@@ -1,0 +1,116 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+# Compiled source #
+###################
+*.class
+
+# Logs #
+########
+*.log
+
+# Built Application Files #
+##########################
+/target/
+/out/
+/build/
+
+# Package Files #
+################
+*.jar
+*.war
+*.ear
+
+# IDE Directories #
+###################
+/.idea/
+/.project
+.classpath
+.settings/
+/.vscode/
+/nbproject/
+
+# OS Generated Files #
+######################
+.DS_Store
+Thumbs.db
+
+# Gradle #
+##########
+.gradle
+build/
+
+# Maven #
+#########
+/.mvn/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Spring Boot #
+###############
+/.spring-boot-devtools.properties
+
+# IntelliJ IDEA #
+#################
+*.iml
+*.ipr
+*.iws
+
+# Eclipse #
+###########
+.metadata
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+
+# VS Code #
+###########
+.vscode/
+
+# Miscellaneous #
+#################
+/*.swp
+*~
+.project
+.idea/
+*.log
