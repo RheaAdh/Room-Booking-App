@@ -1,8 +1,9 @@
 ## Technology Stack
 
-- **Spring Boot**: Framework for building the application.
-- **REST API**: For communication between client and server.
-- **MySQL**: Database for storing data.
+- **Spring Boot**
+- **REST API**
+- **MySQL**
+- **React Native**
 
 ## Requirements
 
