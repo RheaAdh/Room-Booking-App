@@ -12,12 +12,11 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Payment {
-  @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
-  private Integer amount; // unique - 201A
-  private Date createdAt;
-  private Integer mode;
-  private Long bookingId;
+public class Expense {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String name; // unique - 201A
+    private String description;
+    private Integer amount;
 }

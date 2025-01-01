@@ -1,4 +1,4 @@
-package com.example.profpride;
+package com.example.profpride.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,18 +10,23 @@ import lombok.*;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class Room {
-    
+
   @Id
-  @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long id;
-    private String roomNumber; //unique - 201A
-    private Integer floor;
-    private Integer capacity;
-    private RoomType roomType;
-    private BathroomType bathroomType;
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  private Long id;
+  private String roomNumber; // unique - 201A
+  private Integer floor;
+  private Integer capacity;
+  private RoomType roomType;
+  private BathroomType bathroomType;
 }
 
-enum RoomType { SINGLE, DOUBLE, TRIPLE } 
+enum RoomType {
+  SINGLE, DOUBLE, TRIPLE
+}
 
-enum BathroomType { ATTACHED, NON_ATTACHED }
+enum BathroomType {
+  ATTACHED, NON_ATTACHED
+}

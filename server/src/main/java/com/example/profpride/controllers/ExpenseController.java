@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/payments")
-public class PaymentController {
+@RequestMapping("/api/v1/expenses")
+public class ExpenseController {
 
     @Autowired
     private PaymentRepository paymentRepository;
