@@ -8,7 +8,7 @@
 
 - Room Size Types: Single/Double/Triple/Queen
 - Bathroom Type: Attached/Common
-- Booking Type: Monthly/Daily (if monthly then option should be there to renew booking)
+- Booking Type: Monthly/Weekly/Daily (if monthly then option should be there to renew booking)
 - CRUD: Bookings
 - CRUD: Payments
 - CRUD: Rooms
@@ -18,3 +18,9 @@
 - Show Room Availability day wise : Owner View
 - Assign room to a booking based on availability and requirement(IMP)
 - Attach verification documents of each contact
+
+## Additional Features
+
+- Authentication & Role-Based Access (OWNER/CARETAKER)
+- Notifications: upcoming arrivals, departures, and overdue payments via whatsapp.
+- Analytics page to view revenue, occupancy rates, and expense trends.

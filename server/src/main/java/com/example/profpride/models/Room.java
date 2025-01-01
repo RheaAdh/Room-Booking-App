@@ -1,9 +1,14 @@
-package com.example.profpride.entities;
+package com.example.profpride.models;
 
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
@@ -11,6 +16,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "room")
 public class Room {
 
   @Id
@@ -21,12 +27,15 @@ public class Room {
   private Integer capacity;
   private RoomType roomType;
   private BathroomType bathroomType;
+
+  @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+  private List<Booking> bookings;
 }
 
 enum RoomType {
-  SINGLE, DOUBLE, TRIPLE
+  SINGLE, DOUBLE, TRIPLE, QUEEN
 }
 
 enum BathroomType {
-  ATTACHED, NON_ATTACHED
+  ATTACHED, COMMON
 }

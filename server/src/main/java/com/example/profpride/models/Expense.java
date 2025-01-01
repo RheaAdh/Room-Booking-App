@@ -1,9 +1,12 @@
-package com.example.profpride.entities;
+package com.example.profpride.models;
+
+import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
@@ -11,6 +14,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "expense")
 public class Expense {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -18,4 +22,5 @@ public class Expense {
     private String name; // unique - 201A
     private String description;
     private Integer amount;
+    private LocalDate createdAt;
 }
