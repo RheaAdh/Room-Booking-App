@@ -26,8 +26,8 @@ public class Booking {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
-  private LocalDate startDate;
-  private LocalDate endDate;
+  private LocalDateTime startDate;
+  private LocalDateTime endDate;
   private LocalDateTime updatedAt;
   private LocalDateTime createdAt;
 

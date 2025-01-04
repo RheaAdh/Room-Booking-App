@@ -15,13 +15,10 @@
 - CRUD: Rooms
 - CRUD: Building Expenses
 - CRUD: Contacts
-- Show todays Arrival/Departures/Dues to be collected : Caretaker View
-- Show Room Availability day wise : Owner View
-- Assign room to a booking based on availability and requirement(IMP)
-- Attach verification documents of each contact
 
-## Additional Features
+## Owner Dashboard:
 
-- Authentication & Role-Based Access (OWNER/CARETAKER)
-- Notifications: upcoming arrivals, departures, and overdue payments via whatsapp.
-- Analytics page to view revenue, occupancy rates, and expense trends.
+- Show todays Arrival/Departures/Dues to be collected
+- Show Room Availability day wise
+- Assign room to a booking based on availability and requirement(IMP) - try to automate
+- View revenue, occupancy rates, and expense trends.

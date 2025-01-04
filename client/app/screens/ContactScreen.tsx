@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,126 +6,288 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  Linking,
+  Modal,
   Button,
-  ScrollView,
-  Image,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import DatePicker from 'react-native-datepicker';
+import axios from 'axios';
 
 const ContactScreen = () => {
-  const [contacts, setContacts] = useState([
-    { id: '1', name: 'rhea', mob: '12314134', count: 2 },
-    { id: '2', name: 'test1', mob: '322353251', count: 1 },
-    // Add more contact objects here.
-  ]);
+  interface Contact {
+    id: string;
+    name: string | null;
+    phoneNumber: string | null;
+    email: string | null;
+    documentsFolderLink: string | null;
+  }
 
-  const [form, setForm] = useState({
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // State for modal and form
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [formData, setFormData] = useState({
     name: '',
-    mob: '',
-    additionalMob: [] as string[],
-    updated: new Date().toISOString(),
+    phoneNumber: '',
+    email: '',
+    documentsFolderLink: '',
   });
 
-  const [showForm, setShowForm] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
-  const handleSave = () => {
-    if (form.name && form.mob) {
-      const newContact = {
-        id: (contacts.length + 1).toString(),
-        name: form.name,
-        mob: form.mob,
-        count: 1,
-      };
-      setContacts([...contacts, newContact]);
-      resetForm();
-      setShowForm(false);
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const fetchContacts = () => {
+    setLoading(true);
+    axios
+      .get("http://localhost:8080/api/v1/customers")
+      .then((res) => {
+        setContacts(res.data);
+        setFilteredContacts(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err);
+        setLoading(false);
+      });
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      setFilteredContacts(contacts);
     } else {
-      alert('Please fill in the required fields.');
+      const lowerQuery = query.toLowerCase();
+      const filtered = contacts.filter(
+        (contact) =>
+          (contact.name && contact.name.toLowerCase().includes(lowerQuery)) ||
+          (contact.phoneNumber && contact.phoneNumber.includes(lowerQuery))
+      );
+      setFilteredContacts(filtered);
     }
   };
 
-  const resetForm = () => {
-    setForm({
-      name: '',
-      mob: '',
-      additionalMob: [],
-      updated: new Date().toISOString(),
+  const validateLink = (link: string | null): boolean => {
+    if (!link) return false;
+    const googleDriveRegex = /^https?:\/\/(www\.)?drive\.google\.com\/[a-zA-Z0-9/?=_-]+$/;
+    return googleDriveRegex.test(link);
+  };
+
+  // Handle Add/Edit Form Submission
+  const handleSubmit = () => {
+    const { name, phoneNumber, email, documentsFolderLink } = formData;
+
+    // Validate form data
+    if (!name || !phoneNumber) {
+      Alert.alert('Error', 'Name and Phone Number are required.');
+      return;
+    }
+
+    if (isEditing && selectedContact) {
+      // Editing Contact (PUT Request)
+      axios
+        .put(`http://localhost:8080/api/v1/customers/${selectedContact.id}`, formData)
+        .then(() => {
+          fetchContacts();
+          closeModal();
+        })
+        .catch((err) => console.error(err));
+    } else {
+      // Adding New Contact (POST Request)
+      axios
+        .post("http://localhost:8080/api/v1/customers", formData)
+        .then(() => {
+          fetchContacts();
+          closeModal();
+        })
+        .catch((err) => console.error(err));
+    }
+  };
+
+  const openAddContact = () => {
+    setFormData({ name: '', phoneNumber: '', email: '', documentsFolderLink: '' });
+    setIsEditing(false);
+    setIsModalVisible(true);
+  };
+
+  const openEditContact = (contact: Contact) => {
+    setFormData({
+      name: contact.name || '',
+      phoneNumber: contact.phoneNumber || '',
+      email: contact.email || '',
+      documentsFolderLink: contact.documentsFolderLink || '',
     });
+    setSelectedContact(contact);
+    setIsEditing(true);
+    setIsModalVisible(true);
   };
 
-  const addAdditionalMob = () => {
-    setForm({ ...form, additionalMob: [...form.additionalMob, ''] });
+  const openDeleteConfirmation = (contact: Contact) => {
+    setSelectedContact(contact);
+    setIsDeleteModalVisible(true);
   };
 
-  const updateAdditionalMob = (text: string, index: number) => {
-    const updatedMobs = [...form.additionalMob];
-    updatedMobs[index] = text;
-    setForm({ ...form, additionalMob: updatedMobs });
+  const closeModal = () => {
+    setIsModalVisible(false);
+    setFormData({ name: '', phoneNumber: '', email: '', documentsFolderLink: '' });
+    setSelectedContact(null);
   };
 
-  const renderContact = ({ item }) => (
+  const closeDeleteModal = () => {
+    setIsDeleteModalVisible(false);
+    setSelectedContact(null);
+  };
+
+  const handleDeleteContact = () => {
+    if (!selectedContact) return;
+
+    setIsDeleting(true);
+    axios
+      .delete(`http://localhost:8080/api/v1/customers/${selectedContact.id}`)
+      .then(() => {
+        fetchContacts();
+        closeDeleteModal();
+        setIsDeleting(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setIsDeleting(false);
+        closeDeleteModal();
+      });
+  };
+
+  const renderContact = ({ item }: { item: Contact }) => (
     <View style={styles.contactRow}>
-      <Text style={styles.contactText}>{item.name}</Text>
-      <Text style={styles.contactText}>{item.mob}</Text>
-      <Text style={styles.contactText}>{item.count}</Text>
+      <TouchableOpacity
+        style={styles.contactInfo}
+        onPress={() => openEditContact(item)}
+      >
+        <Text style={styles.contactText}>
+          {item.name || 'N/A'} | {item.phoneNumber || 'N/A'}
+        </Text>
+        {item.email && (
+          <Text
+            style={[styles.icon, styles.link]}
+            onPress={() => Linking.openURL(`mailto:${item.email}`)}
+          >
+            📧
+          </Text>
+        )}
+        {item.documentsFolderLink && validateLink(item.documentsFolderLink) && (
+          <Text
+            style={[styles.icon, styles.link]}
+            onPress={() => Linking.openURL(item.documentsFolderLink!)}
+          >
+            📂
+          </Text>
+        )}
+        <TouchableOpacity onPress={() => openDeleteConfirmation(item)}>
+          <Text style={[styles.icon, styles.delete]}>❌</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Contacts</Text>
-        <Button title="Add Contact" onPress={() => setShowForm(true)} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name or phone number"
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
       </View>
-      <FlatList
-        data={contacts}
-        keyExtractor={(item) => item.id}
-        renderItem={renderContact}
-        style={styles.contactList}
-      />
-      {showForm && (
-        <ScrollView style={styles.formContainer}>
-          <Text style={styles.formTitle}>Contact Form</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Name *"
-            value={form.name}
-            onChangeText={(text) => setForm({ ...form, name: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Mob *"
-            keyboardType="phone-pad"
-            value={form.mob}
-            onChangeText={(text) => setForm({ ...form, mob: text })}
-          />
-          {form.additionalMob.map((mob, index) => (
-            <TextInput
-              key={index}
-              style={styles.input}
-              placeholder={`Additional Mob ${index + 1}`}
-              keyboardType="phone-pad"
-              value={mob}
-              onChangeText={(text) => updateAdditionalMob(text, index)}
-            />
-          ))}
-          <TouchableOpacity onPress={addAdditionalMob} style={styles.addButton}>
-            <Text style={styles.addButtonText}>+ Add Phone</Text>
-          </TouchableOpacity>
-          <DatePicker
-            style={styles.datePicker}
-            date={form.updated}
-            mode="date"
-            placeholder="Select Updated Date"
-            format="YYYY-MM-DD"
-            confirmBtnText="Confirm"
-            cancelBtnText="Cancel"
-            onDateChange={(date) => setForm({ ...form, updated: date })}
-          />
-          <Button title="Save" onPress={handleSave} />
-          <Button title="Cancel" onPress={() => setShowForm(false)} color="red" />
-        </ScrollView>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : error ? (
+        <Text>Error: {error.message}</Text>
+      ) : (
+        <FlatList
+          data={filteredContacts}
+          keyExtractor={(item) => item.id}
+          renderItem={renderContact}
+          style={styles.contactList}
+        />
       )}
+
+      {/* Floating Add Button */}
+      <TouchableOpacity style={styles.addButton} onPress={openAddContact}>
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
+
+      {/* Add/Edit Modal */}
+      <Modal visible={isModalVisible} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={formData.name}
+              onChangeText={(text) => setFormData({ ...formData, name: text })}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              keyboardType="phone-pad"
+              value={formData.phoneNumber}
+              onChangeText={(text) => setFormData({ ...formData, phoneNumber: text })}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email (optional)"
+              keyboardType="email-address"
+              value={formData.email}
+              onChangeText={(text) => setFormData({ ...formData, email: text })}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Google Drive Link (optional)"
+              value={formData.documentsFolderLink}
+              onChangeText={(text) => setFormData({ ...formData, documentsFolderLink: text })}
+            />
+            <View style={styles.buttonContainer}>
+              <Button title="Cancel" onPress={closeModal} color="#ff5c5c" />
+              <Button title={isEditing ? "Update" : "Add"} onPress={handleSubmit} />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={isDeleteModalVisible} animationType="fade" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.deleteConfirmationText}>
+              Are you sure you want to delete this contact?
+            </Text>
+            <View style={styles.buttonContainer}>
+              <Button
+                title="Cancel"
+                onPress={closeDeleteModal}
+                color="#ff5c5c"
+              />
+              <Button
+                title={isDeleting ? "Deleting..." : "Delete"}
+                onPress={handleDeleteContact}
+                color="#ff0000"
+                disabled={isDeleting}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -133,65 +295,95 @@ const ContactScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 10,
+    paddingTop: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#f4f4f4',
     marginBottom: 10,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  searchInput: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
   },
   contactList: {
-    flex: 1,
+    paddingHorizontal: 10,
   },
   contactRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginVertical: 8,
     padding: 10,
     backgroundColor: '#fff',
-    marginBottom: 5,
     borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  contactInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   contactText: {
+    flex: 1,
     fontSize: 16,
   },
-  formContainer: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
+  icon: {
+    marginLeft: 10,
+    fontSize: 18,
   },
-  formTitle: {
-    fontSize: 20,
-    marginBottom: 10,
+  link: {
+    color: '#1a73e8',
+  },
+  delete: {
+    color: '#ff5c5c',
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#28a745',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 10,
+  },
+  addButtonText: {
+    fontSize: 30,
+    color: 'white',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    width: '80%',
+    padding: 20,
+    borderRadius: 10,
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    marginBottom: 10,
+    marginVertical: 10,
     fontSize: 16,
   },
-  addButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 10,
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
   },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  datePicker: {
-    width: '100%',
-    marginBottom: 10,
+  deleteConfirmationText: {
+    fontSize: 18,
+    marginBottom: 20,
   },
 });
 

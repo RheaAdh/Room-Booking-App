@@ -7,6 +7,8 @@ const ExpenseTracker = () => {
     { desc: 'washing powder 4kg', pm: 20.83, date: '29/04/2024', amt: 250, category: 'M' },
   ];
 
+
+
   return (
     <View style={styles.container}>
       <View style={styles.form}>

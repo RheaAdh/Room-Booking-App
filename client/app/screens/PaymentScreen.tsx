@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Button,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
+import axios from "axios";  
 interface Payment {
   id: string;
   date: string;
@@ -28,9 +28,13 @@ const PaymentScreen: React.FC = () => {
     { id: '2', date: '01-01-2025', amount: 33600, paymentID: '231512', mode: 'Cash', backupID: '51235', updatedDate: '01-01-2025', room: 'Room2' },
     // Add more sample payments here
   ]);
+
+
   const [modalVisible, setModalVisible] = useState(false);
   const [currentPayment, setCurrentPayment] = useState<Payment | null>(null);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+
+    
 
   const handleSave = () => {
     if (currentPayment) {
