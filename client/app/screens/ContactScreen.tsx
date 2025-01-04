@@ -167,38 +167,42 @@ const ContactScreen = () => {
       });
   };
 
-  const renderContact = ({ item }: { item: Contact }) => (
-    <View style={styles.contactRow}>
-      <TouchableOpacity
-        style={styles.contactInfo}
-        onPress={() => openEditContact(item)}
-      >
-        <Text style={styles.contactText}>
-          {item.name || 'N/A'} | {item.phoneNumber || 'N/A'}
+ const renderContact = ({ item }: { item: Contact }) => (
+  <View style={styles.contactRow}>
+    <TouchableOpacity
+      style={styles.contactInfo}
+      onPress={() => openEditContact(item)}
+    >
+      <Text style={styles.contactText}>
+        {item.name || 'N/A'} | {item.phoneNumber || 'N/A'}
+      </Text>
+      
+      {/* Show email as text if available */}
+      {item.email && (
+        <Text
+          style={[styles.contactText, styles.email]}
+          onPress={() => Linking.openURL(`mailto:${item.email}`)}
+        >
+          {item.email}
         </Text>
-        {item.email && (
-          <Text
-            style={[styles.icon, styles.link]}
-            onPress={() => Linking.openURL(`mailto:${item.email}`)}
-          >
-            📧
-          </Text>
-        )}
-        {item.documentsFolderLink && validateLink(item.documentsFolderLink) && (
-          <Text
-            style={[styles.icon, styles.link]}
-            onPress={() => Linking.openURL(item.documentsFolderLink!)}
-          >
-            📂
-          </Text>
-        )}
-        <TouchableOpacity onPress={() => openDeleteConfirmation(item)}>
-          <Text style={[styles.icon, styles.delete]}>❌</Text>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </View>
-  );
+      )}
 
+      {/* Show ID proof link instead of emoji if valid link is present */}
+      {item.documentsFolderLink && validateLink(item.documentsFolderLink) && (
+        <Text
+          style={[styles.contactText, styles.link]}
+          onPress={() => Linking.openURL(item.documentsFolderLink!)}
+        >
+          ID Proof Link
+        </Text>
+      )}
+
+      <TouchableOpacity onPress={() => openDeleteConfirmation(item)}>
+        <Text style={[styles.icon, styles.delete]}>❌</Text>
+      </TouchableOpacity>
+    </TouchableOpacity>
+  </View>
+);
   return (
     <View style={styles.container}>
       <View style={styles.header}>
