@@ -10,42 +10,67 @@ import {
   Button,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import axios from "axios";  
+import axios from 'axios';
+
 interface Payment {
-  id: string;
-  date: string;
+  id?: number;
   amount: number;
-  paymentID: string;
+  createdAt: string;
   mode: string;
-  backupID: string;
-  updatedDate: string;
-  room: string;
+  bookingId: number; // Reference to booking
 }
 
+const API_URL = 'http://your-backend-url.com/payments'; // Replace with actual backend URL
+
 const PaymentScreen: React.FC = () => {
-  const [payments, setPayments] = useState<Payment[]>([
-    { id: '1', date: '02-01-2025', amount: 4950, paymentID: '1413', mode: 'Online', backupID: '13535', updatedDate: '02-01-2025', room: 'Room1' },
-    { id: '2', date: '01-01-2025', amount: 33600, paymentID: '231512', mode: 'Cash', backupID: '51235', updatedDate: '01-01-2025', room: 'Room2' },
-    // Add more sample payments here
-  ]);
-
-
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentPayment, setCurrentPayment] = useState<Payment | null>(null);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(API_URL);
+      setPayments(response.data);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (currentPayment) {
-      const updatedPayments = currentPayment.id
-        ? payments.map((payment) =>
-            payment.id === currentPayment.id ? currentPayment : payment
-          )
-        : [...payments, { ...currentPayment, id: Math.random().toString() }];
-      setPayments(updatedPayments);
-      setModalVisible(false);
-      setCurrentPayment(null);
+      try {
+        if (currentPayment.id) {
+          // Update existing payment
+          await axios.put(`${API_URL}/${currentPayment.id}`, currentPayment);
+          setPayments((prev) =>
+            prev.map((payment) =>
+              payment.id === currentPayment.id ? currentPayment : payment
+            )
+          );
+        } else {
+          // Create new payment
+          const response = await axios.post(API_URL, currentPayment);
+          setPayments((prev) => [...prev, response.data]);
+        }
+        setModalVisible(false);
+        setCurrentPayment(null);
+      } catch (error) {
+        console.error('Error saving payment:', error);
+      }
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+      setPayments((prev) => prev.filter((payment) => payment.id !== id));
+    } catch (error) {
+      console.error('Error deleting payment:', error);
     }
   };
 
@@ -54,24 +79,24 @@ const PaymentScreen: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleDelete = (id: string) => {
-    setPayments(payments.filter((payment) => payment.id !== id));
-  };
-
   const renderPayment = ({ item }: { item: Payment }) => (
     <View style={styles.row}>
-      <Text style={styles.cell}>{item.date}</Text>
+      <Text style={styles.cell}>{item.createdAt}</Text>
       <Text style={styles.cell}>{item.amount}</Text>
-      <Text style={styles.cell}>{item.room}</Text>
-      <Text style={styles.cell}>{item.paymentID}</Text>
+      <Text style={styles.cell}>{item.mode}</Text>
+      <Text style={styles.cell}>{item.bookingId}</Text>
       <TouchableOpacity onPress={() => handleEdit(item)}>
         <Text style={styles.link}>Edit</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => handleDelete(item.id)}>
+      <TouchableOpacity onPress={() => handleDelete(item.id!)}>
         <Text style={[styles.link, { color: 'red' }]}>Delete</Text>
       </TouchableOpacity>
     </View>
   );
+
+  useEffect(() => {
+    fetchPayments();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -80,34 +105,34 @@ const PaymentScreen: React.FC = () => {
         style={styles.addButton}
         onPress={() => {
           setCurrentPayment({
-            id: '',
-            date: '',
             amount: 0,
-            paymentID: '',
+            createdAt: '',
             mode: '',
-            backupID: '',
-            updatedDate: '',
-            room: '',
+            bookingId: 0,
           });
           setModalVisible(true);
         }}
       >
         <Text style={styles.addButtonText}>Add Payment</Text>
       </TouchableOpacity>
-      <FlatList
-        data={payments}
-        renderItem={renderPayment}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={styles.headerCell}>Date</Text>
-            <Text style={styles.headerCell}>Amt</Text>
-            <Text style={styles.headerCell}>Room</Text>
-            <Text style={styles.headerCell}>Payment ID</Text>
-            <Text style={styles.headerCell}>Actions</Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <Text>Loading...</Text>
+      ) : (
+        <FlatList
+          data={payments}
+          renderItem={renderPayment}
+          keyExtractor={(item) => item.id?.toString() || ''}
+          ListHeaderComponent={
+            <View style={styles.header}>
+              <Text style={styles.headerCell}>Date</Text>
+              <Text style={styles.headerCell}>Amount</Text>
+              <Text style={styles.headerCell}>Mode</Text>
+              <Text style={styles.headerCell}>Booking ID</Text>
+              <Text style={styles.headerCell}>Actions</Text>
+            </View>
+          }
+        />
+      )}
       <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Payment Form</Text>
@@ -116,25 +141,25 @@ const PaymentScreen: React.FC = () => {
             onPress={() => setDatePickerVisible(true)}
             style={styles.input}
           >
-            <Text>{currentPayment?.date || 'Select Date'}</Text>
+            <Text>{currentPayment?.createdAt || 'Select Date'}</Text>
           </TouchableOpacity>
           {datePickerVisible && (
             <DateTimePicker
               value={new Date()}
               mode="date"
               display="default"
-              onChange={(event: any, date: { toISOString: () => string; }) => {
+              onChange={(event: any, date?: Date) => {
                 if (date) {
                   setCurrentPayment({
                     ...currentPayment!,
-                    date: date.toISOString().split('T')[0],
+                    createdAt: date.toISOString().split('T')[0],
                   });
                 }
                 setDatePickerVisible(false);
               }}
             />
           )}
-          <Text style={styles.label}>Amt*</Text>
+          <Text style={styles.label}>Amount*</Text>
           <TextInput
             style={styles.input}
             keyboardType="numeric"
@@ -142,18 +167,7 @@ const PaymentScreen: React.FC = () => {
             onChangeText={(value) =>
               setCurrentPayment({
                 ...currentPayment!,
-                amount: parseFloat(value),
-              })
-            }
-          />
-          <Text style={styles.label}>Payment ID*</Text>
-          <TextInput
-            style={styles.input}
-            value={currentPayment?.paymentID}
-            onChangeText={(value) =>
-              setCurrentPayment({
-                ...currentPayment!,
-                paymentID: value,
+                amount: parseInt(value, 10),
               })
             }
           />
@@ -168,25 +182,15 @@ const PaymentScreen: React.FC = () => {
               })
             }
           />
-          <Text style={styles.label}>Backup ID</Text>
+          <Text style={styles.label}>Booking ID*</Text>
           <TextInput
             style={styles.input}
-            value={currentPayment?.backupID}
+            keyboardType="numeric"
+            value={currentPayment?.bookingId.toString()}
             onChangeText={(value) =>
               setCurrentPayment({
                 ...currentPayment!,
-                backupID: value,
-              })
-            }
-          />
-          <Text style={styles.label}>Room</Text>
-          <TextInput
-            style={styles.input}
-            value={currentPayment?.room}
-            onChangeText={(value) =>
-              setCurrentPayment({
-                ...currentPayment!,
-                room: value,
+                bookingId: parseInt(value, 10),
               })
             }
           />
@@ -201,20 +205,105 @@ const PaymentScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f5f5f5' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
-  addButton: { backgroundColor: '#007bff', padding: 10, borderRadius: 5, alignItems: 'center', marginBottom: 16 },
-  addButtonText: { color: '#fff', fontSize: 16 },
-  header: { flexDirection: 'row', marginBottom: 8 },
-  headerCell: { flex: 1, fontWeight: 'bold' },
-  row: { flexDirection: 'row', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ccc' },
-  cell: { flex: 1 },
-  link: { color: '#007bff', textDecorationLine: 'underline' },
-  modalContainer: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
-  label: { marginTop: 8, fontWeight: 'bold' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 5, padding: 8, marginVertical: 8 },
-  buttonRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#343a40',
+  },
+  addButton: {
+    backgroundColor: '#007bff',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  cell: {
+    fontSize: 14,
+    color: '#495057',
+    flex: 1,
+    textAlign: 'center',
+  },
+  link: {
+    fontSize: 14,
+    color: '#007bff',
+    textDecorationLine: 'underline',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    backgroundColor: '#e9ecef',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  headerCell: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#343a40',
+    flex: 1,
+    textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#343a40',
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#495057',
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    backgroundColor: '#fff',
+    color: '#495057',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 24,
+  },
 });
 
 export default PaymentScreen;

@@ -8,7 +8,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import com.example.profpride.enums.PaymentMode;
 
 @Entity
 @Getter
@@ -21,14 +22,10 @@ public class Payment {
   @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
   private Integer amount;
-  private LocalDate createdAt;
+  private LocalDateTime createdAt;
   private PaymentMode mode;
 
   @ManyToOne
   @JoinColumn(name = "booking_id", nullable = false)
   private Booking booking;
-}
-
-enum PaymentMode {
-  CREDIT_CARD, DEBIT_CARD, UPI, CASH, NET_BANKING, CARE_TAKER
 }

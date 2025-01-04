@@ -1,6 +1,5 @@
 package com.example.profpride.models;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,9 +11,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.example.profpride.enums.BookingDurationType;
+import com.example.profpride.enums.BookingStatusType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Getter
@@ -32,10 +33,10 @@ public class Booking {
   private LocalDateTime createdAt;
 
   @Enumerated(EnumType.STRING)
-  private StatusType bookingStatus;
+  private BookingStatusType bookingStatus;
 
   @Enumerated(EnumType.STRING)
-  private DurationType durationType;
+  private BookingDurationType durationType;
 
   @ManyToOne // multiple bookings can exist for a single room
   @JoinColumn(name = "room_id", nullable = false)
@@ -45,14 +46,7 @@ public class Booking {
   @JoinColumn(name = "customer_id", nullable = false)
   private Customer customer;
 
-  @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "booking") // a booking can have multiple payments
+  @JsonIgnore
   private List<Payment> payments;
-}
-
-enum StatusType {
-  NEW, PENDING, CONFIRMED, CANCELLED, CHECKED_IN, CHECKED_OUT
-}
-
-enum DurationType {
-  DAILY, WEEKLY, MONTHLY
 }

@@ -1,8 +1,9 @@
 package com.example.profpride.models;
 
 import java.util.List;
-
-import jakarta.persistence.CascadeType;
+import com.example.profpride.enums.BathroomType;
+import com.example.profpride.enums.RoomType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,14 +29,7 @@ public class Room {
   private RoomType roomType;
   private BathroomType bathroomType;
 
-  @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "room")
+  @JsonIgnore
   private List<Booking> bookings;
-}
-
-enum RoomType {
-  SINGLE, DOUBLE, TRIPLE, QUEEN
-}
-
-enum BathroomType {
-  ATTACHED, COMMON
 }
