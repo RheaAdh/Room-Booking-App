@@ -1,157 +1,155 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  FlatList,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  Picker,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, StyleSheet, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface Booking {
   id: number;
-  startDate: string;
-  endDate: string;
-  durationType: string;
-  bookingStatus: string;
   customer: {
-    id: number;
+    id: string;
     name: string;
   };
   room: {
-    id: number;
-    name: string;
+    roomNumber: ReactNode;
+    id: string;
+    number: string;
   };
+  checkInDate: string;
+  checkOutDate: string;
 }
 
-interface Room {
-  id: number;
+interface Customer {
+  id: string;
   name: string;
 }
 
+interface Room {
+  id: string;
+  roomNumber: string;
+}
+
+const API_URL_FOR_BOOKINGS = 'http://localhost:8080/api/v1/bookings';
+const API_URL_FOR_CUSTOMERS = 'http://localhost:8080/api/v1/customers';
+const API_URL_FOR_ROOMS = 'http://localhost:8080/api/v1/rooms';
+
 const BookingsScreen: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [currentBooking, setCurrentBooking] = useState<Partial<Booking>>({});
-  const [isEditing, setIsEditing] = useState(false);
-  const [customers, setCustomers] = useState<any[]>([]); // Holds customer list
-  const [rooms, setRooms] = useState<any[]>([]); // Holds room list
-  const [statusOptions] = useState(['NEW', 'CONFIRMED', 'CANCELLED']); // Dropdown for booking status
-  const [duration, setDuration] = useState(0); // Duration in days
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedRoom, setSelectedRoom] = useState<string>('');
+  const [checkInDate, setCheckInDate] = useState<string>('');
+  const [checkOutDate, setCheckOutDate] = useState<string>('');
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
-  useEffect(() => {
-    // Fetch bookings from the API
-    axios
-      .get('http://localhost:8080/api/v1/bookings')
-      .then((response) => {
-        setBookings(response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching bookings:', error);
-      });
+  const fetchBookings = async () => {
+    try {
+      const response = await fetch(API_URL_FOR_BOOKINGS);
+      const data: Booking[] = await response.json();
+      setBookings(data);
+      console.log("bookingsList=", data);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch bookings.');
+    }
+  };
 
-    // Fetch customers and rooms for selection in the modal
-    axios
-      .get('http://localhost:8080/api/v1/customers')
-      .then((response) => {
-        setCustomers(response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching customers:', error);
-      });
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch(API_URL_FOR_CUSTOMERS);
+      const data: Customer[] = await response.json();
+      setCustomers(data);
+      console.log("customersList=", data);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch customers.');
+    }
+  };
 
-    axios
-      .get('http://localhost:8080/api/v1/rooms')
-      .then((response) => {
-        setRooms(response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching rooms:', error);
-      });
-  }, []);
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch(API_URL_FOR_ROOMS);
+      const data: Room[] = await response.json();
+      setRooms(data);
+      console.log("roomsList=", data);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch rooms.');
+    }
+  };
 
-  const handleAddOrUpdateBooking = () => {
-    const newBooking: Booking = {
-      id: currentBooking.id ?? Date.now(),
-      startDate: currentBooking.startDate || '',
-      endDate: currentBooking.endDate || '',
-      bookingStatus: currentBooking.bookingStatus || 'NEW',
-      durationType: 'DAYS',
-      customer: currentBooking.customer || { id: 1, name: '' },
-      room: currentBooking.room || { id: 1, name: '' },
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchBookings();
+      fetchCustomers();
+      fetchRooms();
+    }, [])
+  );
+
+ const handleSaveBooking = async () => {
+  if (!selectedCustomer || !selectedRoom || !checkInDate || !checkOutDate) {
+    Alert.alert('Error', 'Please fill in all fields.');
+    return;
+  }
+
+  try {
+    const bookingData = {
+      checkInDate: `${checkInDate}T00:00:00`,
+      checkOutDate: `${checkOutDate}T00:00:00`,
+      bookingStatus: "NEW",
+      customer: { id: selectedCustomer },  // Use customer.id as a string or number depending on your API
+      room: { id: selectedRoom },  // Use room.id as a string or number depending on your API
     };
-
-    const durationInDays = Math.ceil(
-      (new Date(currentBooking.endDate!).getTime() - new Date(currentBooking.startDate!).getTime()) /
-        (1000 * 3600 * 24)
-    );
-    newBooking.durationType = `${durationInDays} Days`; // Set duration in days
-
-    // Send the data to the API to save it to the backend
-    if (isEditing && currentBooking.id !== undefined) {
-      axios
-        .put(`http://localhost:8080/api/v1/bookings/${newBooking.id}`, newBooking)
-        .then((response) => {
-          // Update the booking list with the updated data
-          setBookings((prevBookings) =>
-            prevBookings.map((booking) =>
-              booking.id === newBooking.id ? response.data : booking
-            )
-          );
-        })
-        .catch((error) => {
-          console.error('Error updating booking:', error);
-        });
+    
+console.log("save bookingData=", bookingData);
+    if (editingBooking) {
+      console.log("editingBooking=", editingBooking);
+      console.log("bookingData=", bookingData);
+      await fetch(`${API_URL_FOR_BOOKINGS}/${editingBooking.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData),
+      });
     } else {
-      axios
-        .post('http://localhost:8080/api/v1/bookings', newBooking)
-        .then((response) => {
-          // Add the new booking to the list
-          setBookings((prevBookings) => [...prevBookings, response.data]);
-        })
-        .catch((error) => {
-          console.error('Error adding booking:', error);
-        });
+      await fetch(API_URL_FOR_BOOKINGS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData),
+      });
     }
 
-    setModalVisible(false);
-    setCurrentBooking({});
-    setIsEditing(false);
-  };
-
+    fetchBookings();  // Refresh the bookings list
+    setModalVisible(false);  // Close the modal
+  } catch (error) {
+    Alert.alert('Error', 'Failed to save booking.');
+  }
+};
   const handleEditBooking = (booking: Booking) => {
-    setCurrentBooking(booking);
-    setIsEditing(true);
-    setModalVisible(true);
-  };
 
-  const handleDeleteBooking = (id: number) => {
-    axios
-      .delete(`http://localhost:8080/api/v1/bookings/${id}`)
-      .then(() => {
-        setBookings((prevBookings) => prevBookings.filter((booking) => booking.id !== id));
-      })
-      .catch((error) => {
-        console.error('Error deleting booking:', error);
-      });
+    console.log("editbooking=", booking);
+  setEditingBooking(booking);
+  
+  // Ensure that the dates are valid strings before calling split
+  const formattedCheckInDate = booking.checkInDate ? booking.checkInDate.split('T')[0] : '';
+  const formattedCheckOutDate = booking.checkOutDate ? booking.checkOutDate.split('T')[0] : '';
+
+  setSelectedCustomer(booking.customer.id);
+  setSelectedRoom(booking.room.id);
+  setCheckInDate(formattedCheckInDate);  // Update state with formatted date
+  setCheckOutDate(formattedCheckOutDate);  // Update state with formatted date
+  setModalVisible(true);
+};
+
+
+  const handleDeleteBooking = async (id: number) => {
+    try {
+      await fetch(`${API_URL_FOR_BOOKINGS}/${id}`, { method: 'DELETE' });
+      fetchBookings();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete booking.');
+    }
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => {
-          setModalVisible(true);
-          setIsEditing(false); // Reset to add mode when opening modal
-        }}
-      >
-        <Ionicons name="add" size={24} color="white" />
-      </TouchableOpacity>
-
       <FlatList
         data={bookings}
         keyExtractor={(item) => item.id.toString()}
@@ -160,96 +158,73 @@ const BookingsScreen: React.FC = () => {
             <View style={styles.bookingInfo}>
               <Text style={styles.bookingName}>{item.customer.name}</Text>
               <Text style={styles.bookingDetails}>
-                {item.startDate} - {item.endDate}
+                Room: {item.room.roomNumber}, Check-in: {item.checkInDate}, Check-out: {item.checkOutDate}
               </Text>
-              <Text style={styles.bookingDetails}>Duration: {item.durationType}</Text>
-              <Text style={styles.bookingDetails}>Status: {item.bookingStatus}</Text>
             </View>
             <View style={styles.actions}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => handleEditBooking(item)}
-              >
-                <Ionicons name="pencil" size={20} color="blue" />
+              <TouchableOpacity onPress={() => handleEditBooking(item)} style={styles.editButton}>
+                <Text style={styles.editButtonText}>Edit</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => handleDeleteBooking(item.id)}
-              >
-                <Ionicons name="trash" size={20} color="red" />
+              <TouchableOpacity onPress={() => handleDeleteBooking(item.id)} style={styles.deleteButton}>
+                <Text style={styles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
       />
 
-      <Modal visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => {
+          setEditingBooking(null);
+          setSelectedCustomer('');
+          setSelectedRoom('');
+          setCheckInDate('');
+          setCheckOutDate('');
+          setModalVisible(true);
+        }}
+      >
+        <Text style={styles.addButtonText}>Add Booking</Text>
+      </TouchableOpacity>
+
+      <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContent}>
-          <TextInput
-            style={styles.input}
-            placeholder="Start Date"
-            value={currentBooking.startDate}
-            onChangeText={(text) =>
-              setCurrentBooking((prev) => ({ ...prev, startDate: text }))
-            }
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="End Date"
-            value={currentBooking.endDate}
-            onChangeText={(text) =>
-              setCurrentBooking((prev) => ({ ...prev, endDate: text }))
-            }
-          />
           <Picker
-            selectedValue={currentBooking.bookingStatus}
-            style={styles.input}
-            onValueChange={(itemValue: any) =>
-              setCurrentBooking((prev) => ({ ...prev, bookingStatus: itemValue }))
-            }
+            selectedValue={selectedCustomer}
+            onValueChange={(itemValue) => setSelectedCustomer(itemValue)}
+            style={styles.picker}
           >
-            {statusOptions.map((status) => (
-              <Picker.Item label={status} value={status} key={status} />
-            ))}
-          </Picker>
-          <Picker
-            selectedValue={currentBooking.customer?.id}
-            style={styles.input}
-            onValueChange={(itemValue: any) =>
-              setCurrentBooking((prev) => ({
-                ...prev,
-                customer: customers.find((c) => c.id === itemValue),
-              }))
-            }
-          >
+            <Picker.Item label="Select a customer" value="" />
             {customers.map((customer) => (
-              <Picker.Item label={customer.name} value={customer.id} key={customer.id} />
+              <Picker.Item key={customer.id} label={customer.name} value={customer.id} />
             ))}
           </Picker>
           <Picker
-            selectedValue={currentBooking.room?.id}
-            style={styles.input}
-            onValueChange={(itemValue: number) =>
-              setCurrentBooking((prev) => ({
-                ...prev,
-                room: rooms.find((r) => r.id === itemValue),
-              }))
-            }
+            selectedValue={selectedRoom}
+            onValueChange={(itemValue) => setSelectedRoom(itemValue)}
+            style={styles.picker}
           >
-            {rooms.map((room: Room) => (
-              <Picker.Item label={room.name} value={room.id} key={room.id} />
+            <Picker.Item label="Select a room" value="" />
+            {rooms.map((room) => (
+              <Picker.Item key={room.id} label={`Room ${room.roomNumber}`} value={room.id} />
             ))}
           </Picker>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleAddOrUpdateBooking}
-          >
-            <Text style={styles.saveButtonText}>{isEditing ? 'Update' : 'Add'}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Check-in Date (YYYY-MM-DD)"
+            value={checkInDate}
+            onChangeText={setCheckInDate}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Check-out Date (YYYY-MM-DD)"
+            value={checkOutDate}
+            onChangeText={setCheckOutDate}
+          />
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveBooking}>
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => setModalVisible(false)}
-          >
+          <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
@@ -261,74 +236,106 @@ const BookingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  addButton: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#007bff',
-    borderRadius: 50,
-    padding: 10,
+    padding: 16,
+    backgroundColor: '#f9f9f9',
   },
   bookingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    alignItems: 'center',
+    padding: 16,
+    marginVertical: 8,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    elevation: 2,
   },
   bookingInfo: {
-    flex: 1,
+    flex: 3,
   },
   bookingName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   bookingDetails: {
     fontSize: 14,
-    color: '#666',
+    color: '#555',
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'space-evenly',
   },
-  actionButton: {
-    marginLeft: 10,
+  editButton: {
+    padding: 8,
+    backgroundColor: '#4CAF50',
+    borderRadius: 4,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    padding: 8,
+    backgroundColor: '#F44336',
+    borderRadius: 4,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  addButton: {
+    marginVertical: 16,
+    padding: 16,
+    backgroundColor: '#2196F3',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   modalContent: {
     flex: 1,
+    padding: 16,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
     backgroundColor: '#fff',
   },
+  picker: {
+    height: 50,
+    marginVertical: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 4,
+  },
   input: {
-    width: '100%',
-    padding: 10,
-    marginVertical: 10,
-    borderWidth: 1,
+    height: 50,
     borderColor: '#ccc',
-    borderRadius: 5,
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    marginVertical: 8,
   },
   saveButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    marginTop: 10,
-    borderRadius: 5,
+    marginVertical: 8,
+    padding: 16,
+    backgroundColor: '#4CAF50',
+    alignItems: 'center',
+    borderRadius: 8,
   },
   saveButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontWeight: 'bold',
   },
   cancelButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    marginTop: 10,
-    borderRadius: 5,
+    marginVertical: 8,
+    padding: 16,
+    backgroundColor: '#F44336',
+    alignItems: 'center',
+    borderRadius: 8,
   },
   cancelButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

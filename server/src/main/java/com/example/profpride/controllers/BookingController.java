@@ -20,6 +20,8 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<Booking> createBooking(@RequestBody Booking booking) {
+        System.out.println("Booking: ");
+        System.out.println(booking);
         Booking savedBooking = bookingRepository.save(booking);
         return new ResponseEntity<>(savedBooking, HttpStatus.CREATED);
     }
@@ -44,8 +46,8 @@ public class BookingController {
     public ResponseEntity<Booking> updateBooking(@PathVariable Long id, @RequestBody Booking updatedBooking) {
         return bookingRepository.findById(id).map(booking -> {
             booking.setBookingStatus(updatedBooking.getBookingStatus());
-            booking.setStartDate(updatedBooking.getStartDate());
-            booking.setEndDate(updatedBooking.getEndDate());
+            booking.setCheckInDate(updatedBooking.getCheckInDate());
+            booking.setCheckOutDate(updatedBooking.getCheckOutDate());
             booking.setDurationType(updatedBooking.getDurationType());
             Booking savedBooking = bookingRepository.save(booking);
             return new ResponseEntity<>(savedBooking, HttpStatus.OK);

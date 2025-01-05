@@ -25,10 +25,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Table(name = "booking")
 public class Booking {
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.SEQUENCE)
   private Long id;
-  private LocalDateTime startDate;
-  private LocalDateTime endDate;
+  private LocalDateTime checkInDate;
+  private LocalDateTime checkOutDate;
   private LocalDateTime updatedAt;
   private LocalDateTime createdAt;
 

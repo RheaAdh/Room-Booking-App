@@ -3,7 +3,10 @@
 - **Spring Boot**
 - **REST API**
 - **MySQL**
+- **Gradle**
 - **React Native**
+- **Typescript**
+- **CSS**
 
 ## Requirements
 

@@ -14,7 +14,7 @@ export default function OwnerTabs() {
       <Drawer.Screen name="Contacts" component={ContactScreen} />
       <Drawer.Screen name="Rooms" component={RoomScreen} />
       <Drawer.Screen name="Bookings" component={BookingsScreen} />
-      <Drawer.Screen name="Payments" component={PaymentScreen} />
+      <Drawer.Screen name="Transaction History" component={PaymentScreen} />
       <Drawer.Screen name="Expenses" component={ExpenseScreen} />
     </Drawer.Navigator>
   );
