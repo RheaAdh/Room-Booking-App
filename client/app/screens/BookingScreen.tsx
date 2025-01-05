@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useFocusEffect } from '@react-navigation/native';
+import { BASE_URL } from '../Constants';
 
 interface Booking {
   id: number;
@@ -39,10 +40,10 @@ interface Room {
     roomMonthlyCost: number;
 }
 
-const API_URL_FOR_BOOKINGS = 'http://localhost:8080/api/v1/bookings';
-const API_URL_FOR_CUSTOMERS = 'http://localhost:8080/api/v1/customers';
-const API_URL_FOR_ROOMS = 'http://localhost:8080/api/v1/rooms';
-const API_URL_FOR_PAYMENTS = 'http://localhost:8080/api/v1/payments';
+const API_URL_FOR_BOOKINGS = `${BASE_URL}/bookings`;
+const API_URL_FOR_CUSTOMERS = `${BASE_URL}/customers`;
+const API_URL_FOR_ROOMS = `${BASE_URL}/rooms`;
+const API_URL_FOR_PAYMENTS = `${BASE_URL}/payments`;
 
 const BookingsScreen: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);

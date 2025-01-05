@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, Picker, Alert, Modal } from 'react-native';
-import axios from 'axios'; // Import axios
+import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, Alert, Modal } from 'react-native';
 
+import axios from 'axios'; 
+import { Picker } from '@react-native-picker/picker';
+import {BASE_URL} from '../Constants';
 type RoomType = 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'QUEEN' | 'SINGLE(smaller size)';
 type BathroomType = 'ATTACHED' | 'COMMON';
 
@@ -22,14 +24,13 @@ const RoomScreen: React.FC = () => {
   const [roomMonthlyCost, setRoomMonthlyCost] = useState<number>(0);
   const [roomDailyCost, setRoomDailyCost] = useState<number>(0);
   const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false); // Modal visibility state
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false); 
 
-  const apiUrl = 'http://localhost:8080/api/v1/rooms';
+  const apiUrl = `${BASE_URL}/rooms`;
 
-  // Fetch rooms from backend
   const fetchRooms = async () => {
     try {
-      const response = await axios.get(apiUrl); // Use axios instead of fetch
+      const response = await axios.get(apiUrl); 
       setRooms(response.data);
     } catch (error) {
       console.error('Error fetching rooms:', error);
@@ -40,7 +41,6 @@ const RoomScreen: React.FC = () => {
     fetchRooms();
   }, []);
 
-  // Save or update room
   const saveRoom = async () => {
     if (!roomNumber || !roomType || !bathroomType || !roomMonthlyCost || !roomDailyCost) {
       Alert.alert("Error", "Please fill out all fields");
@@ -55,7 +55,6 @@ const RoomScreen: React.FC = () => {
       roomDailyCost: parseFloat(roomDailyCost.toString()),
     };
 
-    // Include id if updating room
     if (editingRoomId !== null) {
       roomData.id = editingRoomId;
     }

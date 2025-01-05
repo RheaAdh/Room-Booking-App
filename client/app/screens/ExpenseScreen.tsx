@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import axios from 'axios';
+import {BASE_URL} from '../Constants';
 
 // Mock API URL
-const API_URL = 'http://localhost:8080/api/v1/expenses';
+const API_URL = `${BASE_URL}/expenses`;
 
 // Expense interface for TypeScript compatibility
 interface Expense {

@@ -1,27 +1,38 @@
+## Guest House Management Service
+
 ## Technology Stack
 
-- **Spring Boot**
+- **Spring Boot - Java**
 - **REST API**
 - **MySQL**
 - **Gradle**
-- **React Native**
+- **React Native** - compatible on all devices
 - **Typescript**
 - **CSS**
 
-## Requirements
-
-- Room Size Types: Single/Double/Triple/Queen
-- Bathroom Type: Attached/Common
-- Booking Type: Monthly/Weekly/Daily (if monthly then option should be there to renew booking)
-- CRUD: Bookings
-- CRUD: Payments
-- CRUD: Rooms
-- CRUD: Building Expenses
-- CRUD: Contacts
-
-## Owner Dashboard:
+## Dashboard:
 
 - Show todays Arrival/Departures/Dues to be collected
-- Show Room Availability day wise
-- Assign room to a booking based on availability and requirement(IMP) - try to automate
+- Show available roomList by filling in customer requirement (Bathroom type + Room Type + Time period)
 - View revenue, occupancy rates, and expense trends.
+
+## Bookings:
+
+- Add Booking
+- Add payment/payments to a booking
+- Update Booking
+- Update Payment in a booking
+- Delete Booking
+
+## Customers / Rooms / Expenses
+
+- Create
+- Read
+- Update
+- Delete
+
+## Customer Requirements based on which booking is made
+
+- Room Size Types: Single/Double/Triple/Queen/Single(small)
+- Bathroom Type: Attached/Common
+- Booking Type: Monthly/Daily

@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import axios from 'axios';
+import {BASE_URL} from '../Constants';
 
 const ContactScreen = () => {
   interface Contact {
@@ -50,7 +51,7 @@ const ContactScreen = () => {
   const fetchContacts = () => {
     setLoading(true);
     axios
-      .get("http://localhost:8080/api/v1/customers")
+      .get(`${BASE_URL}/customers`)
       .then((res) => {
         setContacts(res.data);
         setFilteredContacts(res.data);
@@ -97,7 +98,7 @@ const ContactScreen = () => {
     if (isEditing && selectedContact) {
       // Editing Contact (PUT Request)
       axios
-        .put(`http://localhost:8080/api/v1/customers/${selectedContact.id}`, formData)
+        .put(`${BASE_URL}/customers/${selectedContact.id}`, formData)
         .then(() => {
           fetchContacts();
           closeModal();
@@ -106,7 +107,7 @@ const ContactScreen = () => {
     } else {
       // Adding New Contact (POST Request)
       axios
-        .post("http://localhost:8080/api/v1/customers", formData)
+        .post(`${BASE_URL}/customers`, formData)
         .then(() => {
           fetchContacts();
           closeModal();
@@ -154,7 +155,7 @@ const ContactScreen = () => {
 
     setIsDeleting(true);
     axios
-      .delete(`http://localhost:8080/api/v1/customers/${selectedContact.id}`)
+      .delete(`${BASE_URL}//customers/${selectedContact.id}`)
       .then(() => {
         fetchContacts();
         closeDeleteModal();
