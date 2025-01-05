@@ -47,6 +47,5 @@ public class Booking {
   private Customer customer;
 
   @OneToMany(mappedBy = "booking") // a booking can have multiple payments
-  @JsonIgnore
   private List<Payment> payments;
 }

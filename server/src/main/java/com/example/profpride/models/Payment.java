@@ -10,12 +10,14 @@ import jakarta.persistence.Table;
 import lombok.*;
 import java.time.LocalDateTime;
 import com.example.profpride.enums.PaymentMode;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties({ "booking" })
 @Table(name = "payment")
 public class Payment {
   @Id

@@ -30,17 +30,22 @@ public class PaymentController {
 
     @PostMapping
     public ResponseEntity<Payment> createPayment(@RequestBody Map<String, Object> payload) {
-        // Create payment for a booking
+        System.out.println("Payload: " + payload);
         Integer amount = (Integer) payload.get("amount");
         LocalDateTime createdAt = LocalDateTime.parse((String) payload.get("createdAt"));
         PaymentMode mode = PaymentMode.valueOf((String) payload.get("mode"));
         Long bookingId = Long.valueOf((Integer) payload.get("bookingId"));
+        System.out.println("Booking ID: " + bookingId);
 
         // Find booking by id
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
+        System.out.println("Booking: " + booking);
+
         Payment payment = new Payment(null, amount, createdAt, mode, booking);
+
+        System.out.println("Payment: " + payment);
         return ResponseEntity.ok(paymentService.savePayment(payment));
     }
 

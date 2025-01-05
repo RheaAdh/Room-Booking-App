@@ -1,24 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, Picker, Alert, Modal } from 'react-native';
+import axios from 'axios'; // Import axios
 
-const RoomScreen = () => {
-  const [rooms, setRooms] = useState([]);
-  const [roomNumber, setRoomNumber] = useState('');
-  const [floor, setFloor] = useState('');
-  const [capacity, setCapacity] = useState('');
-  const [roomType, setRoomType] = useState('SINGLE');
-  const [bathroomType, setBathroomType] = useState('ATTACHED');
-  const [editingRoomId, setEditingRoomId] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
+type RoomType = 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'QUEEN' | 'SINGLE(smaller size)';
+type BathroomType = 'ATTACHED' | 'COMMON';
+
+interface Room {
+  id: number;
+  roomNumber: string;
+  roomType: RoomType;
+  bathroomType: BathroomType;
+  roomMonthlyCost: number;
+  roomDailyCost: number;
+}
+
+const RoomScreen: React.FC = () => {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [roomNumber, setRoomNumber] = useState<string>('');
+  const [roomType, setRoomType] = useState<RoomType>('SINGLE');
+  const [bathroomType, setBathroomType] = useState<BathroomType>('ATTACHED');
+  const [roomMonthlyCost, setRoomMonthlyCost] = useState<number>(0);
+  const [roomDailyCost, setRoomDailyCost] = useState<number>(0);
+  const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false); // Modal visibility state
 
   const apiUrl = 'http://localhost:8080/api/v1/rooms';
 
   // Fetch rooms from backend
   const fetchRooms = async () => {
     try {
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-      setRooms(data);
+      const response = await axios.get(apiUrl); // Use axios instead of fetch
+      setRooms(response.data);
     } catch (error) {
       console.error('Error fetching rooms:', error);
     }
@@ -30,37 +42,46 @@ const RoomScreen = () => {
 
   // Save or update room
   const saveRoom = async () => {
-    if (!roomNumber || !floor || !capacity) {
+    if (!roomNumber || !roomType || !bathroomType || !roomMonthlyCost || !roomDailyCost) {
       Alert.alert("Error", "Please fill out all fields");
       return;
     }
 
-    const roomData = {
+    const roomData: Partial<Room> = {
       roomNumber,
-      floor: parseInt(floor),
-      capacity: parseInt(capacity),
       roomType,
       bathroomType,
+      roomMonthlyCost: parseFloat(roomMonthlyCost.toString()),
+      roomDailyCost: parseFloat(roomDailyCost.toString()),
     };
+
+    // Include id if updating room
+    if (editingRoomId !== null) {
+      roomData.id = editingRoomId;
+    }
+
+    console.log('Room Data:', roomData);
 
     let method = 'POST';
     let url = apiUrl;
     if (editingRoomId !== null) {
       method = 'PUT';
       url = `${apiUrl}/${editingRoomId}`;
-      roomData.id = editingRoomId;
     }
 
     try {
-      const response = await fetch(url, {
+      const response = await axios({
         method,
+        url,
+        data: roomData,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(roomData),
       });
 
-      if (response.ok) {
+      console.log(response);
+
+      if (response.status === 200 || response.status === 201) {
         fetchRooms(); // Re-fetch rooms after save
         resetForm();
         setIsModalVisible(false); // Close modal after saving
@@ -73,13 +94,11 @@ const RoomScreen = () => {
   };
 
   // Delete room
-  const deleteRoom = async (id) => {
+  const deleteRoom = async (id: number) => {
     try {
-      const response = await fetch(`${apiUrl}/${id}`, {
-        method: 'DELETE',
-      });
+      const response = await axios.delete(`${apiUrl}/${id}`);
 
-      if (response.ok) {
+      if (response.status === 200) {
         fetchRooms(); // Re-fetch rooms after deletion
       } else {
         console.error('Failed to delete room');
@@ -90,12 +109,12 @@ const RoomScreen = () => {
   };
 
   // Start editing room
-  const startEditing = (room) => {
+  const startEditing = (room: Room) => {
     setRoomNumber(room.roomNumber);
-    setFloor(room.floor.toString());
-    setCapacity(room.capacity.toString());
     setRoomType(room.roomType);
     setBathroomType(room.bathroomType);
+    setRoomMonthlyCost(room.roomMonthlyCost);
+    setRoomDailyCost(room.roomDailyCost);
     setEditingRoomId(room.id);
     setIsModalVisible(true); // Open modal for editing
   };
@@ -103,10 +122,10 @@ const RoomScreen = () => {
   // Reset form
   const resetForm = () => {
     setRoomNumber('');
-    setFloor('');
-    setCapacity('');
     setRoomType('SINGLE');
     setBathroomType('ATTACHED');
+    setRoomMonthlyCost(0);
+    setRoomDailyCost(0);
     setEditingRoomId(null);
   };
 
@@ -127,35 +146,27 @@ const RoomScreen = () => {
               {editingRoomId !== null ? 'Edit Room' : 'Add Room'}
             </Text>
 
+            <Text style={styles.label}>Room Number</Text>
             <TextInput
               style={styles.input}
               value={roomNumber}
               onChangeText={setRoomNumber}
-              placeholder="Room Number (e.g., 201A)"
+              placeholder="Enter Room Number"
             />
-            <TextInput
-              style={styles.input}
-              value={floor}
-              onChangeText={setFloor}
-              placeholder="Floor"
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              value={capacity}
-              onChangeText={setCapacity}
-              placeholder="Capacity"
-              keyboardType="numeric"
-            />
+
+            <Text style={styles.label}>Room Type</Text>
             <Picker
               selectedValue={roomType}
               style={styles.picker}
               onValueChange={setRoomType}>
               <Picker.Item label="Single" value="SINGLE" />
+              <Picker.Item label="SINGLE(smaller size)" value="SINGLE(smaller size)" />
               <Picker.Item label="Double" value="DOUBLE" />
               <Picker.Item label="Triple" value="TRIPLE" />
               <Picker.Item label="Queen" value="QUEEN" />
             </Picker>
+
+            <Text style={styles.label}>Bathroom Type</Text>
             <Picker
               selectedValue={bathroomType}
               style={styles.picker}
@@ -163,6 +174,25 @@ const RoomScreen = () => {
               <Picker.Item label="Attached" value="ATTACHED" />
               <Picker.Item label="Common" value="COMMON" />
             </Picker>
+
+            <Text style={styles.label}>Monthly Room Cost</Text>
+            <TextInput
+              style={styles.input}
+              value={roomMonthlyCost.toString()}
+              onChangeText={text => setRoomMonthlyCost(Number(text))}
+              placeholder="Enter Monthly Cost"
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.label}>Daily Room Cost</Text>
+            <TextInput
+              style={styles.input}
+              value={roomDailyCost.toString()}
+              onChangeText={text => setRoomDailyCost(Number(text))}
+              placeholder="Enter Daily Cost"
+              keyboardType="numeric"
+            />
+
             <Button
               title={editingRoomId !== null ? "Update Room" : "Add Room"}
               onPress={saveRoom}
@@ -186,7 +216,10 @@ const RoomScreen = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.roomCard}>
-            <Text style={styles.roomText}>{item.roomNumber} | Floor: {item.floor} | Capacity: {item.capacity} | Type: {item.roomType} | Bathroom: {item.bathroomType}</Text>
+            <Text style={styles.roomText}>
+              {item.roomNumber} | Type: {item.roomType} | Bathroom: {item.bathroomType} 
+              | Monthly Cost: {item.roomMonthlyCost} | Daily Cost: {item.roomDailyCost}
+            </Text>
             <View style={styles.actions}>
               <TouchableOpacity onPress={() => startEditing(item)} style={styles.editButton}>
                 <Text style={styles.buttonText}>Edit</Text>
@@ -229,99 +262,76 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
+    width: 300,
     padding: 20,
+    backgroundColor: 'white',
     borderRadius: 10,
-    elevation: 5,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 20,
     textAlign: 'center',
+  },
+  label: {
+    fontSize: 14,
+    marginVertical: 5,
+    color: '#333',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 12,
+    padding: 10,
     marginBottom: 15,
     borderRadius: 5,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  picker: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginBottom: 15,
-    borderRadius: 5,
-    backgroundColor: '#f9f9f9',
-  },
-  closeButton: {
-    backgroundColor: '#F44336',
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    marginTop: 10,
-    alignSelf: 'center',
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  roomCard: {
-    backgroundColor: '#fff',
-    marginBottom: 15,
-    padding: 15,
-    borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  roomText: {
     fontSize: 14,
     color: '#333',
-    flex: 1,
-    flexWrap: 'wrap',
+  },
+  picker: {
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginBottom: 15,
   },
   actions: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   editButton: {
     backgroundColor: '#4CAF50',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    padding: 10,
     borderRadius: 5,
-    marginRight: 10,
   },
   deleteButton: {
     backgroundColor: '#F44336',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    padding: 10,
     borderRadius: 5,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 14,
+    color: 'white',
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
     right: 20,
-    backgroundColor: '#4CAF50',
+    bottom: 20,
     width: 60,
     height: 60,
+    backgroundColor: '#4CAF50',
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
   },
   fabText: {
-    fontSize: 30,
-    color: '#fff',
+    fontSize: 36,
+    color: 'white',
+  },
+  closeButton: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#FF6347',
+    fontSize: 16,
   },
 });
 

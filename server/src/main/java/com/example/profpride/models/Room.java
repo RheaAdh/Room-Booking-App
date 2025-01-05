@@ -23,11 +23,11 @@ public class Room {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
-  private String roomNumber; // unique - 201A
-  private Integer floor;
-  private Integer capacity;
+  private String roomNumber;
   private RoomType roomType;
   private BathroomType bathroomType;
+  private Integer roomMonthlyCost;
+  private Integer roomDailyCost;
 
   @OneToMany(mappedBy = "room")
   @JsonIgnore

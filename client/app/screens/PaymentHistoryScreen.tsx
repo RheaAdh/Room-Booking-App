@@ -19,7 +19,7 @@ interface Payment {
 
 const API_URL = 'http://localhost:8080/api/v1/payments'; // Replace with actual backend URL
 
-const PaymentScreen: React.FC = () => {
+const PaymentHistoryScreen: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -122,4 +122,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PaymentScreen;
+export default PaymentHistoryScreen;

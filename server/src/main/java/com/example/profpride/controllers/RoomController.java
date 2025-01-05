@@ -46,8 +46,8 @@ public class RoomController {
             room.setRoomNumber(updatedRoom.getRoomNumber());
             room.setRoomType(updatedRoom.getRoomType());
             room.setBathroomType(updatedRoom.getBathroomType());
-            room.setCapacity(updatedRoom.getCapacity());
-            room.setFloor(updatedRoom.getFloor());
+            room.setRoomDailyCost(updatedRoom.getRoomDailyCost());
+            room.setRoomMonthlyCost(updatedRoom.getRoomMonthlyCost());
             Room savedRoom = roomRepository.save(room);
             return new ResponseEntity<>(savedRoom, HttpStatus.OK);
         }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));

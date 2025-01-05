@@ -10,12 +10,21 @@ interface Booking {
     name: string;
   };
   room: {
-    roomNumber: ReactNode;
+    roomNumber: string;
     id: string;
-    number: string;
+    roomDailyCost: number;
+    roomMonthlyCost: number;
   };
   checkInDate: string;
   checkOutDate: string;
+  payments?: Payment[];
+}
+
+interface Payment {
+  id: number;
+  amount: number;
+  createdAt: string;
+  mode: string;
 }
 
 interface Customer {
@@ -26,22 +35,29 @@ interface Customer {
 interface Room {
   id: string;
   roomNumber: string;
+   roomDailyCost: number;
+    roomMonthlyCost: number;
 }
 
 const API_URL_FOR_BOOKINGS = 'http://localhost:8080/api/v1/bookings';
 const API_URL_FOR_CUSTOMERS = 'http://localhost:8080/api/v1/customers';
 const API_URL_FOR_ROOMS = 'http://localhost:8080/api/v1/rooms';
+const API_URL_FOR_PAYMENTS = 'http://localhost:8080/api/v1/payments';
 
 const BookingsScreen: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [paymentModalVisible, setPaymentModalVisible] = useState<boolean>(false);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [selectedRoom, setSelectedRoom] = useState<string>('');
   const [checkInDate, setCheckInDate] = useState<string>('');
   const [checkOutDate, setCheckOutDate] = useState<string>('');
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [createdAt, setCreatedAt] = useState<string>('');
+  const [paymentMode, setPaymentMode] = useState<string>('');
 
   const fetchBookings = async () => {
     try {
@@ -84,60 +100,84 @@ const BookingsScreen: React.FC = () => {
     }, [])
   );
 
- const handleSaveBooking = async () => {
-  if (!selectedCustomer || !selectedRoom || !checkInDate || !checkOutDate) {
-    Alert.alert('Error', 'Please fill in all fields.');
-    return;
-  }
-
-  try {
-    const bookingData = {
-      checkInDate: `${checkInDate}T00:00:00`,
-      checkOutDate: `${checkOutDate}T00:00:00`,
-      bookingStatus: "NEW",
-      customer: { id: selectedCustomer },  // Use customer.id as a string or number depending on your API
-      room: { id: selectedRoom },  // Use room.id as a string or number depending on your API
-    };
-    
-console.log("save bookingData=", bookingData);
-    if (editingBooking) {
-      console.log("editingBooking=", editingBooking);
-      console.log("bookingData=", bookingData);
-      await fetch(`${API_URL_FOR_BOOKINGS}/${editingBooking.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookingData),
-      });
-    } else {
-      await fetch(API_URL_FOR_BOOKINGS, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookingData),
-      });
+  const handleSaveBooking = async () => {
+    if (!selectedCustomer || !selectedRoom || !checkInDate || !checkOutDate) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
     }
 
-    fetchBookings();  // Refresh the bookings list
-    setModalVisible(false);  // Close the modal
-  } catch (error) {
-    Alert.alert('Error', 'Failed to save booking.');
-  }
-};
+    try {
+      const bookingData = {
+        checkInDate: `${checkInDate}T00:00:00`,
+        checkOutDate: `${checkOutDate}T00:00:00`,
+        bookingStatus: "NEW",
+        customer: { id: selectedCustomer },
+        room: { id: selectedRoom },
+      };
+    
+      console.log("save bookingData=", bookingData);
+      if (editingBooking) {
+        await fetch(`${API_URL_FOR_BOOKINGS}/${editingBooking.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingData),
+        });
+      } else {
+        await fetch(API_URL_FOR_BOOKINGS, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingData),
+        });
+      }
+
+      fetchBookings();
+      setModalVisible(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save booking.');
+    }
+  };
+
+  const handleSavePayment = async () => {
+    if (!paymentAmount || !paymentMode || !editingBooking) {
+      Alert.alert('Error', 'Please provide payment details.');
+      return;
+    }
+
+    try {
+      const paymentData = {
+        amount: paymentAmount,
+        mode: paymentMode,
+        bookingId: editingBooking.id ,
+        createdAt: `${createdAt}T00:00:00`,
+      };
+
+      console.log("save paymentData=", paymentData);
+
+      await fetch(API_URL_FOR_PAYMENTS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentData),
+      });
+
+      // Refresh the bookings list after saving the payment
+      fetchBookings();
+      setPaymentModalVisible(false);  // Close the payment modal
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save payment.');
+    }
+  };
+
   const handleEditBooking = (booking: Booking) => {
+    setEditingBooking(booking);
+    const formattedCheckInDate = booking.checkInDate.split('T')[0];
+    const formattedCheckOutDate = booking.checkOutDate.split('T')[0];
 
-    console.log("editbooking=", booking);
-  setEditingBooking(booking);
-  
-  // Ensure that the dates are valid strings before calling split
-  const formattedCheckInDate = booking.checkInDate ? booking.checkInDate.split('T')[0] : '';
-  const formattedCheckOutDate = booking.checkOutDate ? booking.checkOutDate.split('T')[0] : '';
-
-  setSelectedCustomer(booking.customer.id);
-  setSelectedRoom(booking.room.id);
-  setCheckInDate(formattedCheckInDate);  // Update state with formatted date
-  setCheckOutDate(formattedCheckOutDate);  // Update state with formatted date
-  setModalVisible(true);
-};
-
+    setSelectedCustomer(booking.customer.id);
+    setSelectedRoom(booking.room.id);
+    setCheckInDate(formattedCheckInDate);
+    setCheckOutDate(formattedCheckOutDate);
+    setModalVisible(true);
+  };
 
   const handleDeleteBooking = async (id: number) => {
     try {
@@ -147,6 +187,7 @@ console.log("save bookingData=", bookingData);
       Alert.alert('Error', 'Failed to delete booking.');
     }
   };
+;
 
   return (
     <View style={styles.container}>
@@ -158,7 +199,28 @@ console.log("save bookingData=", bookingData);
             <View style={styles.bookingInfo}>
               <Text style={styles.bookingName}>{item.customer.name}</Text>
               <Text style={styles.bookingDetails}>
-                Room: {item.room.roomNumber}, Check-in: {item.checkInDate}, Check-out: {item.checkOutDate}
+                Room: {item.room.roomNumber}, Check-in: {item.checkInDate.split('T')[0]}, Check-out: {item.checkOutDate.split('T')[0]}, Cost: {
+                  (() => {
+                    //if days are >31 then take monthly cost else daily cost
+                    const checkInDate = new Date(item.checkInDate);
+                    const checkOutDate = new Date(item.checkOutDate);
+                    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays > 31) {
+                      return item.room.roomMonthlyCost;
+                    } else {
+                      return item.room.roomDailyCost * diffDays;
+                    }
+                  })()
+                }, Paid: {
+                  (() => {
+                    let totalAmount = 0;
+                    if (item.payments) {
+                      totalAmount = item.payments.reduce((acc, payment) => acc + payment.amount, 0);
+                    }
+                    return totalAmount;
+                  })()
+                }
               </Text>
             </View>
             <View style={styles.actions}>
@@ -167,6 +229,9 @@ console.log("save bookingData=", bookingData);
               </TouchableOpacity>
               <TouchableOpacity onPress={() => handleDeleteBooking(item.id)} style={styles.deleteButton}>
                 <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setEditingBooking(item); setPaymentModalVisible(true); }} style={styles.paymentButton}>
+                <Text style={styles.paymentButtonText}>Add Payment</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -211,21 +276,53 @@ console.log("save bookingData=", bookingData);
           </Picker>
           <TextInput
             style={styles.input}
-            placeholder="Check-in Date (YYYY-MM-DD)"
+            placeholder="Check-in Date"
             value={checkInDate}
             onChangeText={setCheckInDate}
           />
           <TextInput
             style={styles.input}
-            placeholder="Check-out Date (YYYY-MM-DD)"
+            placeholder="Check-out Date"
             value={checkOutDate}
             onChangeText={setCheckOutDate}
           />
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveBooking}>
-            <Text style={styles.saveButtonText}>Save</Text>
+          <TouchableOpacity onPress={handleSaveBooking} style={styles.saveButton}>
+            <Text style={styles.saveButtonText}>Save Booking</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+        </View>
+      </Modal>
+
+      <Modal visible={paymentModalVisible} animationType="slide">
+        <View style={styles.modalContent}>
+          <TextInput
+            style={styles.input}
+            placeholder="Amount"
+            value={paymentAmount.toString()}
+            onChangeText={(text) => setPaymentAmount(Number(text))}
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Created At"
+            value={createdAt.toString()}
+            onChangeText={(text) => setCreatedAt(text)}
+            keyboardType = "numeric"
+          />
+          <Picker
+            selectedValue={paymentMode}
+            onValueChange={(itemValue) => setPaymentMode(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select Payment Mode" value="" />
+            <Picker.Item label="Cash" value="CASH" />
+            <Picker.Item label="Credit Card" value="CREDIT_CARD" />
+            <Picker.Item label="Debit Card" value="DEBIT_CARD" />
+            <Picker.Item label="UPI" value="UPI" />
+            <Picker.Item label="Caretaker" value="CARE_TAKER" />
+            <Picker.Item label="Net banking" value="NET_BANKING" />
+          </Picker>
+          <TouchableOpacity onPress={handleSavePayment} style={styles.saveButton}>
+            <Text style={styles.saveButtonText}>Save Payment</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -236,105 +333,84 @@ console.log("save bookingData=", bookingData);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
+    padding: 10,
   },
   bookingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    marginVertical: 8,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 2,
+    marginBottom: 10,
   },
   bookingInfo: {
-    flex: 3,
+    flex: 1,
   },
   bookingName: {
-    fontSize: 16,
     fontWeight: 'bold',
   },
   bookingDetails: {
-    fontSize: 14,
     color: '#555',
   },
   actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'space-evenly',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
   editButton: {
-    padding: 8,
     backgroundColor: '#4CAF50',
-    borderRadius: 4,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    padding: 5,
+    margin: 2,
   },
   deleteButton: {
-    padding: 8,
     backgroundColor: '#F44336',
-    borderRadius: 4,
+    padding: 5,
+    margin: 2,
   },
-  deleteButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  paymentButton: {
+    backgroundColor: '#2196F3',
+    padding: 5,
+    margin: 2,
   },
   addButton: {
-    marginVertical: 16,
-    padding: 16,
     backgroundColor: '#2196F3',
+    padding: 10,
+    marginTop: 20,
     alignItems: 'center',
-    borderRadius: 8,
   },
   addButtonText: {
-    color: '#fff',
+    color: 'white',
     fontWeight: 'bold',
   },
   modalContent: {
     flex: 1,
-    padding: 16,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    padding: 20,
   },
   picker: {
-    height: 50,
-    marginVertical: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 4,
+    marginBottom: 10,
   },
   input: {
-    height: 50,
-    borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    marginVertical: 8,
+    borderColor: '#ccc',
+    padding: 10,
+    marginBottom: 10,
   },
   saveButton: {
-    marginVertical: 8,
-    padding: 16,
     backgroundColor: '#4CAF50',
+    padding: 10,
     alignItems: 'center',
-    borderRadius: 8,
   },
   saveButtonText: {
-    color: '#fff',
+    color: 'white',
     fontWeight: 'bold',
   },
-  cancelButton: {
-    marginVertical: 8,
-    padding: 16,
-    backgroundColor: '#F44336',
-    alignItems: 'center',
-    borderRadius: 8,
+  editButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
-  cancelButtonText: {
-    color: '#fff',
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  paymentButtonText: {
+    color: 'white',
     fontWeight: 'bold',
   },
 });
