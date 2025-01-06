@@ -1,419 +1,357 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect, ReactNode } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  Modal,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
+import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
-import { useFocusEffect } from '@react-navigation/native';
 import { BASE_URL } from '../Constants';
 
-interface Booking {
-  id: number;
-  customer: {
-    id: string;
-    name: string;
-  };
-  room: {
-    roomNumber: string;
-    id: string;
-    roomDailyCost: number;
-    roomMonthlyCost: number;
-  };
+type Payment = {
+  id: string;
+  amount: number;
+  mode: 'CASH' | 'ONLINE' | 'CREDIT_CARD'; // Added 'CREDIT_CARD'
+  createdAt: string;
+};
+
+type Room = {
+  roomNumber: string;
+  roomType: string;
+  roomMonthlyCost: number;
+};
+
+type Booking = {
   checkInDate: string;
   checkOutDate: string;
-  payments?: Payment[];
-}
-
-interface Payment {
-  id: number;
-  amount: number;
-  createdAt: string;
-  mode: string;
-}
-
-interface Customer {
+  room: Room;
+  bookingStatus: string;
   id: string;
   name: string;
-}
+  payments: Payment[];
+};
 
-interface Room {
-  id: string;
-  roomNumber: string;
-   roomDailyCost: number;
-    roomMonthlyCost: number;
-}
-
-const API_URL_FOR_BOOKINGS = `${BASE_URL}/bookings`;
-const API_URL_FOR_CUSTOMERS = `${BASE_URL}/customers`;
-const API_URL_FOR_ROOMS = `${BASE_URL}/rooms`;
-const API_URL_FOR_PAYMENTS = `${BASE_URL}/payments`;
-
-const BookingsScreen: React.FC = () => {
+export default function App() {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [paymentModalVisible, setPaymentModalVisible] = useState<boolean>(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [selectedRoom, setSelectedRoom] = useState<string>('');
-  const [checkInDate, setCheckInDate] = useState<string>('');
-  const [checkOutDate, setCheckOutDate] = useState<string>('');
-  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [paymentMode, setPaymentMode] = useState<'CASH' | 'ONLINE' | 'CREDIT_CARD' | ''>('');
   const [createdAt, setCreatedAt] = useState<string>('');
-  const [paymentMode, setPaymentMode] = useState<string>('');
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch(API_URL_FOR_BOOKINGS);
-      const data: Booking[] = await response.json();
-      setBookings(data);
-      console.log("bookingsList=", data);
+      const response = await axios.get(`${BASE_URL}/bookings`);
+      setBookings(response.data);
     } catch (error) {
-      Alert.alert('Error', 'Failed to fetch bookings.');
+      console.error('Error fetching bookings:', error);
     }
   };
 
-  const fetchCustomers = async () => {
+  const fetchPayments = async (bookingId: string) => {
     try {
-      const response = await fetch(API_URL_FOR_CUSTOMERS);
-      const data: Customer[] = await response.json();
-      setCustomers(data);
-      console.log("customersList=", data);
+      const response = await axios.get(`${BASE_URL}/bookings/${bookingId}`);
+      const updatedBookings = bookings.map((booking) =>
+        booking.id === bookingId ? { ...booking, payments: response.data.payments } : booking
+      );
+      setBookings(updatedBookings);
     } catch (error) {
-      Alert.alert('Error', 'Failed to fetch customers.');
+      console.error('Error fetching payments:', error);
     }
   };
 
-  const fetchRooms = async () => {
-    try {
-      const response = await fetch(API_URL_FOR_ROOMS);
-      const data: Room[] = await response.json();
-      setRooms(data);
-      console.log("roomsList=", data);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to fetch rooms.');
-    }
+  const openPaymentsModal = (booking: Booking) => {
+    setSelectedBooking(booking);
+    fetchPayments(booking.id);
+    setPaymentModalVisible(true);
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchBookings();
-      fetchCustomers();
-      fetchRooms();
-    }, [])
-  );
-
-  const handleSaveBooking = async () => {
-    if (!selectedCustomer || !selectedRoom || !checkInDate || !checkOutDate) {
-      Alert.alert('Error', 'Please fill in all fields.');
-      return;
-    }
-
-    try {
-      const bookingData = {
-        checkInDate: `${checkInDate}T00:00:00`,
-        checkOutDate: `${checkOutDate}T00:00:00`,
-        bookingStatus: "NEW",
-        customer: { id: selectedCustomer },
-        room: { id: selectedRoom },
-      };
-    
-      console.log("save bookingData=", bookingData);
-      if (editingBooking) {
-        await fetch(`${API_URL_FOR_BOOKINGS}/${editingBooking.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(bookingData),
-        });
-      } else {
-        await fetch(API_URL_FOR_BOOKINGS, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(bookingData),
-        });
-      }
-
-      fetchBookings();
-      setModalVisible(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save booking.');
-    }
+  const closePaymentsModal = () => {
+    setPaymentModalVisible(false);
+    resetPaymentForm();
   };
 
   const handleSavePayment = async () => {
-    if (!paymentAmount || !paymentMode || !editingBooking) {
-      Alert.alert('Error', 'Please provide payment details.');
-      return;
-    }
+    if (!selectedBooking) return;
+
+    const formattedCreatedAt = `${createdAt}T00:00:00`;
 
     try {
-      const paymentData = {
-        amount: paymentAmount,
-        mode: paymentMode,
-        bookingId: editingBooking.id ,
-        createdAt: `${createdAt}T00:00:00`,
-      };
-
-      console.log("save paymentData=", paymentData);
-
-      await fetch(API_URL_FOR_PAYMENTS, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(paymentData),
+      const response = await axios.post(`${BASE_URL}/payments`, {
+        bookingId: selectedBooking.id,
+        amount: parseInt(paymentAmount, 10), // Ensure amount is an integer
+        mode: paymentMode as 'CASH' | 'ONLINE' | 'CREDIT_CARD', // Correct mode
+        createdAt: formattedCreatedAt, // Ensure this is in proper date-time format
       });
 
-      // Refresh the bookings list after saving the payment
-      fetchBookings();
-      setPaymentModalVisible(false);  // Close the payment modal
+      const newPayment: Payment = response.data;
+
+      setSelectedBooking({
+        ...selectedBooking,
+        payments: [...selectedBooking.payments, newPayment],
+      });
+      resetPaymentForm();
     } catch (error) {
-      Alert.alert('Error', 'Failed to save payment.');
+      console.error('Error adding payment:', error);
     }
   };
 
-  const handleEditBooking = (booking: Booking) => {
-    setEditingBooking(booking);
-    const formattedCheckInDate = booking.checkInDate.split('T')[0];
-    const formattedCheckOutDate = booking.checkOutDate.split('T')[0];
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!selectedBooking) return;
 
-    setSelectedCustomer(booking.customer.id);
-    setSelectedRoom(booking.room.id);
-    setCheckInDate(formattedCheckInDate);
-    setCheckOutDate(formattedCheckOutDate);
-    setModalVisible(true);
-  };
-
-  const handleDeleteBooking = async (id: number) => {
     try {
-      await fetch(`${API_URL_FOR_BOOKINGS}/${id}`, { method: 'DELETE' });
-      fetchBookings();
+      await axios.delete(`${BASE_URL}/payments/${paymentId}`);
+
+      const updatedPayments = selectedBooking.payments.filter(
+        (payment) => payment.id !== paymentId
+      );
+
+      setSelectedBooking({ ...selectedBooking, payments: updatedPayments });
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete booking.');
+      console.error('Error deleting payment:', error);
     }
   };
-;
+
+  const resetPaymentForm = () => {
+    setPaymentAmount('');
+    setPaymentMode('');
+    setCreatedAt('');
+  };
+
+  const saveUpdatedBooking = () => {
+    if (!selectedBooking) return;
+
+    setBookings((prev) =>
+      prev.map((booking) =>
+        booking.id === selectedBooking.id ? { ...selectedBooking } : booking
+      )
+    );
+    closePaymentsModal();
+  };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.header}>Bookings</Text>
       <FlatList
         data={bookings}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.bookingItem}>
-            <View style={styles.bookingInfo}>
-              <Text style={styles.bookingName}>{item.customer.name}</Text>
-              <Text style={styles.bookingDetails}>
-                Room: {item.room.roomNumber}, Check-in: {item.checkInDate.split('T')[0]}, Check-out: {item.checkOutDate.split('T')[0]}, Cost: {
-                  (() => {
-                    //if days are >31 then take monthly cost else daily cost
-                    const checkInDate = new Date(item.checkInDate);
-                    const checkOutDate = new Date(item.checkOutDate);
-                    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays > 31) {
-                      return item.room.roomMonthlyCost;
-                    } else {
-                      return item.room.roomDailyCost * diffDays;
-                    }
-                  })()
-                }, Paid: {
-                  (() => {
-                    let totalAmount = 0;
-                    if (item.payments) {
-                      totalAmount = item.payments.reduce((acc, payment) => acc + payment.amount, 0);
-                    }
-                    return totalAmount;
-                  })()
-                }
-              </Text>
-            </View>
-            <View style={styles.actions}>
-              <TouchableOpacity onPress={() => handleEditBooking(item)} style={styles.editButton}>
-                <Text style={styles.editButtonText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteBooking(item.id)} style={styles.deleteButton}>
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setEditingBooking(item); setPaymentModalVisible(true); }} style={styles.paymentButton}>
-                <Text style={styles.paymentButtonText}>Add Payment</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <TouchableOpacity
+            onPress={() => openPaymentsModal(item)}
+            style={styles.bookingItem}
+          >
+            <Text style={styles.bookingName}>{item.name}</Text>
+            <Text style={styles.bookingDetails}>
+              Status: {item.bookingStatus} | Check-in: {item.checkInDate} | Check-out: {item.checkOutDate} | {item.room.roomNumber} | {item.room.roomType} | Room Cost: Rs{item.room.roomMonthlyCost}/-
+            </Text>
+          </TouchableOpacity>
         )}
       />
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => {
-          setEditingBooking(null);
-          setSelectedCustomer('');
-          setSelectedRoom('');
-          setCheckInDate('');
-          setCheckOutDate('');
-          setModalVisible(true);
-        }}
-      >
-        <Text style={styles.addButtonText}>Add Booking</Text>
-      </TouchableOpacity>
-
-      <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modalContent}>
-          <Picker
-            selectedValue={selectedCustomer}
-            onValueChange={(itemValue) => setSelectedCustomer(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select a customer" value="" />
-            {customers.map((customer) => (
-              <Picker.Item key={customer.id} label={customer.name} value={customer.id} />
-            ))}
-          </Picker>
-          <Picker
-            selectedValue={selectedRoom}
-            onValueChange={(itemValue) => setSelectedRoom(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select a room" value="" />
-            {rooms.map((room) => (
-              <Picker.Item key={room.id} label={`Room ${room.roomNumber}`} value={room.id} />
-            ))}
-          </Picker>
-          <TextInput
-            style={styles.input}
-            placeholder="Check-in Date"
-            value={checkInDate}
-            onChangeText={setCheckInDate}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Check-out Date"
-            value={checkOutDate}
-            onChangeText={setCheckOutDate}
-          />
-          <TouchableOpacity onPress={handleSaveBooking} style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Save Booking</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-
       <Modal visible={paymentModalVisible} animationType="slide">
         <View style={styles.modalContent}>
-          <TextInput
-            style={styles.input}
-            placeholder="Amount"
-            value={paymentAmount.toString()}
-            onChangeText={(text) => setPaymentAmount(Number(text))}
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Created At"
-            value={createdAt.toString()}
-            onChangeText={(text) => setCreatedAt(text)}
-            keyboardType = "numeric"
-          />
-          <Picker
-            selectedValue={paymentMode}
-            onValueChange={(itemValue) => setPaymentMode(itemValue)}
-            style={styles.picker}
+          <Text style={styles.modalTitle}>
+            Payments for Booking: {selectedBooking?.name}
+          </Text>
+
+          <View style={styles.addPaymentSection}>
+            <Text style={styles.sectionTitle}>Add Payment</Text>
+            <TextInput
+              placeholder="Payment Amount"
+              value={paymentAmount}
+              onChangeText={(value) => setPaymentAmount(value)}
+              style={styles.input}
+              keyboardType="numeric"
+            />
+            <Picker
+              selectedValue={paymentMode}
+              onValueChange={(itemValue) =>
+                setPaymentMode(itemValue as 'CASH' | 'ONLINE' | 'CREDIT_CARD')
+              }
+              style={styles.picker}
+            >
+              <Picker.Item label="Select a mode" value="" />
+              <Picker.Item label="CASH" value="CASH" />
+              <Picker.Item label="ONLINE" value="ONLINE" />
+              <Picker.Item label="CREDIT CARD" value="CREDIT_CARD" />
+            </Picker>
+            <TextInput
+              placeholder="Payment Date (YYYY-MM-DD)"
+              value={createdAt}
+              onChangeText={setCreatedAt}
+              style={styles.input}
+            />
+            <TouchableOpacity
+              onPress={handleSavePayment}
+              style={styles.saveButton}
+            >
+              <Text style={styles.saveButtonText}>Save Payment</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.paymentList}>
+            {selectedBooking?.payments?.length ? (
+              selectedBooking.payments.map((payment) => (
+                <View key={payment.id} style={styles.paymentItem}>
+                  <View style={styles.paymentInfo}>
+                    <Text style={styles.paymentDetails}>
+                      Amount: ₹{payment.amount} | Mode: {payment.mode}
+                    </Text>
+                    <Text style={styles.paymentDetails}>
+                      Date: {payment.createdAt}
+                    </Text>
+                  </View>
+                  <View style={styles.paymentActions}>
+                    <TouchableOpacity
+                      onPress={() => handleDeletePayment(payment.id)}
+                      style={styles.deleteButton}
+                    >
+                      <Text style={styles.deleteButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text>No payments found for this booking.</Text>
+            )}
+          </ScrollView>
+
+          <TouchableOpacity
+            onPress={saveUpdatedBooking}
+            style={styles.cancelButton}
           >
-            <Picker.Item label="Select Payment Mode" value="" />
-            <Picker.Item label="Cash" value="CASH" />
-            <Picker.Item label="Credit Card" value="CREDIT_CARD" />
-            <Picker.Item label="Debit Card" value="DEBIT_CARD" />
-            <Picker.Item label="UPI" value="UPI" />
-            <Picker.Item label="Caretaker" value="CARE_TAKER" />
-            <Picker.Item label="Net banking" value="NET_BANKING" />
-          </Picker>
-          <TouchableOpacity onPress={handleSavePayment} style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Save Payment</Text>
+            <Text style={styles.cancelButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
       </Modal>
     </View>
   );
-};
-
+}
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    backgroundColor: '#f5f5f5' 
   },
-  bookingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+  header: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    marginBottom: 20, 
+    textAlign: 'center' 
   },
-  bookingInfo: {
-    flex: 1,
+  bookingItem: { 
+    padding: 15, 
+    borderWidth: 1, 
+    borderColor: '#ccc', 
+    marginBottom: 10, 
+    borderRadius: 8, 
+    backgroundColor: '#fff',
   },
-  bookingName: {
-    fontWeight: 'bold',
+  bookingName: { 
+    fontSize: 18, 
+    color: '#333' 
   },
-  bookingDetails: {
-    color: '#555',
+  bookingDetails: { 
+    fontSize: 14, 
+    color: '#666' 
   },
-  actions: {
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+  modalContent: { 
+    flex: 1, 
+    padding: 20, 
+    backgroundColor: '#fff' 
   },
-  editButton: {
-    backgroundColor: '#4CAF50',
-    padding: 5,
-    margin: 2,
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    marginBottom: 20, 
+    textAlign: 'center' 
   },
-  deleteButton: {
-    backgroundColor: '#F44336',
-    padding: 5,
-    margin: 2,
+  paymentItem: { 
+    flexDirection: 'row', 
+    marginBottom: 15, 
+    padding: 10, 
+    borderWidth: 1, 
+    borderColor: '#ccc', 
+    borderRadius: 8, 
+    backgroundColor: '#e0f7fa'
   },
-  paymentButton: {
-    backgroundColor: '#2196F3',
-    padding: 5,
-    margin: 2,
+  paymentInfo: { 
+    flex: 2 
   },
-  addButton: {
-    backgroundColor: '#2196F3',
-    padding: 10,
-    marginTop: 20,
-    alignItems: 'center',
+  paymentDetails: { 
+    fontSize: 16, 
+    color: '#333' 
   },
-  addButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  paymentActions: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-around' 
   },
-  modalContent: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
+  deleteButton: { 
+    padding: 10, 
+    backgroundColor: '#f44336', 
+    borderRadius: 8 
   },
-  picker: {
-    marginBottom: 10,
+  deleteButtonText: { 
+    color: '#fff' 
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
+  addPaymentSection: { 
+    marginTop: 20, 
+    padding: 10, 
+    backgroundColor: '#f1f8e9', 
+    borderRadius: 8 
   },
-  saveButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    alignItems: 'center',
+  sectionTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    marginBottom: 10, 
+    textAlign: 'center' 
   },
-  saveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#ccc', 
+    padding: 10, 
+    borderRadius: 8, 
+    marginBottom: 10, 
+    backgroundColor: '#fff' 
   },
-  editButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  picker: { 
+    borderWidth: 1, 
+    borderColor: '#ccc', 
+    marginBottom: 10 
   },
-  deleteButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  saveButton: { 
+    padding: 15, 
+    backgroundColor: '#2196f3', 
+    borderRadius: 8, 
+    marginTop: 10 
   },
-  paymentButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  saveButtonText: { 
+    color: '#fff', 
+    textAlign: 'center', 
+    fontSize: 16 
+  },
+  cancelButton: { 
+    padding: 15, 
+    backgroundColor: '#ddd', 
+    borderRadius: 8, 
+    marginTop: 20 
+  },
+  cancelButtonText: { 
+    textAlign: 'center', 
+    fontSize: 16 
+  },
+  paymentList: { 
+    flex: 1, 
+    marginTop: 10 
   },
 });
-
-export default BookingsScreen;

@@ -13,8 +13,7 @@
 ## Dashboard:
 
 - Show todays Arrival/Departures/Dues to be collected
-- Show available roomList by filling in customer requirement (Bathroom type + Room Type + Time period)
-- View revenue, occupancy rates, and expense trends.
+- Show available rooms by {Bathroom type + Room Type + Time frame}
 
 ## Bookings:
 

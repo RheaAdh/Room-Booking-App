@@ -60,28 +60,15 @@ const DashboardScreen: React.FC = () => {
       const departuresResponse = await axios.get<Departure[]>(`${BASE_URL}/departures`);
       const duesResponse = await axios.get<Due[]>(`${BASE_URL}/payments`);
       const availabilityResponse = await axios.get<RoomAvailability[]>(`${BASE_URL}/room-availability`);
-      const statsResponse = await axios.get<Stats>(`${BASE_URL}/stats`);
 
       setArrivals(arrivalsResponse.data);
       setDepartures(departuresResponse.data);
       setDues(duesResponse.data);
       setRoomAvailability(availabilityResponse.data);
-      setStats(statsResponse.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const assignRoom = async (bookingId: number, roomId: number) => {
-    try {
-      await axios.post(`${BASE_URL}/assign-room`, { bookingId, roomId });
-      alert(`Room ${roomId} assigned to booking ${bookingId}`);
-      fetchDashboardData(); // Refresh data after assignment
-    } catch (error) {
-      console.error('Error assigning room:', error);
-      alert('Failed to assign room. Try again later.');
     }
   };
 
@@ -154,7 +141,7 @@ const DashboardScreen: React.FC = () => {
 
       {/* Room Availability */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Room Availability</Text>
+        <Text style={styles.sectionTitle}>Room Availability based on category</Text>
         <FlatList
           data={roomAvailability}
           horizontal
@@ -166,36 +153,6 @@ const DashboardScreen: React.FC = () => {
             </View>
           )}
         />
-      </View>
-
-      {/* Stats Section */}
-      <View style={styles.statsSection}>
-        <Text style={styles.sectionTitle}>Performance Metrics</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Revenue</Text>
-            <Text style={styles.statValue}>₹{stats.revenue}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Occupancy</Text>
-            <Text style={styles.statValue}>{stats.occupancy}%</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Expenses</Text>
-            <Text style={styles.statValue}>₹{stats.expenses}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Assign Room Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Assign Room</Text>
-        <TouchableOpacity
-          style={styles.assignButton}
-          onPress={() => assignRoom(1, 101)} // Replace with dynamic logic
-        >
-          <Text style={styles.assignButtonText}>Automate Room Assignment</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
