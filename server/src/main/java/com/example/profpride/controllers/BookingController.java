@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import com.example.profpride.models.Booking;
 import com.example.profpride.repositories.BookingRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/bookings")
@@ -61,4 +63,5 @@ public class BookingController {
             return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
         }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
 }

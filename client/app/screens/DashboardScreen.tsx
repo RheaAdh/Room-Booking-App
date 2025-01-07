@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,23 +7,29 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import axios from 'axios';
-import {BASE_URL} from '../Constants';
+import { BASE_URL } from '../Constants';
 
 interface Arrival {
+  bookingStatus: ReactNode;
+  customer: any;
   id: number;
   bookingId: number;
   guestName: string;
 }
 
 interface Departure {
+  bookingStatus: ReactNode;
+  customer: any;
   id: number;
   bookingId: number;
   guestName: string;
 }
 
 interface Due {
+  customer: any;
   id: number;
   guestName: string;
   amount: number;
@@ -47,7 +53,7 @@ const DashboardScreen: React.FC = () => {
   const [roomAvailability, setRoomAvailability] = useState<RoomAvailability[]>([]);
   const [stats, setStats] = useState<Stats>({ revenue: 0, occupancy: 0, expenses: 0 });
   const [loading, setLoading] = useState<boolean>(true);
-
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -56,20 +62,31 @@ const DashboardScreen: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const arrivalsResponse = await axios.get<Arrival[]>(`${BASE_URL}/arrivals`);
-      const departuresResponse = await axios.get<Departure[]>(`${BASE_URL}/departures`);
-      const duesResponse = await axios.get<Due[]>(`${BASE_URL}/payments`);
-      const availabilityResponse = await axios.get<RoomAvailability[]>(`${BASE_URL}/room-availability`);
+      const [
+        arrivalsResponse,
+        departuresResponse,
+        duesResponse
+      ] = await Promise.all([
+        axios.get<Arrival[]>(`${BASE_URL}/arrivals`),
+        axios.get<Departure[]>(`${BASE_URL}/departures`),
+        axios.get<Due[]>(`${BASE_URL}/due`)
+      ]);
+      console.log('arrivalsResponse', arrivalsResponse.data);
 
       setArrivals(arrivalsResponse.data);
       setDepartures(departuresResponse.data);
       setDues(duesResponse.data);
-      setRoomAvailability(availabilityResponse.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchDashboardData();
   };
 
   const renderList = (
@@ -99,61 +116,46 @@ const DashboardScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Today's Arrivals */}
+    <ScrollView
+      style={styles.container}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
       {renderList(
         "Today's Arrivals",
         arrivals,
         (item) => item.id.toString(),
         ({ item }: { item: Arrival }) => (
           <View style={styles.listItem}>
-            <Text>Booking ID: {item.bookingId}</Text>
-            <Text>Guest: {item.guestName}</Text>
+            <Text>Booking ID: {item.bookingStatus}</Text>
+            <Text>Guest: {item.customer.name}</Text>
+            <Text>Phone Number:{item.customer.phoneNumber}</Text>
           </View>
         )
       )}
 
-      {/* Today's Departures */}
       {renderList(
         "Today's Departures",
         departures,
         (item) => item.id.toString(),
         ({ item }: { item: Departure }) => (
           <View style={styles.listItem}>
-            <Text>Booking ID: {item.bookingId}</Text>
-            <Text>Guest: {item.guestName}</Text>
+           <Text>Booking ID: {item.bookingStatus}</Text>
+            <Text>Guest: {item.customer.name}</Text>
+            <Text>Phone Number:{item.customer.phoneNumber}</Text>
           </View>
         )
       )}
 
-      {/* Dues to be Collected */}
       {renderList(
         'Dues to be Collected',
         dues,
         (item) => item.id.toString(),
         ({ item }: { item: Due }) => (
           <View style={styles.listItem}>
-            <Text>Guest: {item.guestName}</Text>
-            <Text>Due Amount: ₹{item.amount}</Text>
+            <Text>Guest: {item.customer.name}</Text>
           </View>
         )
       )}
-
-      {/* Room Availability */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Room Availability based on category</Text>
-        <FlatList
-          data={roomAvailability}
-          horizontal
-          keyExtractor={(item) => item.date}
-          renderItem={({ item }: { item: RoomAvailability }) => (
-            <View style={styles.roomAvailabilityCard}>
-              <Text>{item.date}</Text>
-              <Text>Available Rooms: {item.availableRooms}</Text>
-            </View>
-          )}
-        />
-      </View>
     </ScrollView>
   );
 };
@@ -221,17 +223,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#000',
-  },
-  assignButton: {
-    backgroundColor: '#007bff',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  assignButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   loaderContainer: {
     flex: 1,
