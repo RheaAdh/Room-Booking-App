@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import com.example.profpride.enums.BookingDurationType;
 import com.example.profpride.enums.BookingStatusType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Getter

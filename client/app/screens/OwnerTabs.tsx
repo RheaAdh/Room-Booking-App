@@ -5,11 +5,13 @@ import ContactScreen from "./ContactScreen";
 import BookingsScreen from "./BookingScreen";
 import ExpenseScreen from "./ExpenseScreen";
 import RoomScreen from "./RoomScreen";
+import BookingGrid from "./BookingGrid";
 
 export default function OwnerTabs() {
   return (
     <Drawer.Navigator>
       <Drawer.Screen name="Dashboard" component={DashboardScreen} />
+      <Drawer.Screen name="Booking Grid" component={BookingGrid} />
       <Drawer.Screen name="Contacts" component={ContactScreen} />
       <Drawer.Screen name="Rooms" component={RoomScreen} />
       <Drawer.Screen name="Bookings" component={BookingsScreen} />

@@ -2,7 +2,6 @@ package com.example.profpride.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.example.profpride.models.Booking;
 import com.example.profpride.models.Payment;
 import com.example.profpride.repositories.BookingRepository;

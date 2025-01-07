@@ -1,7 +1,6 @@
 package com.example.profpride.models;
 
-import java.time.LocalDate;
-
+import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,5 +21,5 @@ public class Expense {
     private String name; // unique - 201A
     private String description;
     private Integer amount;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 }
