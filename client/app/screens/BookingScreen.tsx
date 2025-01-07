@@ -1,13 +1,13 @@
-import React, { useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   FlatList,
   Modal,
   ScrollView,
   StyleSheet,
+  TextInput,
 } from 'react-native';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
@@ -16,7 +16,7 @@ import { BASE_URL } from '../Constants';
 type Payment = {
   id: string;
   amount: number;
-  mode: 'CASH' | 'ONLINE' | 'CREDIT_CARD'; // Added 'CREDIT_CARD'
+  mode: 'CASH' | 'ONLINE' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'UPI' | 'NET_BANKING' | 'CARE_TAKER';
   createdAt: string;
 };
 
@@ -42,11 +42,24 @@ export default function App() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const [paymentAmount, setPaymentAmount] = useState<string>('');
-  const [paymentMode, setPaymentMode] = useState<'CASH' | 'ONLINE' | 'CREDIT_CARD' | ''>('');
+  const [paymentMode, setPaymentMode] = useState<
+    'CASH' | 'ONLINE' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'UPI' | 'NET_BANKING' | 'CARE_TAKER' | ''
+  >('');
   const [createdAt, setCreatedAt] = useState<string>('');
+
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [bookingModalVisible, setBookingModalVisible] = useState<boolean>(false);
+  const [selectedRoom, setSelectedRoom] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [checkInDate, setCheckInDate] = useState<string>('');
+  const [checkOutDate, setCheckOutDate] = useState<string>('');
+  const [newBookingCreated, setNewBookingCreated] = useState<boolean>(false);
 
   useEffect(() => {
     fetchBookings();
+    fetchRooms();
+    fetchCustomers();
   }, []);
 
   const fetchBookings = async () => {
@@ -89,9 +102,9 @@ export default function App() {
     try {
       const response = await axios.post(`${BASE_URL}/payments`, {
         bookingId: selectedBooking.id,
-        amount: parseInt(paymentAmount, 10), // Ensure amount is an integer
-        mode: paymentMode as 'CASH' | 'ONLINE' | 'CREDIT_CARD', // Correct mode
-        createdAt: formattedCreatedAt, // Ensure this is in proper date-time format
+        amount: parseInt(paymentAmount, 10),
+        mode: paymentMode as 'CASH' | 'ONLINE' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'UPI' | 'NET_BANKING' | 'CARE_TAKER',
+        createdAt: formattedCreatedAt,
       });
 
       const newPayment: Payment = response.data;
@@ -122,6 +135,21 @@ export default function App() {
     }
   };
 
+  const handleEditBooking = (bookingId: string) => {
+    // Implement the edit booking functionality here
+    
+    console.log(`Edit booking with ID: ${bookingId}`);
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    try {
+      await axios.delete(`${BASE_URL}/bookings/${bookingId}`);
+      setBookings((prev) => prev.filter((booking) => booking.id !== bookingId));
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+    }
+  };
+
   const resetPaymentForm = () => {
     setPaymentAmount('');
     setPaymentMode('');
@@ -138,23 +166,99 @@ export default function App() {
     );
     closePaymentsModal();
   };
+  const fetchRooms = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/rooms`);
+      setRooms(response.data);
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/customers`);
+      setCustomers(response.data);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    }
+  };
+
+  const handleCreateBooking = async () => {
+    if (!selectedRoom || !selectedCustomer || !checkInDate || !checkOutDate) {
+      alert('Please fill all the fields');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${BASE_URL}/bookings`, {
+        roomId: selectedRoom,
+        customerId: selectedCustomer,
+        checkInDate,
+        checkOutDate,
+      });
+
+      alert('Booking created successfully!');
+      setNewBookingCreated(true);
+      closeBookingModal();
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      alert('Failed to create booking');
+    }
+  };
+
+  const openBookingModal = () => {
+    setBookingModalVisible(true);
+  };
+
+  const closeBookingModal = () => {
+    setBookingModalVisible(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setSelectedRoom('');
+    setSelectedCustomer('');
+    setCheckInDate('');
+    setCheckOutDate('');
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Bookings</Text>
       <FlatList
         data={bookings}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => openPaymentsModal(item)}
-            style={styles.bookingItem}
-          >
-            <Text style={styles.bookingName}>{item.name}</Text>
-            <Text style={styles.bookingDetails}>
-              Status: {item.bookingStatus} | Check-in: {item.checkInDate} | Check-out: {item.checkOutDate} | {item.room.roomNumber} | {item.room.roomType} | Room Cost: Rs{item.room.roomMonthlyCost}/-
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.bookingItem}>
+            <View style={styles.bookingDetailsContainer}>
+              <Text style={styles.bookingName}>{item.name}</Text>
+              <Text style={styles.bookingDetails}>
+                Status: {item.bookingStatus} | Check-in: {item.checkInDate} | Check-out: {item.checkOutDate} | {item.room.roomNumber} | {item.room.roomType} | Room Cost: Rs{item.room.roomMonthlyCost}/-
+              </Text>
+            </View>
+
+            {/* Container for Payments and Delete buttons */}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                onPress={() => openPaymentsModal(item)}
+                style={styles.paymentButton}
+              >
+                <Text style={styles.paymentButtonText}>Payments</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleEditBooking(item.id)}
+                style={styles.editButton}
+              >
+                <Text>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleDeleteBooking(item.id)}
+                style={styles.deleteButton}
+              >
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
       />
 
@@ -176,14 +280,17 @@ export default function App() {
             <Picker
               selectedValue={paymentMode}
               onValueChange={(itemValue) =>
-                setPaymentMode(itemValue as 'CASH' | 'ONLINE' | 'CREDIT_CARD')
+                setPaymentMode(itemValue as 'CASH' | 'ONLINE' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'UPI' | 'NET_BANKING' | 'CARE_TAKER')
               }
               style={styles.picker}
             >
               <Picker.Item label="Select a mode" value="" />
-              <Picker.Item label="CASH" value="CASH" />
-              <Picker.Item label="ONLINE" value="ONLINE" />
               <Picker.Item label="CREDIT CARD" value="CREDIT_CARD" />
+              <Picker.Item label="DEBIT CARD" value="DEBIT_CARD" />
+              <Picker.Item label="UPI" value="UPI" />
+              <Picker.Item label="CASH" value="CASH" />
+              <Picker.Item label="NET BANKING" value="NET_BANKING" />
+              <Picker.Item label="CARE TAKER" value="CARE_TAKER" />
             </Picker>
             <TextInput
               placeholder="Payment Date (YYYY-MM-DD)"
@@ -234,124 +341,241 @@ export default function App() {
           </TouchableOpacity>
         </View>
       </Modal>
+       {/* Modal for Booking Form */}
+      <Modal visible={bookingModalVisible} animationType="slide">
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Create a New Booking</Text>
+
+          <Text style={styles.label}>Select Room</Text>
+          <Picker
+            selectedValue={selectedRoom}
+            onValueChange={(itemValue) => setSelectedRoom(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select Room" value="" />
+            {rooms.map((room) => (
+              <Picker.Item key={room.id} label={`${room.roomNumber} - ${room.roomType}`} value={room.id} />
+            ))}
+          </Picker>
+
+          <Text style={styles.label}>Select Customer</Text>
+          <Picker
+            selectedValue={selectedCustomer}
+            onValueChange={(itemValue) => setSelectedCustomer(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select Customer" value="" />
+            {customers.map((customer) => (
+              <Picker.Item key={customer.id} label={customer.name} value={customer.id} />
+            ))}
+          </Picker>
+
+          <Text style={styles.label}>Check-in Date</Text>
+          <TextInput
+            value={checkInDate}
+            onChangeText={setCheckInDate}
+            style={styles.input}
+            placeholder="YYYY-MM-DD"
+          />
+
+          <Text style={styles.label}>Check-out Date</Text>
+          <TextInput
+            value={checkOutDate}
+            onChangeText={setCheckOutDate}
+            style={styles.input}
+            placeholder="YYYY-MM-DD"
+          />
+        </View>
+
+         {/* Modal for Booking Form */}
+      <Modal visible={bookingModalVisible} animationType="slide">
+        <View style={styles.modalContent}>
+          {/* Your existing modal content for booking */}
+        </View>
+      </Modal>
+
+      {/* Floating Action Button (FAB) */}
+      <TouchableOpacity 
+        style={styles.fab} 
+        onPress={openBookingModal}
+      >
+        +
+      </TouchableOpacity>
+      </Modal>
     </View>
+    
   );
 }
+
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 20, 
-    backgroundColor: '#f5f5f5' 
+ container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f9f9f9',
   },
-  header: { 
-    fontSize: 24, 
-    fontWeight: 'bold', 
-    marginBottom: 20, 
-    textAlign: 'center' 
+ fab: {
+    position: 'absolute',
+    bottom: 20,  // Distance from the bottom of the screen
+    right: 20,   // Distance from the right of the screen
+    width: 60,   // Width of the button
+    height: 60,  // Height of the button
+    borderRadius: 30, // Make it round
+    backgroundColor: '#3498db', // Blue color for the button
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',  // Optional: for shadow effect
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4, // For Android shadow effect
+    zIndex: 10,  // Make sure it's above other components
   },
-  bookingItem: { 
-    padding: 15, 
-    borderWidth: 1, 
-    borderColor: '#ccc', 
-    marginBottom: 10, 
-    borderRadius: 8, 
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  bookingItem: {
+    backgroundColor: '#fff',
+    marginBottom: 10,
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  bookingDetailsContainer: {
+    marginBottom: 10,
+  },
+  bookingName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  bookingDetails: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  paymentButton: {
+    backgroundColor: '#2ecc71',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  paymentButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  editButton: {
+    backgroundColor: '#f39c12',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  deleteButton: {
+    backgroundColor: '#e74c3c',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
     backgroundColor: '#fff',
   },
-  bookingName: { 
-    fontSize: 18, 
-    color: '#333' 
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
-  bookingDetails: { 
-    fontSize: 14, 
-    color: '#666' 
+  addPaymentSection: {
+    marginBottom: 20,
   },
-  modalContent: { 
-    flex: 1, 
-    padding: 20, 
-    backgroundColor: '#fff' 
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
   },
-  modalTitle: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    marginBottom: 20, 
-    textAlign: 'center' 
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 15,
+    paddingLeft: 10,
+    fontSize: 16,
   },
-  paymentItem: { 
-    flexDirection: 'row', 
-    marginBottom: 15, 
-    padding: 10, 
-    borderWidth: 1, 
-    borderColor: '#ccc', 
-    borderRadius: 8, 
-    backgroundColor: '#e0f7fa'
+  picker: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 15,
   },
-  paymentInfo: { 
-    flex: 2 
+  saveButton: {
+    backgroundColor: '#3498db',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    alignSelf: 'center',
   },
-  paymentDetails: { 
-    fontSize: 16, 
-    color: '#333' 
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  paymentActions: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-around' 
+  paymentList: {
+    marginTop: 20,
   },
-  deleteButton: { 
-    padding: 10, 
-    backgroundColor: '#f44336', 
-    borderRadius: 8 
+  paymentItem: {
+    backgroundColor: '#f8f8f8',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  deleteButtonText: { 
-    color: '#fff' 
+  paymentInfo: {
+    flex: 1,
   },
-  addPaymentSection: { 
-    marginTop: 20, 
-    padding: 10, 
-    backgroundColor: '#f1f8e9', 
-    borderRadius: 8 
+  paymentDetails: {
+    fontSize: 14,
+    color: '#333',
   },
-  sectionTitle: { 
-    fontSize: 18, 
-    fontWeight: 'bold', 
-    marginBottom: 10, 
-    textAlign: 'center' 
+  paymentActions: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  input: { 
-    borderWidth: 1, 
-    borderColor: '#ccc', 
-    padding: 10, 
-    borderRadius: 8, 
-    marginBottom: 10, 
-    backgroundColor: '#fff' 
+  cancelButton: {
+    backgroundColor: '#95a5a6',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    alignSelf: 'center',
+    marginTop: 20,
   },
-  picker: { 
-    borderWidth: 1, 
-    borderColor: '#ccc', 
-    marginBottom: 10 
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  saveButton: { 
-    padding: 15, 
-    backgroundColor: '#2196f3', 
-    borderRadius: 8, 
-    marginTop: 10 
-  },
-  saveButtonText: { 
-    color: '#fff', 
-    textAlign: 'center', 
-    fontSize: 16 
-  },
-  cancelButton: { 
-    padding: 15, 
-    backgroundColor: '#ddd', 
-    borderRadius: 8, 
-    marginTop: 20 
-  },
-  cancelButtonText: { 
-    textAlign: 'center', 
-    fontSize: 16 
-  },
-  paymentList: { 
-    flex: 1, 
-    marginTop: 10 
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
   },
 });
