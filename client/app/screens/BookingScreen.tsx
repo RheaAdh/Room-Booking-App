@@ -20,7 +20,13 @@ type Payment = {
   createdAt: string;
 };
 
+type Customer = {
+  id: number;
+  name: string;
+};
+
 type Room = {
+  id: number
   roomNumber: string;
   roomType: string;
   roomMonthlyCost: number;
@@ -50,8 +56,8 @@ export default function App() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [bookingModalVisible, setBookingModalVisible] = useState<boolean>(false);
-  const [selectedRoom, setSelectedRoom] = useState<string>('');
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedRoom, setSelectedRoom] = useState<number>(0);
+  const [selectedCustomer, setSelectedCustomer] = useState<number>(-1);
   const [checkInDate, setCheckInDate] = useState<string>('');
   const [checkOutDate, setCheckOutDate] = useState<string>('');
   const [newBookingCreated, setNewBookingCreated] = useState<boolean>(false);
@@ -184,28 +190,37 @@ export default function App() {
     }
   };
 
-  const handleCreateBooking = async () => {
-    if (!selectedRoom || !selectedCustomer || !checkInDate || !checkOutDate) {
-      alert('Please fill all the fields');
-      return;
-    }
+ const handleCreateBooking = async () => {
+  if (!selectedRoom || !selectedCustomer || !checkInDate || !checkOutDate) {
+    alert('Please fill all the fields');
+    return;
+  }
 
-    try {
-      const response = await axios.post(`${BASE_URL}/bookings`, {
-        roomId: selectedRoom,
-        customerId: selectedCustomer,
-        checkInDate,
-        checkOutDate,
-      });
+  console.log('Creating booking:', selectedRoom, selectedCustomer, checkInDate, checkOutDate);
 
-      alert('Booking created successfully!');
-      setNewBookingCreated(true);
-      closeBookingModal();
-    } catch (error) {
-      console.error('Error creating booking:', error);
-      alert('Failed to create booking');
-    }
-  };
+  // Ensure the dates are in the required format (YYYY-MM-DDTHH:MM:SS)
+  const formattedCheckInDate = `${checkInDate}T00:00:00`;
+  const formattedCheckOutDate = `${checkOutDate}T00:00:00`;
+
+  try {
+    // Send the request with the updated format
+    const response = await axios.post(`${BASE_URL}/bookings`, {
+      checkInDate: formattedCheckInDate, 
+      checkOutDate: formattedCheckOutDate,
+      bookingStatus: 'NEW', // Static value as per request format
+      customer: { id: selectedCustomer },  // Sending the customer as an object with an ID
+      room: { id: selectedRoom }  // Sending the room as an object with an ID
+    });
+    console.log(response.data);
+
+    alert('Booking created successfully!');
+    setNewBookingCreated(true);
+    closeBookingModal();
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    alert('Failed to create booking');
+  }
+};
 
   const openBookingModal = () => {
     setBookingModalVisible(true);
@@ -217,8 +232,8 @@ export default function App() {
   };
 
   const resetForm = () => {
-    setSelectedRoom('');
-    setSelectedCustomer('');
+    setSelectedRoom(0)
+    setSelectedCustomer(0)
     setCheckInDate('');
     setCheckOutDate('');
   };
@@ -354,7 +369,8 @@ export default function App() {
           >
             <Picker.Item label="Select Room" value="" />
             {rooms.map((room) => (
-              <Picker.Item key={room.id} label={`${room.roomNumber} - ${room.roomType}`} value={room.id} />
+              console.log("ROOM",room),
+              <Picker.Item key={room.id} label={room.id.toString()} value={room.id} />
             ))}
           </Picker>
 
@@ -385,23 +401,79 @@ export default function App() {
             style={styles.input}
             placeholder="YYYY-MM-DD"
           />
-        </View>
+        </View></Modal>
 
          {/* Modal for Booking Form */}
       <Modal visible={bookingModalVisible} animationType="slide">
-        <View style={styles.modalContent}>
-          {/* Your existing modal content for booking */}
-        </View>
-      </Modal>
+  <View style={styles.modalContent}>
+    <Text style={styles.modalTitle}>Create a New Booking</Text>
 
-      {/* Floating Action Button (FAB) */}
-      <TouchableOpacity 
-        style={styles.fab} 
-        onPress={openBookingModal}
-      >
-        +
-      </TouchableOpacity>
-      </Modal>
+    {/* Select Room */}
+    <Text style={styles.label}>Select Room</Text>
+    <Picker
+      selectedValue={selectedRoom}
+      onValueChange={(itemValue) => setSelectedRoom(itemValue)}
+      style={styles.picker}
+    >
+      <Picker.Item label="Select Room" value="" />
+      {rooms.map((room) => (
+        <Picker.Item key={room.roomNumber} label={`${room.roomNumber} - ${room.roomType}`} value={room.id} />
+      ))}
+    </Picker>
+
+    {/* Select Customer */}
+    <Text style={styles.label}>Select Customer</Text>
+    <Picker
+      selectedValue={selectedCustomer}
+      onValueChange={(itemValue) => setSelectedCustomer(itemValue)}
+      style={styles.picker}
+    >
+      <Picker.Item label="Select Customer" value="" />
+      {customers.map((customer) => (
+        <Picker.Item key={customer.id} label={customer.name} value={customer.id} />
+      ))}
+    </Picker>
+
+    {/* Check-in Date */}
+    <Text style={styles.label}>Check-in Date</Text>
+    <TextInput
+      value={checkInDate}
+      onChangeText={setCheckInDate}
+      style={styles.input}
+      placeholder="YYYY-MM-DD"
+    />
+
+    {/* Check-out Date */}
+    <Text style={styles.label}>Check-out Date</Text>
+    <TextInput
+      value={checkOutDate}
+      onChangeText={setCheckOutDate}
+      style={styles.input}
+      placeholder="YYYY-MM-DD"
+    />
+
+    {/* Submit Button to Create Booking */}
+    <TouchableOpacity
+      onPress={handleCreateBooking}
+      style={styles.saveButton}
+    >
+      <Text style={styles.saveButtonText}>Create Booking</Text>
+    </TouchableOpacity>
+
+    {/* Close Button */}
+    <TouchableOpacity
+      onPress={closeBookingModal}
+      style={styles.cancelButton}
+    >
+      <Text style={styles.cancelButtonText}>Close</Text>
+    </TouchableOpacity>
+  </View>
+</Modal>
+
+           
+ <TouchableOpacity style={styles.fab} onPress={openBookingModal}>
+              <Text style={styles.fabText}>+</Text>
+            </TouchableOpacity>
     </View>
     
   );
@@ -413,22 +485,22 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f9f9f9',
   },
- fab: {
-    position: 'absolute',
-    bottom: 20,  // Distance from the bottom of the screen
-    right: 20,   // Distance from the right of the screen
-    width: 60,   // Width of the button
-    height: 60,  // Height of the button
-    borderRadius: 30, // Make it round
-    backgroundColor: '#3498db', // Blue color for the button
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',  // Optional: for shadow effect
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4, // For Android shadow effect
-    zIndex: 10,  // Make sure it's above other components
+  fab: {
+  backgroundColor: '#007bff',
+  borderRadius: 50,
+  width: 60,
+  height: 60,
+  justifyContent: 'center',
+  alignItems: 'center',
+  position: 'absolute',
+  bottom: 20,
+  right: 20,
+  zIndex: 100, // Add zIndex to ensure it stays on top
+},
+  fabText: {
+    color: '#fff',
+    fontSize: 30,
+    fontWeight: 'bold',
   },
   header: {
     fontSize: 24,
