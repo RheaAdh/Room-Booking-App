@@ -4,6 +4,8 @@ import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, 
 import axios from 'axios'; 
 import { Picker } from '@react-native-picker/picker';
 import {BASE_URL} from '../Constants';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Import the icons
+
 type RoomType = 'SINGLE' | 'DOUBLE' | 'TRIPLE' | 'QUEEN' | 'SINGLE(smaller size)';
 type BathroomType = 'ATTACHED' | 'COMMON';
 
@@ -209,27 +211,28 @@ const RoomScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
-
-      <FlatList
-        data={rooms}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.roomCard}>
-            <Text style={styles.roomText}>
-              {item.roomNumber} | Type: {item.roomType} | Bathroom: {item.bathroomType} 
-              | Monthly Cost: {item.roomMonthlyCost} | Daily Cost: {item.roomDailyCost}
-            </Text>
-            <View style={styles.actions}>
-              <TouchableOpacity onPress={() => startEditing(item)} style={styles.editButton}>
-                <Text style={styles.buttonText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => deleteRoom(item.id)} style={styles.deleteButton}>
-                <Text style={styles.buttonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      />
+<FlatList
+  data={rooms}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <View style={styles.roomCard}>
+      <View style={styles.roomInfo}>
+        <Text style={styles.roomText}>
+          {item.roomNumber} | Type: {item.roomType} | Bathroom: {item.bathroomType} 
+          | Monthly Cost: {item.roomMonthlyCost} | Daily Cost: {item.roomDailyCost}
+        </Text>
+      </View>
+      <View style={styles.iconActions}>
+        <TouchableOpacity onPress={() => startEditing(item)}>
+          <Icon name="edit" size={24} color="#4CAF50" style={styles.icon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => deleteRoom(item.id)}>
+          <Icon name="delete" size={24} color="#F44336" style={styles.icon} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  )}
+/>
 
       <TouchableOpacity
         style={styles.fab}
@@ -292,34 +295,56 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 15,
   },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  editButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-  },
-  deleteButton: {
-    backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: 'white',
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 60,
-    height: 60,
-    backgroundColor: '#4CAF50',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+ actions: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginTop: 10,
+},
+editButton: {
+  flex: 1,
+  marginRight: 5, // Add spacing between the two buttons
+  backgroundColor: '#4CAF50',
+  paddingVertical: 8,
+  paddingHorizontal: 12,
+  borderRadius: 5,
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 3,
+  elevation: 3,
+},
+deleteButton: {
+  flex: 1,
+  marginLeft: 5, // Add spacing between the two buttons
+  backgroundColor: '#F44336',
+  paddingVertical: 8,
+  paddingHorizontal: 12,
+  borderRadius: 5,
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 3,
+  elevation: 3,
+},
+buttonText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+   fab: {
+  backgroundColor: '#007bff',
+  borderRadius: 50,
+  width: 60,
+  height: 60,
+  justifyContent: 'center',
+  alignItems: 'center',
+  position: 'absolute',
+  bottom: 20,
+  right: 20,
+  zIndex: 100, // Add zIndex to ensure it stays on top
+},
   fabText: {
     fontSize: 36,
     color: 'white',
@@ -331,6 +356,36 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#FF6347',
     fontSize: 16,
+  },
+  roomCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    elevation: 2, // Shadow for Android
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  roomInfo: {
+    flex: 1, // Take remaining space
+    marginRight: 10, // Add space between info and icons
+  },
+  roomText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  iconActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  icon: {
+    marginLeft: 10, // Space between icons
   },
 });
 

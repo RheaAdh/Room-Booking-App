@@ -9,12 +9,15 @@ interface Booking {
   customer: { id: number; name: string };
   checkInDate: string;
   checkOutDate: string;
+  bookingStatus: string;
 }
 
 const BookingGrid: React.FC = () => {
   const [rooms, setRooms] = useState<string[]>([]);
   const [dates, setDates] = useState<string[]>([]);
-  const [gridData, setGridData] = useState<string[][]>([]);
+  const [gridData, setGridData] = useState<{ name: string; bookingStatus: string }[][]>(
+    []
+  );
 
   useEffect(() => {
     fetchBookingData();
@@ -37,15 +40,18 @@ const BookingGrid: React.FC = () => {
       setDates(allDates);
 
       // Extract rooms and prepare grid data
-      const roomMap: Record<string, string[]> = {};
-      bookings.forEach(({ room, customer, checkInDate, checkOutDate }) => {
+      const roomMap: Record<string, { name: string; status: string }[]> = {};
+      bookings.forEach(({ room, customer, checkInDate, checkOutDate, bookingStatus }) => {
         if (!roomMap[room.roomNumber]) {
-          roomMap[room.roomNumber] = Array(allDates.length).fill("");
+          roomMap[room.roomNumber] = Array(allDates.length).fill({
+            name: "",
+            status: "EMPTY",
+          });
         }
 
         allDates.forEach((date, index) => {
           if (date >= checkInDate && date < checkOutDate) {
-            roomMap[room.roomNumber][index] = customer.name;
+            roomMap[room.roomNumber][index] = { name: customer.name, bookingStatus: bookingStatus };
           }
         });
       });
@@ -57,19 +63,28 @@ const BookingGrid: React.FC = () => {
     }
   };
 
-  const renderCell = (text: string) => (
-    <View style={styles.cell}>
-      <Text style={styles.cellText}>{text || ""}</Text>
-    </View>
-  );
+  const renderCell = (data: { name: string; bookingStatus: string }) => {
+    let backgroundColor = "#d9f9d9"; // Default green for empty cells
+    if (data.bookingStatus === "CONFIRMED" || data.bookingStatus === "CHECKED_IN") {
+      backgroundColor = "#f9d9d9"; // Light red
+    } else if (data.bookingStatus === "PENDING") {
+      backgroundColor = "#fffacd"; // Light yellow
+    }
 
-  const renderRow = (row: string[], room: string) => (
+    return (
+      <View style={[styles.cell, { backgroundColor }]}>
+        <Text style={styles.cellText}>{data.name || ""}</Text>
+      </View>
+    );
+  };
+
+  const renderRow = (row: { name: string; status: string }[], room: string) => (
     <View style={styles.row}>
       <View style={[styles.cell, styles.roomCell]}>
         <Text style={styles.roomText}>{room}</Text>
       </View>
-      {row.map((customer, index) => (
-        <React.Fragment key={index}>{renderCell(customer)}</React.Fragment>
+      {row.map((data, index) => (
+        <React.Fragment key={index}>{renderCell(data)}</React.Fragment>
       ))}
     </View>
   );

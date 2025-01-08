@@ -33,6 +33,7 @@ type Room = {
 };
 
 type Booking = {
+  customer: any;
   checkInDate: string;
   checkOutDate: string;
   room: Room;
@@ -61,6 +62,8 @@ export default function App() {
   const [checkInDate, setCheckInDate] = useState<string>('');
   const [checkOutDate, setCheckOutDate] = useState<string>('');
   const [newBookingCreated, setNewBookingCreated] = useState<boolean>(false);
+    const [selectedBookingStatus, setSelectedBookingStatus] = useState<string>('NEW'); // New state for bookingStatus
+
 
   useEffect(() => {
     fetchBookings();
@@ -141,11 +144,95 @@ export default function App() {
     }
   };
 
-  const handleEditBooking = (bookingId: string) => {
-    // Implement the edit booking functionality here
-    
-    console.log(`Edit booking with ID: ${bookingId}`);
-  };
+const handleEditBooking = (bookingId: string) => {
+  // Find the booking details to edit
+  const bookingToEdit = bookings.find((booking) => booking.id === bookingId);
+  
+  if (bookingToEdit) {
+    setSelectedBooking(bookingToEdit);
+    setSelectedRoom(bookingToEdit.room.id);
+    setSelectedCustomer(bookingToEdit.customer.id);
+    setCheckInDate(bookingToEdit.checkInDate.split('T')[0]); // Convert to 'YYYY-MM-DD'
+    setCheckOutDate(bookingToEdit.checkOutDate.split('T')[0]); // Convert to 'YYYY-MM-DD'
+    setBookingModalVisible(true);  // Open the booking modal
+  }
+  
+};
+// Function to create a new booking
+const handleCreateNewBooking = async () => {
+  if (!selectedRoom || !selectedCustomer || !checkInDate || !checkOutDate) {
+    alert('Please fill all the fields');
+    return;
+  }
+
+  const formattedCheckInDate = `${checkInDate}T00:00:00`;
+  const formattedCheckOutDate = `${checkOutDate}T00:00:00`;
+
+  try {
+    // Create a new booking using POST
+    const response = await axios.post(`${BASE_URL}/bookings`, {
+      checkInDate: formattedCheckInDate,
+      checkOutDate: formattedCheckOutDate,
+      bookingStatus: 'NEW', // Default to 'NEW' for new bookings
+      customer: { id: selectedCustomer },
+      room: { id: selectedRoom },
+    });
+
+    alert('Booking created successfully!');
+    setBookings((prevBookings) => [...prevBookings, response.data]);
+    closeBookingModal();
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    alert('Failed to create booking');
+  }
+};
+  const bookingStatuses = ['NEW', 'PENDING', 'CONFIRMED', 'CANCELLED', 'CHECKED_IN', 'CHECKED_OUT'];
+
+const handleSaveUpdatedBooking = async () => {
+  if (!selectedRoom || !selectedCustomer || !checkInDate || !checkOutDate) {
+    alert('Please fill all the fields');
+    return;
+  }
+
+  const formattedCheckInDate = `${checkInDate}T00:00:00`;
+  const formattedCheckOutDate = `${checkOutDate}T00:00:00`;
+
+  try {
+    let response;
+
+    if (selectedBooking) {
+      // Update the existing booking using PUT
+      response = await axios.put(`${BASE_URL}/bookings/${selectedBooking.id}`, {
+        checkInDate: formattedCheckInDate,
+        checkOutDate: formattedCheckOutDate,
+        bookingStatus: selectedBookingStatus, // Send the selected booking status
+        customer: { id: selectedCustomer },
+        room: { id: selectedRoom },
+      });
+
+      setBookings((prevBookings) =>
+        prevBookings.map((booking) =>
+          booking.id === selectedBooking.id ? { ...booking, ...response.data } : booking
+        )
+      );
+
+      alert('Booking updated successfully!');
+
+      // clear the state
+      setSelectedBooking(null);
+      setSelectedRoom(0);
+      setSelectedCustomer(0);
+      setCheckInDate('');
+      setCheckOutDate('');
+      setBookingModalVisible(false);
+
+    }
+    setBookingModalVisible(false);
+  } catch (error) {
+    console.error('Error saving booking:', error);
+    alert('Failed to save booking');
+  }
+};
 
   const handleDeleteBooking = async (bookingId: string) => {
     try {
@@ -260,7 +347,7 @@ export default function App() {
               >
                 <Text style={styles.paymentButtonText}>Payments</Text>
               </TouchableOpacity>
-              <TouchableOpacity
+             <TouchableOpacity
                 onPress={() => handleEditBooking(item.id)}
                 style={styles.editButton}
               >
@@ -357,56 +444,9 @@ export default function App() {
         </View>
       </Modal>
        {/* Modal for Booking Form */}
-      <Modal visible={bookingModalVisible} animationType="slide">
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Create a New Booking</Text>
-
-          <Text style={styles.label}>Select Room</Text>
-          <Picker
-            selectedValue={selectedRoom}
-            onValueChange={(itemValue) => setSelectedRoom(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select Room" value="" />
-            {rooms.map((room) => (
-              console.log("ROOM",room),
-              <Picker.Item key={room.id} label={room.id.toString()} value={room.id} />
-            ))}
-          </Picker>
-
-          <Text style={styles.label}>Select Customer</Text>
-          <Picker
-            selectedValue={selectedCustomer}
-            onValueChange={(itemValue) => setSelectedCustomer(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select Customer" value="" />
-            {customers.map((customer) => (
-              <Picker.Item key={customer.id} label={customer.name} value={customer.id} />
-            ))}
-          </Picker>
-
-          <Text style={styles.label}>Check-in Date</Text>
-          <TextInput
-            value={checkInDate}
-            onChangeText={setCheckInDate}
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-          />
-
-          <Text style={styles.label}>Check-out Date</Text>
-          <TextInput
-            value={checkOutDate}
-            onChangeText={setCheckOutDate}
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-          />
-        </View></Modal>
-
-         {/* Modal for Booking Form */}
-      <Modal visible={bookingModalVisible} animationType="slide">
+<Modal visible={bookingModalVisible} animationType="slide">
   <View style={styles.modalContent}>
-    <Text style={styles.modalTitle}>Create a New Booking</Text>
+    <Text style={styles.modalTitle}>Edit Booking</Text>
 
     {/* Select Room */}
     <Text style={styles.label}>Select Room</Text>
@@ -417,7 +457,7 @@ export default function App() {
     >
       <Picker.Item label="Select Room" value="" />
       {rooms.map((room) => (
-        <Picker.Item key={room.roomNumber} label={`${room.roomNumber} - ${room.roomType}`} value={room.id} />
+        <Picker.Item key={room.id} label={`${room.roomNumber} - ${room.roomType}`} value={room.id} />
       ))}
     </Picker>
 
@@ -433,6 +473,18 @@ export default function App() {
         <Picker.Item key={customer.id} label={customer.name} value={customer.id} />
       ))}
     </Picker>
+
+    {/* Select Booking Status */}
+          <Text style={styles.label}>Booking Status</Text>
+          <Picker
+            selectedValue={selectedBookingStatus}
+            onValueChange={(itemValue) => setSelectedBookingStatus(itemValue)}
+            style={styles.picker}
+          >
+            {bookingStatuses.map((status) => (
+              <Picker.Item key={status} label={status} value={status} />
+            ))}
+          </Picker>
 
     {/* Check-in Date */}
     <Text style={styles.label}>Check-in Date</Text>
@@ -452,19 +504,16 @@ export default function App() {
       placeholder="YYYY-MM-DD"
     />
 
-    {/* Submit Button to Create Booking */}
-    <TouchableOpacity
-      onPress={handleCreateBooking}
-      style={styles.saveButton}
-    >
-      <Text style={styles.saveButtonText}>Create Booking</Text>
-    </TouchableOpacity>
+
+    {/* Submit Button to Save Changes */}
+   <TouchableOpacity onPress={selectedBooking ? handleSaveUpdatedBooking : handleCreateBooking} style={styles.saveButton}>
+  <Text style={styles.saveButtonText}>
+    {selectedBooking ? 'Save Changes' : 'Create Booking'}
+  </Text>
+</TouchableOpacity>
 
     {/* Close Button */}
-    <TouchableOpacity
-      onPress={closeBookingModal}
-      style={styles.cancelButton}
-    >
+    <TouchableOpacity onPress={closeBookingModal} style={styles.cancelButton}>
       <Text style={styles.cancelButtonText}>Close</Text>
     </TouchableOpacity>
   </View>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { MaterialIcons, AntDesign } from '@expo/vector-icons';
 import axios from 'axios';
-import {BASE_URL} from '../Constants';
+import { BASE_URL } from '../Constants';
 
 // Mock API URL
 const API_URL = `${BASE_URL}/expenses`;
@@ -21,7 +22,7 @@ const ExpenseScreen = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    amount: 0,
+    amount: '',
     createdAt: '',
   });
   const [isEditing, setIsEditing] = useState(false);
@@ -41,7 +42,12 @@ const ExpenseScreen = () => {
   const handleSubmit = async () => {
     try {
       const { name, description, amount, createdAt } = formData;
-      const newExpense = { name, description, amount: parseInt(amount), createdAt };
+      const newExpense = {
+        name,
+        description,
+        amount: parseInt(amount),
+        createdAt: `${createdAt}T00:00:00`,
+      };
 
       if (isEditing && editId !== null) {
         // Update existing expense
@@ -55,7 +61,7 @@ const ExpenseScreen = () => {
       }
 
       setIsModalVisible(false);
-      setFormData({ name: '', description: '', amount: 0, createdAt: '' });
+      setFormData({ name: '', description: '', amount: '', createdAt: '' });
     } catch (error) {
       console.error('Error submitting expense:', error);
     }
@@ -87,7 +93,7 @@ const ExpenseScreen = () => {
       name: expense.name,
       description: expense.description,
       amount: expense.amount.toString(),
-      createdAt: expense.createdAt,
+      createdAt: expense.createdAt.split('T')[0], // Extract date only
     });
   };
 
@@ -96,23 +102,28 @@ const ExpenseScreen = () => {
   }, []);
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {/* Expenses List */}
       <FlatList
         data={expenses}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.row}>
-            <Text style={styles.cell}>{item.name}</Text>
-            <Text style={styles.cell}>{item.description}</Text>
-            <Text style={styles.cell}>{`Rs. ${item.amount}`}</Text>
-            <Text style={styles.cell}>{item.createdAt}</Text>
-            <View style={styles.actionCell}>
-              <TouchableOpacity style={styles.editButton} onPress={() => openEditModal(item)}>
-                <Text style={styles.buttonText}>Edit</Text>
+          <View style={styles.card}>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>{item.name}</Text>
+              <Text style={styles.cardText}>{item.description}</Text>
+              <Text style={styles.cardAmount}>{`Rs. ${item.amount}`}</Text>
+              <Text style={styles.cardDate}>
+                {item.createdAt ? item.createdAt.split('T')[0] : ''}
+              </Text>
+
+            </View>
+            <View style={styles.cardActions}>
+              <TouchableOpacity onPress={() => openEditModal(item)}>
+                <MaterialIcons name="edit" size={20} color="#007bff" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
-                <Text style={styles.buttonText}>Delete</Text>
+              <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteIcon}>
+                <MaterialIcons name="delete" size={20} color="#d9534f" />
               </TouchableOpacity>
             </View>
           </View>
@@ -121,7 +132,7 @@ const ExpenseScreen = () => {
 
       {/* Add Expense Button */}
       <TouchableOpacity style={styles.fab} onPress={openAddModal}>
-        <Text style={styles.fabText}>+</Text>
+        <AntDesign name="plus" size={30} color="#fff" />
       </TouchableOpacity>
 
       {/* Modal for Adding/Editing Expenses */}
@@ -131,7 +142,7 @@ const ExpenseScreen = () => {
             <Text style={styles.modalTitle}>{isEditing ? 'Edit Expense' : 'Add Expense'}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Name (e.g., 201A)"
+              placeholder="Name"
               value={formData.name}
               onChangeText={(text) => setFormData({ ...formData, name: text })}
             />
@@ -161,7 +172,7 @@ const ExpenseScreen = () => {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -169,58 +180,59 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 20,
+    backgroundColor: '#f2f2f2',
   },
-  row: {
+  card: {
     flexDirection: 'row',
-    marginBottom: 12,
-    paddingVertical: 8,
-    backgroundColor: '#f9f9f9',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginVertical: 8,
+    padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    elevation: 2,
   },
-  cell: {
+  cardContent: {
     flex: 1,
-    padding: 8,
-    textAlign: 'center',
-    fontSize: 14,
   },
-  actionCell: {
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  cardText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  cardAmount: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#007bff',
+    marginBottom: 4,
+  },
+  cardDate: {
+    fontSize: 12,
+    color: '#999',
+  },
+  cardActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  editButton: {
-    backgroundColor: '#f0ad4e',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  deleteButton: {
-    backgroundColor: '#d9534f',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 12,
+  deleteIcon: {
+    marginLeft: 12,
   },
   fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
     backgroundColor: '#007bff',
-    borderRadius: 50,
+    borderRadius: 30,
     width: 60,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-  },
-  fabText: {
-    color: '#fff',
-    fontSize: 30,
-    fontWeight: 'bold',
+    elevation: 5,
   },
   modalContainer: {
     flex: 1,
@@ -232,7 +244,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
-    width: '80%',
+    width: '90%',
   },
   modalTitle: {
     fontSize: 18,
@@ -246,12 +258,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
     fontSize: 14,
-    width: '100%',
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
   },
 });
 
