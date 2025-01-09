@@ -14,8 +14,6 @@ interface Room {
   roomNumber: string;
   roomType: RoomType;
   bathroomType: BathroomType;
-  roomMonthlyCost: number;
-  roomDailyCost: number;
 }
 
 const RoomScreen: React.FC = () => {
@@ -23,8 +21,6 @@ const RoomScreen: React.FC = () => {
   const [roomNumber, setRoomNumber] = useState<string>('');
   const [roomType, setRoomType] = useState<RoomType>('SINGLE');
   const [bathroomType, setBathroomType] = useState<BathroomType>('ATTACHED');
-  const [roomMonthlyCost, setRoomMonthlyCost] = useState<number>(0);
-  const [roomDailyCost, setRoomDailyCost] = useState<number>(0);
   const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false); 
 
@@ -44,7 +40,7 @@ const RoomScreen: React.FC = () => {
   }, []);
 
   const saveRoom = async () => {
-    if (!roomNumber || !roomType || !bathroomType || !roomMonthlyCost || !roomDailyCost) {
+    if (!roomNumber || !roomType || !bathroomType) {
       Alert.alert("Error", "Please fill out all fields");
       return;
     }
@@ -52,9 +48,7 @@ const RoomScreen: React.FC = () => {
     const roomData: Partial<Room> = {
       roomNumber,
       roomType,
-      bathroomType,
-      roomMonthlyCost: parseFloat(roomMonthlyCost.toString()),
-      roomDailyCost: parseFloat(roomDailyCost.toString()),
+      bathroomType
     };
 
     if (editingRoomId !== null) {
@@ -114,8 +108,6 @@ const RoomScreen: React.FC = () => {
     setRoomNumber(room.roomNumber);
     setRoomType(room.roomType);
     setBathroomType(room.bathroomType);
-    setRoomMonthlyCost(room.roomMonthlyCost);
-    setRoomDailyCost(room.roomDailyCost);
     setEditingRoomId(room.id);
     setIsModalVisible(true); // Open modal for editing
   };
@@ -125,8 +117,6 @@ const RoomScreen: React.FC = () => {
     setRoomNumber('');
     setRoomType('SINGLE');
     setBathroomType('ATTACHED');
-    setRoomMonthlyCost(0);
-    setRoomDailyCost(0);
     setEditingRoomId(null);
   };
 
@@ -176,24 +166,6 @@ const RoomScreen: React.FC = () => {
               <Picker.Item label="Common" value="COMMON" />
             </Picker>
 
-            <Text style={styles.label}>Monthly Room Cost</Text>
-            <TextInput
-              style={styles.input}
-              value={roomMonthlyCost.toString()}
-              onChangeText={text => setRoomMonthlyCost(Number(text))}
-              placeholder="Enter Monthly Cost"
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.label}>Daily Room Cost</Text>
-            <TextInput
-              style={styles.input}
-              value={roomDailyCost.toString()}
-              onChangeText={text => setRoomDailyCost(Number(text))}
-              placeholder="Enter Daily Cost"
-              keyboardType="numeric"
-            />
-
             <Button
               title={editingRoomId !== null ? "Update Room" : "Add Room"}
               onPress={saveRoom}
@@ -218,8 +190,7 @@ const RoomScreen: React.FC = () => {
     <View style={styles.roomCard}>
       <View style={styles.roomInfo}>
         <Text style={styles.roomText}>
-          {item.roomNumber} | Type: {item.roomType} | Bathroom: {item.bathroomType} 
-          | Monthly Cost: {item.roomMonthlyCost} | Daily Cost: {item.roomDailyCost}
+          {item.roomNumber} | Type: {item.roomType} | Bathroom: {item.bathroomType}
         </Text>
       </View>
       <View style={styles.iconActions}>

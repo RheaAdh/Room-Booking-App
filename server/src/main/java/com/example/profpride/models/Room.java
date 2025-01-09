@@ -26,8 +26,6 @@ public class Room {
   private String roomNumber;
   private RoomType roomType;
   private BathroomType bathroomType;
-  private Integer roomMonthlyCost;
-  private Integer roomDailyCost;
 
   @OneToMany(mappedBy = "room")
   @JsonIgnore

@@ -45,7 +45,7 @@ const BookingGrid: React.FC = () => {
         if (!roomMap[room.roomNumber]) {
           roomMap[room.roomNumber] = Array(allDates.length).fill({
             name: "",
-            status: "EMPTY",
+            bookingStatus: "EMPTY",
           });
         }
 

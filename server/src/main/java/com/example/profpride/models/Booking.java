@@ -28,8 +28,7 @@ public class Booking {
   private Long id;
   private LocalDateTime checkInDate;
   private LocalDateTime checkOutDate;
-  private LocalDateTime updatedAt;
-  private LocalDateTime createdAt;
+  private Long dueAmount;
 
   @Enumerated(EnumType.STRING)
   private BookingStatusType bookingStatus;

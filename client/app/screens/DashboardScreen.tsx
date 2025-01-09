@@ -153,6 +153,7 @@ const DashboardScreen: React.FC = () => {
         ({ item }: { item: Due }) => (
           <View style={styles.listItem}>
             <Text>Guest: {item.customer.name}</Text>
+
           </View>
         )
       )}

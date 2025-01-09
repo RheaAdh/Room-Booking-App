@@ -2,18 +2,19 @@
 
 ## Technology Stack
 
-- **Spring Boot - Java**
+- **Spring Boot**
+- **Java**
 - **REST API**
 - **MySQL**
 - **Gradle**
-- **React Native** - compatible on all devices
+- **React Native**
 - **Typescript**
 - **CSS**
 
 ## Dashboard:
 
 - Show todays Arrival/Departures/Dues to be collected
-- Show available rooms by {Bathroom type + Room Type + Time frame}
+- Show room availability in a grid
 
 ## Bookings:
 
@@ -23,7 +24,7 @@
 - Update Payment in a booking
 - Delete Booking
 
-## Customers / Rooms / Expenses
+## Customers / Rooms / Expenses / RoomCost
 
 - Create
 - Read
