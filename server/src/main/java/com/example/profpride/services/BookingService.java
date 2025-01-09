@@ -1,8 +1,10 @@
 package com.example.profpride.services;
 
+import com.example.profpride.enums.BookingDurationType;
 import com.example.profpride.models.Booking;
 import com.example.profpride.models.Customer;
 import com.example.profpride.models.Room;
+import com.example.profpride.models.RoomCost;
 import com.example.profpride.repositories.BookingRepository;
 import com.example.profpride.repositories.CustomerRepository;
 import com.example.profpride.repositories.RoomRepository;
@@ -27,9 +29,31 @@ public class BookingService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private RoomCostService roomCostService;
+
     public Booking createBooking(Booking booking) {
+        // Calculate the number of days the guest stays
         int days = booking.getCheckOutDate().getDayOfYear() - booking.getCheckInDate().getDayOfYear();
-        booking.setDueAmount((long) 100 * days);
+
+        List<RoomCost> roomCostList = roomCostService.getAllRoomCosts();
+        int roomCost = 0;
+        // traverse the roomCostList and verify the conditions match based on the
+        // RoomType,
+        // BathroomType, and BookingDurationType
+        for (RoomCost cost : roomCostList) {
+            if (cost.getRoomType().equals(booking.getRoom().getRoomType()) &&
+                    cost.getBathroomType().equals(booking.getRoom().getBathroomType())) {
+                if (days > 30 && cost.getBookingDurationType().equals(BookingDurationType.MONTHLY)) {
+                    roomCost = days * cost.getCost();
+                    break;
+                } else if (days < 30 && cost.getBookingDurationType().equals(BookingDurationType.DAILY)) {
+                    roomCost = cost.getCost();
+                    break;
+                }
+            }
+        }
+        booking.setDueAmount((long) (roomCost * days));
         return bookingRepository.save(booking);
     }
 
@@ -47,7 +71,7 @@ public class BookingService {
             booking.setBookingStatus(updatedBooking.getBookingStatus());
             booking.setCheckInDate(updatedBooking.getCheckInDate());
             booking.setCheckOutDate(updatedBooking.getCheckOutDate());
-            booking.setDurationType(updatedBooking.getDurationType());
+            booking.setBookingDurationType(updatedBooking.getBookingDurationType());
             booking.setDueAmount(updatedBooking.getDueAmount());
 
             // Update room if changed

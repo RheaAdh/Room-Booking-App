@@ -29,6 +29,8 @@ interface Departure {
 }
 
 interface Due {
+  dueAmount: null;
+  booking: any;
   customer: any;
   id: number;
   guestName: string;
@@ -71,7 +73,7 @@ const DashboardScreen: React.FC = () => {
         axios.get<Departure[]>(`${BASE_URL}/departures`),
         axios.get<Due[]>(`${BASE_URL}/due`)
       ]);
-      console.log('arrivalsResponse', arrivalsResponse.data);
+      console.log('dueResponse', duesResponse.data);
 
       setArrivals(arrivalsResponse.data);
       setDepartures(departuresResponse.data);
@@ -153,6 +155,8 @@ const DashboardScreen: React.FC = () => {
         ({ item }: { item: Due }) => (
           <View style={styles.listItem}>
             <Text>Guest: {item.customer.name}</Text>
+            <Text>Phone Number: {item.customer.phoneNumber}</Text>
+            <Text>Due: {item.dueAmount==null? "Oops" : item.dueAmount}</Text>
 
           </View>
         )

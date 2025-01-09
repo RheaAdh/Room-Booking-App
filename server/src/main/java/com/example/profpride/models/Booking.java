@@ -33,12 +33,9 @@ public class Booking {
   @Enumerated(EnumType.STRING)
   private BookingStatusType bookingStatus;
 
-  @Enumerated(EnumType.STRING)
-  private BookingDurationType durationType;
-
   @ManyToOne // multiple bookings can exist for a single room
   @JoinColumn(name = "room_id", nullable = false)
-  private Room room;
+  public Room room;
 
   @ManyToOne // a Customer can have multiple bookings
   @JoinColumn(name = "customer_id", nullable = false)
