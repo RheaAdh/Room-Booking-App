@@ -335,7 +335,7 @@ const handleSaveUpdatedBooking = async () => {
             <View style={styles.bookingDetailsContainer}>
               <Text style={styles.bookingName}>{item.name}</Text>
               <Text style={styles.bookingDetails}>
-                Status: {item.bookingStatus} | Check-in: {item.checkInDate} | Check-out: {item.checkOutDate} | {item.room.roomNumber} | {item.room.roomType} | Room Cost: Rs{item.room.roomMonthlyCost}/-
+                Status: {item.bookingStatus} | Check-in: {item.checkInDate} | Check-out: {item.checkOutDate} | {item.room.roomNumber} | {item.room.roomType}
               </Text>
             </View>
 

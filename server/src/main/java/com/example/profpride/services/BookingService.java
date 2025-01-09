@@ -71,7 +71,6 @@ public class BookingService {
             booking.setBookingStatus(updatedBooking.getBookingStatus());
             booking.setCheckInDate(updatedBooking.getCheckInDate());
             booking.setCheckOutDate(updatedBooking.getCheckOutDate());
-            booking.setBookingDurationType(updatedBooking.getBookingDurationType());
             booking.setDueAmount(updatedBooking.getDueAmount());
 
             // Update room if changed
