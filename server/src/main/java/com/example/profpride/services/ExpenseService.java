@@ -27,19 +27,23 @@ public class ExpenseService {
     }
 
     public Expense updateExpense(Long id, Expense updatedExpense) {
-        return expenseRepository.findById(id).map(expense -> {
-            expense.setName(updatedExpense.getName());
-            expense.setDescription(updatedExpense.getDescription());
-            expense.setAmount(updatedExpense.getAmount());
-            expense.setCreatedAt(updatedExpense.getCreatedAt());
-            return expenseRepository.save(expense);
-        }).orElse(null);
+        if (expenseRepository.existsById(id)) {
+            updatedExpense.setId(id);
+            return expenseRepository.save(updatedExpense);
+        } else {
+            throw new RuntimeException("Expense not found with id: " + id);
+        }
     }
 
-    public boolean deleteExpense(Long id) {
-        return expenseRepository.findById(id).map(expense -> {
-            expenseRepository.delete(expense);
-            return true;
-        }).orElse(false);
+    public void deleteExpense(Long id) {
+        if (expenseRepository.existsById(id)) {
+            expenseRepository.deleteById(id);
+        } else {
+            throw new RuntimeException("Expense not found with id: " + id);
+        }
+    }
+
+    public List<Expense> getExpensesByCategory(com.example.profpride.enums.ExpenseCategory category) {
+        return expenseRepository.findByCategory(category);
     }
 }

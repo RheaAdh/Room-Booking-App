@@ -1,33 +1,64 @@
 package com.example.profpride.models;
 
-import java.util.List;
-import com.example.profpride.enums.BathroomType;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import com.example.profpride.enums.RoomType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.*;
+import com.example.profpride.enums.BathroomType;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "room")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "room")
 public class Room {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
-  private String roomNumber;
-  private RoomType roomType;
-  private BathroomType bathroomType;
-
-  @OneToMany(mappedBy = "room")
-  @JsonIgnore
-  private List<Booking> bookings;
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "room_number", unique = true, nullable = false)
+    private String roomNumber;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "room_type", nullable = false)
+    private RoomType roomType;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "bathroom_type", nullable = false)
+    private BathroomType bathroomType;
+    
+    @Column(name = "is_available")
+    private Boolean isAvailable = true;
+    
+    @Column(name = "daily_reference_cost", precision = 10, scale = 2)
+    private BigDecimal dailyReferenceCost = BigDecimal.ZERO;
+    
+    @Column(name = "monthly_reference_cost", precision = 10, scale = 2)
+    private BigDecimal monthlyReferenceCost = BigDecimal.ZERO;
+    
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
