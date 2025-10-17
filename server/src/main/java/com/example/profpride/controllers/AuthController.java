@@ -31,7 +31,7 @@ public class AuthController {
             }
             
             // Query the users table to validate credentials
-            String sql = "SELECT user_id, password, role, name FROM users WHERE user_id = ?";
+            String sql = "SELECT userid, password, role, name FROM users WHERE userid = ?";
             
             try {
                 Map<String, Object> user = jdbcTemplate.queryForMap(sql, userId);
@@ -45,7 +45,7 @@ public class AuthController {
                     response.put("message", "Login successful");
                     response.put("token", token);
                     response.put("user", Map.of(
-                        "userId", user.get("user_id"),
+                        "userId", user.get("userid"),
                         "name", user.get("name"),
                         "role", user.get("role")
                     ));
