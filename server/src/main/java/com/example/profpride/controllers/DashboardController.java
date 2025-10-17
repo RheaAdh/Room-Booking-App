@@ -19,7 +19,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/dashboard")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8081", "exp://192.168.1.12:8081"})
 public class DashboardController {
 
     @Autowired
