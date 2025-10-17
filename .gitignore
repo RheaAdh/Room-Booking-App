@@ -1,0 +1,64 @@
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Node modules (global + specific)
+node_modules/
+**/node_modules/
+web-client/node_modules/
+
+# Build outputs
+build/
+**/build/
+dist/
+**/dist/
+server/target/
+**/out/
+
+# Logs
+*.log
+logs/
+**/logs/
+
+# Environment files
+.env
+.env.*
+*.local
+
+# IDE/editor
+.vscode/
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# Coverage and caches
+coverage/
+.tmp/
+.cache/
+**/.parcel-cache/
+
+# Java / Spring Boot
+*.class
+*.out
+*.tmp
+hs_err_pid*
+replay_pid*
+spring.log
+
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Gradle (future)
+.gradle/
+**/build/
+
+
