@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -18,9 +19,17 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @PostMapping
-    public ResponseEntity<Payment> createPayment(@RequestBody Payment payment) {
-        Payment savedPayment = paymentService.createPayment(payment);
-        return new ResponseEntity<>(savedPayment, HttpStatus.CREATED);
+    public ResponseEntity<?> createPayment(@RequestBody Payment payment) {
+        try {
+            Payment savedPayment = paymentService.createPayment(payment);
+            return new ResponseEntity<>(savedPayment, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Failed to create payment: " + e.getMessage(),
+                "error", e.getClass().getSimpleName()
+            ));
+        }
     }
 
     @GetMapping
