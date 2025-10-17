@@ -4,7 +4,6 @@ import './App.css';
 
 // Import components
 import LoginScreen from './components/LoginScreen';
-import Dashboard from './components/Dashboard';
 import StatsScreen from './components/StatsScreen';
 import SummaryScreen from './components/SummaryScreen';
 import TransactionsScreen from './components/TransactionsScreen';

@@ -142,7 +142,7 @@ const BookingGrid = () => {
   };
 
   const renderCell = (cellData, roomIndex, dateIndex) => {
-    const { name, bookingStatus, bookingId, customer } = cellData;
+    const { name, bookingStatus, customer } = cellData;
     
     if (!name) {
       return <div className="grid-cell empty"></div>;

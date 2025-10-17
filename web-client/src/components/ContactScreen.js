@@ -172,7 +172,7 @@ const ContactScreen = () => {
         const uploadFormData = new FormData();
         uploadFormData.append('file', file);
 
-        const response = await api.post(`/customer/${customer.phoneNumber}/upload-photo-id`, uploadFormData, {
+        await api.post(`/customer/${customer.phoneNumber}/upload-photo-id`, uploadFormData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

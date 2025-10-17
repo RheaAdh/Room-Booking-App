@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../config/api';
-import PublicRoomView from './PublicRoomView';
 import './CustomerDashboard.css';
 
 const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) => {
