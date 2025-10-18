@@ -1,115 +1,271 @@
-Room Booking App
-================
+# Professional Pride Room Booking System
 
-Full-stack room booking application.
+A comprehensive full-stack room booking application with advanced features for property management, customer management, and booking operations.
 
-- Backend: Spring Boot (Java 17), PostgreSQL
-- Frontend: React (in `web-client`)
-- Container/Deploy: Docker, Render
+## 🚀 Features
 
-Quick Start
------------
+### Core Functionality
+- **Room Management**: Complete CRUD operations for rooms with configurations
+- **Customer Management**: Customer profiles with ID proof verification
+- **Booking System**: Advanced booking management with availability checking
+- **Payment Processing**: Payment tracking with screenshot uploads
+- **Invoice Generation**: Automated invoice creation and PDF generation
+- **Dashboard Analytics**: Comprehensive statistics and reporting
 
-Prerequisites
+### Advanced Features
+- **Room Availability Validation**: Prevents double bookings with real-time conflict detection
+- **Excel-Style Booking Grid**: Visual calendar view with horizontal scrolling
+- **Customer Booking History**: Expandable dropdown showing complete booking history
+- **ID Proof Management**: Multiple ID proof uploads with thumbnail previews
+- **Dynamic Pricing**: Room configurations with person-based pricing
+- **Responsive Design**: Mobile-optimized interfaces for all user types
+- **Real-time Notifications**: Custom popup modals for user feedback
+
+### User Interfaces
+- **Staff Dashboard**: Complete booking management with Excel-style grid
+- **Customer Portal**: Airbnb-style interface with room browsing
+- **Mobile Interface**: Touch-optimized mobile booking screens
+- **Caretaker Interface**: Simplified interface for property caretakers
+
+## 🛠 Technology Stack
+
+- **Backend**: Spring Boot (Java 17), PostgreSQL, JPA/Hibernate
+- **Frontend**: React.js, CSS3, Responsive Design
+- **Authentication**: JWT (JSON Web Tokens)
+- **File Storage**: Cloudinary (Image and PDF uploads)
+- **Deployment**: Docker, Railway/Render
+- **API Documentation**: OpenAPI 3.0 (Swagger)
+
+## 📋 Prerequisites
+
 - Java 17+
 - Node.js 18+
-- Docker
+- Maven 3.6+
+- PostgreSQL 12+
+- Cloudinary account (for file uploads)
 
-Run frontend locally
+## 🚀 Quick Start
+
+### Backend Setup
+```bash
+cd server
+mvn clean install
+# Run ProfprideApplication.java
 ```
+
+### Frontend Setup
+```bash
 cd web-client
 npm install
 npm start
 ```
 
-API Contract
-------------
+### Environment Configuration
+Create `application-prod.properties` with:
+```properties
+# Database
+spring.datasource.url=jdbc:postgresql://localhost:5432/roombooking
+spring.datasource.username=your_username
+spring.datasource.password=your_password
 
-Base URL: `/api/v1`
+# Cloudinary
+cloudinary.cloud_name=your_cloud_name
+cloudinary.api_key=your_api_key
+cloudinary.api_secret=your_api_secret
 
-`openapi.yaml` into Swagger Editor: [editor.swagger.io](https://editor.swagger.io/).
+# JWT
+jwt.secret=your_jwt_secret
+jwt.expiration=86400000
+```
 
-Bookings (`/bookings`)
+## 📚 API Documentation
+
+### Base URL
+- Production: `https://your-service.onrender.com/api/v1`
+- Local: `http://localhost:8082/api/v1`
+
+### Authentication
+- **Staff**: `Authorization: Bearer staff_token`
+- **Customer**: `Authorization: Bearer customer_token_{phoneNumber}`
+
+### Key Endpoints
+
+#### Bookings (`/bookings`)
 - `GET /bookings` → List all bookings
-- `GET /bookings/{id}` → Get booking by id
-- `POST /bookings` → Create booking
-  - Body: `Booking` JSON (includes `customerPhoneNumber`, `roomId`, dates, costs...)
-- `PUT /bookings/{id}` → Update booking fields (partial allowed)
+- `POST /bookings` → Create booking (with availability validation)
+- `PUT /bookings/{id}` → Update booking (with conflict checking)
 - `DELETE /bookings/{id}` → Delete booking
-- `GET /bookings/customer/{phoneNumber}` → List bookings for a customer
-- `GET /bookings/room/{roomId}` → List bookings for a room
-- `GET /bookings/status/{status}` → List by status (`PENDING|CONFIRMED|CANCELLED|COMPLETED`)
+- `GET /bookings/customer/{phoneNumber}` → Customer booking history
+- `PATCH /bookings/{id}/checkin` → Check-in customer
+- `PATCH /bookings/{id}/checkout` → Check-out customer
 
-Rooms (`/rooms`)
-- `POST /rooms` → Create room
+**Room Availability Validation**: All booking creation/updates automatically check for conflicts and return `409 Conflict` if room is already booked.
+
+#### Rooms (`/rooms`)
 - `GET /rooms` → List all rooms
-- `GET /rooms/{id}` → Get room by id
-- `PUT /rooms/{id}` → Update room
-- `DELETE /rooms/{id}` → Delete room
-- `GET /rooms/check-availability?checkInDate=YYYY-MM-DD&checkOutDate=YYYY-MM-DD` → Available rooms between dates
-- `GET /rooms/available?checkInDate=YYYY-MM-DD&checkOutDate=YYYY-MM-DD` → Same as above
+- `POST /rooms` → Create room
+- `GET /rooms/check-availability` → Check availability for dates
+- `GET /rooms/{id}/configurations` → Get room configurations
 
-Customer (`/customer`)
-- `GET /customer` → List customers
-- `GET /customer/{phoneNumber}` → Get customer by phone number
-- `GET /customer/bookings` → Get bookings for authenticated customer
-  - Header: `Authorization: Bearer customer_token_{phoneNumber}`
-- `GET /customer/profile` → Get authenticated customer profile
-  - Header: `Authorization: Bearer customer_token_{phoneNumber}`
-- `PUT /customer/profile` → Update authenticated customer profile
-  - Header: `Authorization: Bearer customer_token_{phoneNumber}`
-  - Body: `{ name?, additionalPhoneNumber?, remarks? }`
-- `POST /customer/{phoneNumber}/upload-photo-id` → Upload single ID proof (multipart `file`)
-- `POST /customer/{phoneNumber}/upload-id-proofs` → Upload multiple ID proofs (multipart `files[]`)
-- `DELETE /customer/{phoneNumber}/id-proofs/{index}` → Delete ID proof by index
-- `PUT /customer/{phoneNumber}` → Update a customer record
-- `DELETE /customer/{phoneNumber}` → Delete a customer
+#### Customers (`/customer`)
+- `GET /customer` → List customers with booking history
+- `POST /customer` → Create customer
+- `PUT /customer/{phoneNumber}` → Update customer
+- `POST /customer/{phoneNumber}/upload-id-proofs` → Upload ID proofs
+- `GET /customer/{phoneNumber}/bookings` → Get customer bookings
 
-Auth (`/auth`)
-- `POST /auth/login` → Staff login (body: `{ userId, password }`)
-- `POST /auth/logout` → Staff logout (header: `Authorization`)
-
-Customer Auth (`/auth/customer`)
-- `POST /auth/customer/register` → Register a customer
-- `POST /auth/customer/login` → Customer login
-- `POST /auth/customer/logout` → Customer logout
-- `GET /auth/customer/profile` → Get profile (header: `Authorization: Bearer customer_token_{phoneNumber}`)
-
-Booking Requests (`/booking-requests`)
-- `POST /booking-requests` → Create a booking request
-- `GET /booking-requests` → List booking requests
-- `GET /booking-requests/{id}` → Get booking request by id
-- `PUT /booking-requests/{id}` → Update booking request
-- `DELETE /booking-requests/{id}` → Delete booking request
-- `GET /booking-requests/customer/{phoneNumber}` → Requests by customer
-- `GET /booking-requests/status/{status}` → Requests by status
-- `PUT /booking-requests/{id}/approve` → Approve request
-- `PUT /booking-requests/{id}/reject` → Reject request
-
-Invoices (`/invoices`)
-- `POST /invoices` → Create invoice
-- `GET /invoices` → List invoices
-- `GET /invoices/{id}` → Get invoice
-- `PUT /invoices/{id}` → Update invoice
-- `DELETE /invoices/{id}` → Delete invoice
-- `GET /invoices/booking/{bookingId}` → Invoices for booking
-- `GET /invoices/{id}/download` → Download by id (URL)
-- `GET /invoices/{bookingId}/preview` → Preview by booking id (HTML)
-- `GET /invoices/{bookingId}/download` → Download PDF by booking
-
-Payments (`/payments`)
+#### Payments (`/payments`)
 - `POST /payments` → Create payment
-- `GET /payments` → List payments
-- `GET /payments/{id}` → Get payment
-- `PUT /payments/{id}` → Update payment
-- `DELETE /payments/{id}` → Delete payment
-- `GET /payments/booking/{bookingId}` → Payments for booking
+- `POST /payments/upload-screenshot` → Upload payment screenshot
+- `GET /payments/booking/{bookingId}` → Get booking payments
 
-Dashboard (`/dashboard`)
-- `GET /dashboard/today-summary?date=YYYY-MM-DD` → Summary and stats
-- `GET /dashboard/recent-bookings?limit=10` → Recent bookings
-- `GET /dashboard/room-occupancy` → Occupancy breakdown
+#### Invoices (`/invoices`)
+- `GET /invoices/{bookingId}/preview` → Preview invoice (HTML)
+- `GET /invoices/{bookingId}/download` → Download invoice (PDF)
 
-Root
-- `GET /` → OK
-- `GET /healthcheck` → OK
+## 🎨 User Interface Features
+
+### Staff Dashboard
+- **Excel-Style Booking Grid**: Visual calendar with horizontal scrolling
+- **Customer Management**: Table with ID proof thumbnails and booking history
+- **Room Management**: Complete room and configuration management
+- **Payment Tracking**: Payment management with screenshot uploads
+- **Statistics Dashboard**: Comprehensive analytics and reporting
+
+### Customer Portal
+- **Airbnb-Style Interface**: Modern, responsive design
+- **Room Browsing**: Filter by dates, guests, and availability
+- **Dynamic Pricing**: Real-time pricing calculation
+- **Booking Requests**: Submit and track booking requests
+- **Profile Management**: Update profile and view booking history
+
+### Mobile Interface
+- **Touch-Optimized**: Mobile-first design
+- **Responsive Grid**: Adapts to all screen sizes
+- **Gesture Support**: Swipe and touch interactions
+- **Offline Capability**: Basic functionality without internet
+
+## 🔧 Advanced Features
+
+### Room Availability System
+- **Real-time Validation**: Prevents double bookings
+- **Conflict Detection**: Checks date overlaps
+- **Status-based Filtering**: Only considers CONFIRMED bookings
+- **User-friendly Errors**: Custom popup modals for conflicts
+
+### Customer ID Proof Management
+- **Multiple Uploads**: Support for multiple ID proofs per customer
+- **Thumbnail Previews**: Visual previews in customer table
+- **Cloudinary Integration**: Secure cloud storage
+- **Status Tracking**: Visual indicators for ID proof submission
+
+### Excel-Style Booking Grid
+- **Horizontal Scrolling**: Full month view with scroll
+- **Fixed Cell Sizes**: Consistent layout across devices
+- **Status Color Coding**: Visual status indicators
+- **Click-to-View**: Detailed booking information on click
+
+### Dynamic Pricing System
+- **Room Configurations**: Person-based pricing
+- **Daily/Monthly Rates**: Flexible pricing models
+- **Real-time Calculation**: Live pricing updates
+- **Cost Breakdown**: Detailed cost analysis
+
+## 📱 Responsive Design
+
+### Breakpoints
+- **Desktop**: 1200px+ (Full Excel grid)
+- **Tablet**: 768px-1199px (Compressed grid)
+- **Mobile**: <768px (Stacked layout)
+
+### Mobile Features
+- **Touch Navigation**: Swipe gestures
+- **Optimized Forms**: Mobile-friendly inputs
+- **Compressed Views**: Space-efficient layouts
+- **Quick Actions**: One-tap operations
+
+## 🔒 Security Features
+
+### Authentication
+- **JWT Tokens**: Secure token-based authentication
+- **Role-based Access**: Staff vs Customer permissions
+- **Token Expiration**: Automatic session management
+
+### Data Protection
+- **Input Validation**: Server-side validation
+- **SQL Injection Prevention**: JPA/Hibernate protection
+- **File Upload Security**: Type and size validation
+- **CORS Configuration**: Cross-origin request handling
+
+## 📊 Analytics & Reporting
+
+### Dashboard Metrics
+- **Today's Summary**: Check-ins, check-outs, revenue
+- **Room Occupancy**: Occupancy rates and trends
+- **Payment Analytics**: Payment status and amounts
+- **Customer Statistics**: Registration and activity metrics
+
+### Export Features
+- **Invoice PDFs**: Professional invoice generation
+- **Booking Reports**: Detailed booking analytics
+- **Customer Reports**: Customer activity summaries
+
+## 🚀 Deployment
+
+### Docker Support
+```bash
+# Build and run with Docker
+docker-compose up --build
+```
+
+### Environment Variables
+- `DATABASE_URL`: PostgreSQL connection string
+- `CLOUDINARY_URL`: Cloudinary configuration
+- `JWT_SECRET`: JWT signing secret
+- `PORT`: Server port (default: 8082)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the API documentation
+- Review the OpenAPI specification
+
+## 🔄 Recent Updates
+
+### v2.0.0 - Major Feature Release
+- ✅ Room availability validation system
+- ✅ Excel-style booking grid with horizontal scrolling
+- ✅ Customer booking history dropdown
+- ✅ ID proof management with thumbnails
+- ✅ Dynamic pricing system
+- ✅ Custom conflict popup modals
+- ✅ Mobile-optimized interfaces
+- ✅ Comprehensive invoice generation
+- ✅ Real-time booking conflict detection
+
+### v1.5.0 - UI/UX Improvements
+- ✅ Airbnb-style customer portal
+- ✅ Responsive design implementation
+- ✅ Payment screenshot uploads
+- ✅ Enhanced booking management
+- ✅ Statistics dashboard
+
+### v1.0.0 - Initial Release
+- ✅ Basic booking system
+- ✅ Customer management
+- ✅ Payment tracking
+- ✅ Room management
+- ✅ Authentication system

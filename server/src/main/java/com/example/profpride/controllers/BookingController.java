@@ -9,12 +9,14 @@ import com.example.profpride.repositories.CustomerRepository;
 import com.example.profpride.repositories.RoomRepository;
 import com.example.profpride.repositories.PaymentRepository;
 import com.example.profpride.enums.BookingStatus;
+import com.example.profpride.enums.BookingDurationType;
 import com.example.profpride.enums.PaymentStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -70,10 +72,35 @@ public class BookingController {
             }
 
             // Validate room exists
-            Optional<Room> room = roomRepository.findById(booking.getRoomId());
-            if (!room.isPresent()) {
+            Optional<Room> roomOpt = roomRepository.findById(booking.getRoomId());
+            if (!roomOpt.isPresent()) {
                 return ResponseEntity.badRequest().build();
             }
+            
+            Room room = roomOpt.get();
+            
+            // Check room availability for the requested dates
+            List<Booking> existingBookings = bookingRepository.findByRoom(room);
+            boolean isRoomAvailable = existingBookings.stream()
+                .noneMatch(existingBooking -> {
+                    // Only check confirmed bookings
+                    if (existingBooking.getBookingStatus() == null || 
+                        !existingBooking.getBookingStatus().toString().equals("CONFIRMED")) {
+                        return false;
+                    }
+                    
+                    // Check for date overlap
+                    return (booking.getCheckInDate().isBefore(existingBooking.getCheckOutDate()) &&
+                           booking.getCheckOutDate().isAfter(existingBooking.getCheckInDate()));
+                });
+            
+            if (!isRoomAvailable) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(null); // Room is already booked for these dates
+            }
+            
+            // Costs should be provided from frontend based on room configuration
+            // No need to set default costs from room as they are now managed by room configurations
 
             // Set default values
             if (booking.getBookingStatus() == null) {
@@ -88,6 +115,9 @@ public class BookingController {
             if (booking.getUpdatedAt() == null) {
                 booking.setUpdatedAt(LocalDateTime.now());
             }
+
+            // Calculate total amount
+            calculateTotalAmount(booking);
 
             Booking savedBooking = bookingRepository.save(booking);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedBooking);
@@ -105,6 +135,38 @@ public class BookingController {
             }
 
             Booking booking = existingBooking.get();
+            
+            // Check room availability for the updated dates (if dates are being changed)
+            if (updatedBooking.getCheckInDate() != null || updatedBooking.getCheckOutDate() != null) {
+                LocalDateTime checkInDate = updatedBooking.getCheckInDate() != null ? 
+                    updatedBooking.getCheckInDate() : booking.getCheckInDate();
+                LocalDateTime checkOutDate = updatedBooking.getCheckOutDate() != null ? 
+                    updatedBooking.getCheckOutDate() : booking.getCheckOutDate();
+                
+                List<Booking> existingBookings = bookingRepository.findByRoom(booking.getRoom());
+                boolean isRoomAvailable = existingBookings.stream()
+                    .noneMatch(existingBookingItem -> {
+                        // Skip the current booking being updated
+                        if (existingBookingItem.getId().equals(booking.getId())) {
+                            return false;
+                        }
+                        
+                        // Only check confirmed bookings
+                        if (existingBookingItem.getBookingStatus() == null || 
+                            !existingBookingItem.getBookingStatus().toString().equals("CONFIRMED")) {
+                            return false;
+                        }
+                        
+                        // Check for date overlap
+                        return (checkInDate.isBefore(existingBookingItem.getCheckOutDate()) &&
+                               checkOutDate.isAfter(existingBookingItem.getCheckInDate()));
+                    });
+                
+                if (!isRoomAvailable) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(null); // Room is already booked for these dates
+                }
+            }
             
             // Update fields
             if (updatedBooking.getCheckInDate() != null) {
@@ -128,11 +190,17 @@ public class BookingController {
             if (updatedBooking.getEarlyCheckinCost() != null) {
                 booking.setEarlyCheckinCost(updatedBooking.getEarlyCheckinCost());
             }
-            if (updatedBooking.getTotalAmount() != null) {
-                booking.setTotalAmount(updatedBooking.getTotalAmount());
+            if (updatedBooking.getLateCheckoutCost() != null) {
+                booking.setLateCheckoutCost(updatedBooking.getLateCheckoutCost());
             }
+            
+            // Recalculate total amount
+            calculateTotalAmount(booking);
             if (updatedBooking.getRemarks() != null) {
                 booking.setRemarks(updatedBooking.getRemarks());
+            }
+            if (updatedBooking.getNumberOfPeople() != null) {
+                booking.setNumberOfPeople(updatedBooking.getNumberOfPeople());
             }
 
             booking.setUpdatedAt(LocalDateTime.now());
@@ -190,5 +258,76 @@ public class BookingController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PatchMapping("/{id}/checkin")
+    public ResponseEntity<Booking> checkIn(@PathVariable Long id) {
+        try {
+            Optional<Booking> bookingOpt = bookingRepository.findById(id);
+            if (bookingOpt.isPresent()) {
+                Booking booking = bookingOpt.get();
+                if (booking.getBookingStatus() == BookingStatus.CONFIRMED) {
+                    booking.setBookingStatus(BookingStatus.CHECKEDIN);
+                    // Set actual check-in date to current time
+                    booking.setCheckInDate(LocalDateTime.now());
+                    booking.setUpdatedAt(LocalDateTime.now());
+                    Booking updatedBooking = bookingRepository.save(booking);
+                    return ResponseEntity.ok(updatedBooking);
+                } else {
+                    return ResponseEntity.badRequest().build();
+                }
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PatchMapping("/{id}/checkout")
+    public ResponseEntity<Booking> checkOut(@PathVariable Long id) {
+        try {
+            Optional<Booking> bookingOpt = bookingRepository.findById(id);
+            if (bookingOpt.isPresent()) {
+                Booking booking = bookingOpt.get();
+                if (booking.getBookingStatus() == BookingStatus.CHECKEDIN) {
+                    booking.setBookingStatus(BookingStatus.CHECKEDOUT);
+                    // Set actual check-out date to current time
+                    booking.setCheckOutDate(LocalDateTime.now());
+                    booking.setUpdatedAt(LocalDateTime.now());
+                    Booking updatedBooking = bookingRepository.save(booking);
+                    return ResponseEntity.ok(updatedBooking);
+                } else {
+                    return ResponseEntity.badRequest().build();
+                }
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    private void calculateTotalAmount(Booking booking) {
+        BigDecimal total = BigDecimal.ZERO;
+        
+        // Add daily or monthly cost based on duration type
+        if (booking.getBookingDurationType() == BookingDurationType.DAILY && booking.getDailyCost() != null) {
+            total = total.add(booking.getDailyCost());
+        } else if (booking.getBookingDurationType() == BookingDurationType.MONTHLY && booking.getMonthlyCost() != null) {
+            total = total.add(booking.getMonthlyCost());
+        }
+        
+        // Add early check-in cost
+        if (booking.getEarlyCheckinCost() != null) {
+            total = total.add(booking.getEarlyCheckinCost());
+        }
+        
+        // Add late checkout cost
+        if (booking.getLateCheckoutCost() != null) {
+            total = total.add(booking.getLateCheckoutCost());
+        }
+        
+        booking.setTotalAmount(total);
     }
 }

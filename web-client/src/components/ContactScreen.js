@@ -15,6 +15,12 @@ const ContactScreen = () => {
     photoIdProofUrl: '',
     remarks: ''
   });
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
+  const [selectedImageTitle, setSelectedImageTitle] = useState('');
+  const [expandedCustomers, setExpandedCustomers] = useState(new Set());
+  const [customerBookings, setCustomerBookings] = useState({});
+  const [loadingBookings, setLoadingBookings] = useState({});
 
   useEffect(() => {
     fetchCustomers();
@@ -23,16 +29,41 @@ const ContactScreen = () => {
   const fetchCustomers = async () => {
     try {
       const response = await api.get('/customer');
-      setCustomers(response.data);
+      setCustomers(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching customers:', error);
+      setCustomers([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchCustomerBookings = async (phoneNumber) => {
+    if (customerBookings[phoneNumber]) {
+      return; // Already fetched
+    }
+
+    setLoadingBookings(prev => ({ ...prev, [phoneNumber]: true }));
+    
+    try {
+      const response = await api.get(`/bookings/customer/${phoneNumber}`);
+      setCustomerBookings(prev => ({
+        ...prev,
+        [phoneNumber]: Array.isArray(response.data) ? response.data : []
+      }));
+    } catch (error) {
+      console.error('Error fetching customer bookings:', error);
+      setCustomerBookings(prev => ({
+        ...prev,
+        [phoneNumber]: []
+      }));
+    } finally {
+      setLoadingBookings(prev => ({ ...prev, [phoneNumber]: false }));
+    }
+  };
+
   // Filter customers based on search term
-  const filteredCustomers = customers.filter(customer => {
+  const filteredCustomers = (customers || []).filter(customer => {
     const name = customer.name?.toLowerCase() || '';
     const phoneNumber = customer.phoneNumber?.toLowerCase() || '';
     const additionalPhoneNumber = customer.additionalPhoneNumber?.toLowerCase() || '';
@@ -122,10 +153,13 @@ const ContactScreen = () => {
       // For new customers, we'll use a temporary phone number
       const phoneNumber = selectedCustomer?.phoneNumber || formData.phoneNumber || 'temp-' + Date.now();
       
-      const response = await api.post(`/customer/${phoneNumber}/upload-id-proofs`, uploadFormData, {
+      const response = await api.post(`/upload/multiple-id-proofs`, uploadFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        params: {
+          phoneNumber: phoneNumber
+        }
       });
 
       if (response.data.success) {
@@ -172,20 +206,68 @@ const ContactScreen = () => {
         const uploadFormData = new FormData();
         uploadFormData.append('file', file);
 
-        await api.post(`/customer/${customer.phoneNumber}/upload-photo-id`, uploadFormData, {
+        const response = await api.post(`/upload/photo-id-proof`, uploadFormData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          params: {
+            phoneNumber: customer.phoneNumber
+          }
         });
 
-        alert('ID Proof uploaded successfully!');
-        fetchCustomers(); // Refresh the customer list
+        if (response.data.success) {
+          alert('ID Proof uploaded successfully!');
+          fetchCustomers(); // Refresh the customer list
+        } else {
+          alert('Error uploading ID proof: ' + response.data.message);
+        }
       } catch (error) {
         console.error('Error uploading ID proof:', error);
         alert('Error uploading ID proof. Please try again.');
       }
     };
     input.click();
+  };
+
+
+  const handleViewImage = (imageUrl, title) => {
+    setSelectedImageUrl(imageUrl);
+    setSelectedImageTitle(title);
+    setShowImageModal(true);
+  };
+
+  const toggleCustomerExpansion = async (phoneNumber) => {
+    const newExpanded = new Set(expandedCustomers);
+    if (expandedCustomers.has(phoneNumber)) {
+      newExpanded.delete(phoneNumber);
+    } else {
+      newExpanded.add(phoneNumber);
+      // Fetch bookings when expanding
+      await fetchCustomerBookings(phoneNumber);
+    }
+    setExpandedCustomers(newExpanded);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusColor = (status) => {
+    const statusColors = {
+      'PENDING': '#ffc107',
+      'CONFIRMED': '#28a745',
+      'CHECKEDIN': '#17a2b8',
+      'CHECKEDOUT': '#6c757d',
+      'CANCELLED': '#dc3545',
+      'NO_SHOW': '#fd7e14',
+      'COMPLETED': '#20c997'
+    };
+    return statusColors[status] || '#6c757d';
   };
 
   if (loading) {
@@ -230,7 +312,7 @@ const ContactScreen = () => {
         </div>
         {searchTerm && (
           <div style={{ marginTop: '8px', fontSize: '14px', color: '#666' }}>
-            Showing {filteredCustomers.length} of {customers.length} customers
+            Showing {filteredCustomers.length} of {(customers || []).length} customers
           </div>
         )}
       </div>
@@ -266,46 +348,123 @@ const ContactScreen = () => {
                     <th>Name</th>
                     <th>Phone</th>
                     <th>Additional Phone</th>
+                    <th>ID Proof 1</th>
+                    <th>ID Proof 2</th>
                     <th>Remarks</th>
-                    <th>ID Proof</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCustomers.map(customer => (
-                    <tr 
-                      key={customer.phoneNumber}
-                      style={{ 
-                        backgroundColor: !customer.photoIdProofUrl ? '#ffe6e6' : 'transparent',
-                        opacity: !customer.photoIdProofUrl ? 0.9 : 1
-                      }}
-                    >
-                      <td>{customer.name}</td>
+                    <React.Fragment key={customer.phoneNumber}>
+                      <tr 
+                        style={{ 
+                          backgroundColor: !customer.idProofSubmitted ? '#ffe6e6' : 'transparent',
+                          opacity: !customer.idProofSubmitted ? 0.9 : 1
+                        }}
+                      >
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button
+                              onClick={() => toggleCustomerExpansion(customer.phoneNumber)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                color: '#007bff',
+                                padding: '0',
+                                marginRight: '5px'
+                              }}
+                              title="Click to view booking history"
+                            >
+                              {expandedCustomers.has(customer.phoneNumber) ? '▼' : '▶'}
+                            </button>
+                            <span style={{ fontWeight: 'bold', cursor: 'pointer' }} onClick={() => toggleCustomerExpansion(customer.phoneNumber)}>
+                              {customer.name}
+                            </span>
+                          </div>
+                        </td>
                       <td>{customer.phoneNumber}</td>
                       <td>{customer.additionalPhoneNumber || 'N/A'}</td>
-                      <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {customer.remarks || 'N/A'}
-                      </td>
                       <td>
-                        {customer.photoIdProofUrl ? (
-                          <a 
-                            href={customer.photoIdProofUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-success"
-                            style={{ fontSize: '12px', padding: '2px 8px' }}
-                          >
-                            📄 View ID
-                          </a>
+                        {customer.idProofSubmitted && (customer.photoIdProofUrl || (customer.idProofUrls && customer.idProofUrls[0])) ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <img 
+                              src={customer.photoIdProofUrl || customer.idProofUrls[0]} 
+                              alt="ID Proof 1 Preview" 
+                              style={{ 
+                                width: '40px', 
+                                height: '30px', 
+                                objectFit: 'cover', 
+                                border: '1px solid #ccc', 
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => handleViewImage(
+                                customer.photoIdProofUrl || customer.idProofUrls[0], 
+                                'ID Proof 1'
+                              )}
+                              title="Click to view full size"
+                            />
+                            <button 
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() => handleViewImage(
+                                customer.photoIdProofUrl || customer.idProofUrls[0], 
+                                'ID Proof 1'
+                              )}
+                              style={{ fontSize: '8px', padding: '1px 4px' }}
+                            >
+                              👁️
+                            </button>
+                          </div>
                         ) : (
                           <button 
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => handleUploadIdProof(customer)}
-                            style={{ fontSize: '12px', padding: '2px 8px' }}
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => handleEditCustomer(customer)}
+                            style={{ fontSize: '10px', padding: '2px 6px' }}
                           >
                             📤 Upload
                           </button>
                         )}
+                      </td>
+                      <td>
+                        {customer.idProofSubmitted && customer.idProofUrls && customer.idProofUrls[1] ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <img 
+                              src={customer.idProofUrls[1]} 
+                              alt="ID Proof 2 Preview" 
+                              style={{ 
+                                width: '40px', 
+                                height: '30px', 
+                                objectFit: 'cover', 
+                                border: '1px solid #ccc', 
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => handleViewImage(customer.idProofUrls[1], 'ID Proof 2')}
+                              title="Click to view full size"
+                            />
+                            <button 
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() => handleViewImage(customer.idProofUrls[1], 'ID Proof 2')}
+                              style={{ fontSize: '8px', padding: '1px 4px' }}
+                            >
+                              👁️
+                            </button>
+                          </div>
+                        ) : (
+                          <button 
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => handleEditCustomer(customer)}
+                            style={{ fontSize: '10px', padding: '2px 6px' }}
+                          >
+                            📤 Upload
+                          </button>
+                        )}
+                      </td>
+                      <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {customer.remarks || 'N/A'}
                       </td>
                       <td>
                         <button 
@@ -323,6 +482,118 @@ const ContactScreen = () => {
                         </button>
                       </td>
                     </tr>
+                    
+                    {/* Booking History Dropdown */}
+                    {expandedCustomers.has(customer.phoneNumber) && (
+                      <tr>
+                        <td colSpan="6" style={{ padding: '0', backgroundColor: '#f8f9fa' }}>
+                          <div style={{ padding: '20px', borderTop: '1px solid #dee2e6' }}>
+                            <h5 style={{ margin: '0 0 15px 0', color: '#495057', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              📅 Booking History for {customer.name}
+                              {loadingBookings[customer.phoneNumber] && (
+                                <span style={{ fontSize: '12px', color: '#6c757d' }}>
+                                  <span className="spinner" style={{ width: '12px', height: '12px', marginRight: '5px' }}></span>
+                                  Loading...
+                                </span>
+                              )}
+                            </h5>
+                            
+                            {customerBookings[customer.phoneNumber] && customerBookings[customer.phoneNumber].length > 0 ? (
+                              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                <div style={{ display: 'grid', gap: '10px' }}>
+                                  {customerBookings[customer.phoneNumber].map((booking, index) => (
+                                    <div 
+                                      key={booking.id || index}
+                                      style={{
+                                        padding: '15px',
+                                        backgroundColor: 'white',
+                                        border: '1px solid #dee2e6',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                      }}
+                                    >
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                                        <div>
+                                          <h6 style={{ margin: '0 0 5px 0', color: '#495057' }}>
+                                            Booking #{booking.id}
+                                          </h6>
+                                          <p style={{ margin: '0', fontSize: '12px', color: '#6c757d' }}>
+                                            Room: {booking.roomId} | Guests: {booking.numberOfPeople || 'N/A'}
+                                          </p>
+                                        </div>
+                                        <span 
+                                          style={{
+                                            padding: '4px 8px',
+                                            borderRadius: '12px',
+                                            fontSize: '10px',
+                                            fontWeight: 'bold',
+                                            color: 'white',
+                                            backgroundColor: getStatusColor(booking.bookingStatus)
+                                          }}
+                                        >
+                                          {booking.bookingStatus}
+                                        </span>
+                                      </div>
+                                      
+                                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
+                                        <div>
+                                          <strong>Check-in:</strong> {formatDate(booking.checkInDate)}
+                                        </div>
+                                        <div>
+                                          <strong>Check-out:</strong> {formatDate(booking.checkOutDate)}
+                                        </div>
+                                        <div>
+                                          <strong>Duration:</strong> {booking.bookingDurationType || 'N/A'}
+                                        </div>
+                                        <div>
+                                          <strong>Total Amount:</strong> ₹{booking.totalAmount || '0'}
+                                        </div>
+                                        <div>
+                                          <strong>Daily Rate:</strong> ₹{booking.dailyCost || '0'}
+                                        </div>
+                                        <div>
+                                          <strong>Monthly Rate:</strong> ₹{booking.monthlyCost || '0'}
+                                        </div>
+                                        {booking.earlyCheckinCost > 0 && (
+                                          <div>
+                                            <strong>Early Check-in:</strong> ₹{booking.earlyCheckinCost}
+                                          </div>
+                                        )}
+                                        {booking.lateCheckoutCost > 0 && (
+                                          <div>
+                                            <strong>Late Check-out:</strong> ₹{booking.lateCheckoutCost}
+                                          </div>
+                                        )}
+                                        <div>
+                                          <strong>Created:</strong> {formatDate(booking.createdAt)}
+                                        </div>
+                                        {booking.remarks && (
+                                          <div style={{ gridColumn: '1 / -1' }}>
+                                            <strong>Remarks:</strong> {booking.remarks}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              !loadingBookings[customer.phoneNumber] && (
+                                <div style={{ 
+                                  textAlign: 'center', 
+                                  padding: '20px', 
+                                  color: '#6c757d',
+                                  fontStyle: 'italic'
+                                }}>
+                                  No bookings found for this customer.
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -392,19 +663,45 @@ const ContactScreen = () => {
                     <div className="id-proofs-list mt-2">
                       {/* Legacy single ID proof */}
                       {formData.photoIdProofUrl && (
-                        <div className="id-proof-item">
-                          <div className="id-proof-info">
-                            <span className="id-proof-name">📄 ID Proof Document</span>
-                            <span className="id-proof-type">Legacy Upload</span>
+                        <div className="id-proof-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '8px' }}>
+                          <div style={{ flex: '0 0 auto' }}>
+                            <img 
+                              src={formData.photoIdProofUrl} 
+                              alt="ID Proof Preview" 
+                              style={{ 
+                                width: '60px', 
+                                height: '45px', 
+                                objectFit: 'cover', 
+                                border: '1px solid #ccc', 
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => handleViewImage(formData.photoIdProofUrl, 'ID Proof (Legacy)')}
+                              title="Click to view full size"
+                            />
                           </div>
-                          <div className="id-proof-actions">
+                          <div style={{ flex: '1', minWidth: '0' }}>
+                            <div className="id-proof-info">
+                              <span className="id-proof-name" style={{ display: 'block', fontWeight: 'bold', fontSize: '12px' }}>📄 ID Proof Document</span>
+                              <span className="id-proof-type" style={{ display: 'block', fontSize: '10px', color: '#666' }}>Legacy Upload</span>
+                            </div>
+                          </div>
+                          <div className="id-proof-actions" style={{ flex: '0 0 auto' }}>
+                            <button 
+                              onClick={() => handleViewImage(formData.photoIdProofUrl, 'ID Proof (Legacy)')}
+                              className="btn btn-sm btn-outline-success"
+                              style={{ marginRight: '5px', fontSize: '10px', padding: '2px 6px' }}
+                            >
+                              👁️ View
+                            </button>
                             <a 
                               href={formData.photoIdProofUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="btn btn-sm btn-outline-success"
+                              className="btn btn-sm btn-outline-primary"
+                              style={{ fontSize: '10px', padding: '2px 6px' }}
                             >
-                              👁️ View
+                              🔗 Open
                             </a>
                           </div>
                         </div>
@@ -412,19 +709,45 @@ const ContactScreen = () => {
                       
                       {/* Multiple ID proofs */}
                       {formData.idProofUrls && formData.idProofUrls.map((url, index) => (
-                        <div key={index} className="id-proof-item">
-                          <div className="id-proof-info">
-                            <span className="id-proof-name">📄 ID Proof #{index + 1}</span>
-                            <span className="id-proof-type">Document</span>
+                        <div key={index} className="id-proof-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '8px' }}>
+                          <div style={{ flex: '0 0 auto' }}>
+                            <img 
+                              src={url} 
+                              alt={`ID Proof ${index + 1} Preview`} 
+                              style={{ 
+                                width: '60px', 
+                                height: '45px', 
+                                objectFit: 'cover', 
+                                border: '1px solid #ccc', 
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => handleViewImage(url, `ID Proof ${index + 1}`)}
+                              title="Click to view full size"
+                            />
                           </div>
-                          <div className="id-proof-actions">
+                          <div style={{ flex: '1', minWidth: '0' }}>
+                            <div className="id-proof-info">
+                              <span className="id-proof-name" style={{ display: 'block', fontWeight: 'bold', fontSize: '12px' }}>📄 ID Proof #{index + 1}</span>
+                              <span className="id-proof-type" style={{ display: 'block', fontSize: '10px', color: '#666' }}>Document</span>
+                            </div>
+                          </div>
+                          <div className="id-proof-actions" style={{ flex: '0 0 auto' }}>
+                            <button 
+                              onClick={() => handleViewImage(url, `ID Proof ${index + 1}`)}
+                              className="btn btn-sm btn-outline-success"
+                              style={{ marginRight: '5px', fontSize: '10px', padding: '2px 6px' }}
+                            >
+                              👁️ View
+                            </button>
                             <a 
                               href={url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="btn btn-sm btn-outline-success"
+                              className="btn btn-sm btn-outline-primary"
+                              style={{ fontSize: '10px', padding: '2px 6px' }}
                             >
-                              👁️ View
+                              🔗 Open
                             </a>
                           </div>
                         </div>
@@ -436,6 +759,23 @@ const ContactScreen = () => {
                 <small className="form-text text-muted">
                   Upload photos or PDFs of ID proof documents (Max 10MB each). You can select multiple files.
                 </small>
+                
+                {/* Add Additional ID Proof Button */}
+                {(formData.idProofUrls && formData.idProofUrls.length > 0) || formData.photoIdProofUrl ? (
+                  <div className="mt-3">
+                    <button 
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => {
+                        const input = document.getElementById('idProofFile');
+                        if (input) input.click();
+                      }}
+                      style={{ fontSize: '12px' }}
+                    >
+                      + Add Additional ID Proof
+                    </button>
+                  </div>
+                ) : null}
               </div>
               <div className="form-group">
                 <label className="form-label">Remarks</label>
@@ -460,6 +800,48 @@ const ContactScreen = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Image Viewing Modal */}
+      {showImageModal && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal" style={{ maxWidth: '90vw', maxHeight: '90vh', width: 'auto', height: 'auto' }}>
+            <div className="modal-header">
+              <h3>{selectedImageTitle}</h3>
+              <button className="modal-close" onClick={() => setShowImageModal(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px', textAlign: 'center' }}>
+              <img 
+                src={selectedImageUrl} 
+                alt={selectedImageTitle}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '70vh', 
+                  objectFit: 'contain',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px'
+                }}
+              />
+              <div style={{ marginTop: '15px' }}>
+                <a 
+                  href={selectedImageUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{ marginRight: '10px' }}
+                >
+                  🔗 Open in New Tab
+                </a>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => setShowImageModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
 package com.example.profpride.controllers;
 
+import com.example.profpride.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,9 @@ public class AuthController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
@@ -38,8 +42,12 @@ public class AuthController {
                 
                 // Check if password matches
                 if (password.equals(user.get("password"))) {
-                    // Generate simple token (in production, use JWT)
-                    String token = "staff_token_" + userId + "_" + System.currentTimeMillis();
+                    // Generate JWT token
+                    String token = jwtUtils.generateToken(
+                        user.get("userid").toString(),
+                        user.get("role").toString(),
+                        user.get("name").toString()
+                    );
                     
                     response.put("success", true);
                     response.put("message", "Login successful");

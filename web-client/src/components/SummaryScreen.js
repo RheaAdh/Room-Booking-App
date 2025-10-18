@@ -23,6 +23,32 @@ const SummaryScreen = () => {
     }
   }, [selectedDate]);
 
+  const handleCheckIn = async (bookingId) => {
+    if (window.confirm('Are you sure you want to check-in this customer?')) {
+      try {
+        await api.patch(`/bookings/${bookingId}/checkin`);
+        fetchSummaryData(); // Refresh data
+        alert('Customer checked-in successfully!');
+      } catch (error) {
+        console.error('Error checking in:', error);
+        alert('Error checking in customer. Please try again.');
+      }
+    }
+  };
+
+  const handleCheckOut = async (bookingId) => {
+    if (window.confirm('Are you sure you want to check-out this customer?')) {
+      try {
+        await api.patch(`/bookings/${bookingId}/checkout`);
+        fetchSummaryData(); // Refresh data
+        alert('Customer checked-out successfully!');
+      } catch (error) {
+        console.error('Error checking out:', error);
+        alert('Error checking out customer. Please try again.');
+      }
+    }
+  };
+
   useEffect(() => {
     fetchSummaryData();
   }, [selectedDate, fetchSummaryData]);
@@ -52,16 +78,6 @@ const SummaryScreen = () => {
       <div className="page-header">
         <h1>📋 Daily Summary</h1>
         <div className="header-actions">
-          <div className="date-picker-container">
-            <label htmlFor="date-picker">Select Date:</label>
-            <input
-              id="date-picker"
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="date-picker"
-            />
-          </div>
           <button className="btn btn-primary" onClick={fetchSummaryData}>
             🔄 Refresh
           </button>
@@ -89,6 +105,8 @@ const SummaryScreen = () => {
                         <th>Customer Name</th>
                         <th>Room</th>
                         <th>Phone</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -97,6 +115,29 @@ const SummaryScreen = () => {
                           <td className="customer-name">{booking.customerName}</td>
                           <td className="room-number">{booking.roomNumber}</td>
                           <td className="phone-number">{booking.phoneNumber}</td>
+                          <td className="status">
+                            <span className={`status-badge ${booking.bookingStatus?.toLowerCase()}`}>
+                              {booking.bookingStatus}
+                            </span>
+                          </td>
+                          <td className="actions">
+                            {booking.bookingStatus === 'CONFIRMED' && (
+                              <button 
+                                className="btn btn-sm btn-primary"
+                                onClick={() => handleCheckIn(booking.bookingId)}
+                              >
+                                ✅ Check-in
+                              </button>
+                            )}
+                            {booking.bookingStatus === 'CHECKEDIN' && (
+                              <button 
+                                className="btn btn-sm btn-warning"
+                                onClick={() => handleCheckOut(booking.bookingId)}
+                              >
+                                🚪 Check-out
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -117,6 +158,8 @@ const SummaryScreen = () => {
                         <th>Customer Name</th>
                         <th>Room</th>
                         <th>Phone</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -125,6 +168,29 @@ const SummaryScreen = () => {
                           <td className="customer-name">{booking.customerName}</td>
                           <td className="room-number">{booking.roomNumber}</td>
                           <td className="phone-number">{booking.phoneNumber}</td>
+                          <td className="status">
+                            <span className={`status-badge ${booking.bookingStatus?.toLowerCase()}`}>
+                              {booking.bookingStatus}
+                            </span>
+                          </td>
+                          <td className="actions">
+                            {booking.bookingStatus === 'CONFIRMED' && (
+                              <button 
+                                className="btn btn-sm btn-primary"
+                                onClick={() => handleCheckIn(booking.bookingId)}
+                              >
+                                ✅ Check-in
+                              </button>
+                            )}
+                            {booking.bookingStatus === 'CHECKEDIN' && (
+                              <button 
+                                className="btn btn-sm btn-warning"
+                                onClick={() => handleCheckOut(booking.bookingId)}
+                              >
+                                🚪 Check-out
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

@@ -3,7 +3,7 @@ package com.example.profpride.controllers;
 import com.example.profpride.models.Booking;
 import com.example.profpride.models.Customer;
 import com.example.profpride.services.CustomerService;
-import com.example.profpride.services.GoogleDriveService;
+import com.example.profpride.services.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +24,7 @@ public class CustomerController {
     private CustomerService customerService;
 
     @Autowired
-    private GoogleDriveService googleDriveService;
+    private CloudinaryService cloudinaryService;
 
     @GetMapping
     public ResponseEntity<List<Customer>> getAllCustomers() {
@@ -208,10 +208,11 @@ public class CustomerController {
             @PathVariable String phoneNumber,
             @RequestParam("file") MultipartFile file) {
         try {
-            String photoIdUrl = googleDriveService.uploadPhotoIdProof(file, phoneNumber);
+            String photoIdUrl = cloudinaryService.uploadPhotoIdProof(file, phoneNumber);
             
-            // Update customer record with photo ID URL
+            // Update customer record with photo ID URL and mark ID proof as submitted
             customerService.updateCustomerPhotoIdUrl(phoneNumber, photoIdUrl);
+            customerService.updateCustomerIdProofSubmitted(phoneNumber, true);
             
             return ResponseEntity.ok(photoIdUrl);
         } catch (IOException e) {
@@ -229,7 +230,7 @@ public class CustomerController {
             // Upload each file
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
-                    String photoIdUrl = googleDriveService.uploadPhotoIdProof(file, phoneNumber);
+                    String photoIdUrl = cloudinaryService.uploadPhotoIdProof(file, phoneNumber);
                     uploadedUrls.add(photoIdUrl);
                 }
             }
@@ -247,6 +248,9 @@ public class CustomerController {
                 // Add new URLs to existing ones
                 customer.getIdProofUrls().addAll(uploadedUrls);
                 customerService.updateCustomerIdProofUrls(phoneNumber, customer.getIdProofUrls());
+                
+                // Mark ID proof as submitted
+                customerService.updateCustomerIdProofSubmitted(phoneNumber, true);
             }
             
             Map<String, Object> response = new HashMap<>();

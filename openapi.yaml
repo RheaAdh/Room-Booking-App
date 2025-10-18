@@ -1,193 +1,407 @@
 openapi: 3.0.3
 info:
-  title: Room Booking API
-  version: 1.0.0
-  description: REST API for room booking, customers, payments, invoices, and dashboards.
+  title: Professional Pride Room Booking API
+  version: 2.0.0
+  description: |
+    Comprehensive REST API for room booking management system with advanced features including:
+    - Room availability validation and conflict prevention
+    - Customer management with ID proof verification
+    - Dynamic pricing based on room configurations
+    - Excel-style booking grid with horizontal scrolling
+    - Payment processing with screenshot uploads
+    - Invoice generation and PDF export
+    - Real-time dashboard analytics
+    - Mobile-optimized responsive interfaces
+    
+    **Key Features:**
+    - Prevents double bookings with real-time validation
+    - Supports multiple ID proof uploads per customer
+    - Dynamic pricing based on number of guests
+    - Comprehensive booking history tracking
+    - Professional invoice generation
+    - Mobile-responsive design
 servers:
   - url: https://your-service.onrender.com
+    description: Production server
   - url: http://localhost:8082
+    description: Local development server
+
 paths:
   /:
     get:
-      summary: Root OK
+      summary: Root endpoint
+      description: Health check endpoint
       responses:
-        '200': { description: OK, content: { text/plain: { schema: { type: string } } } }
+        '200': 
+          description: OK
+          content: 
+            text/plain: 
+              schema: 
+                type: string
+                example: "Professional Pride Room Booking API is running"
+
   /healthcheck:
     get:
       summary: Health check
+      description: Detailed health check endpoint
       responses:
-        '200': { description: OK, content: { text/plain: { schema: { type: string } } } }
+        '200': 
+          description: Service is healthy
+          content: 
+            text/plain: 
+              schema: 
+                type: string
+                example: "Service is running"
 
   /api/v1/bookings:
     get:
-      summary: List bookings
+      summary: List all bookings
+      description: Retrieve all bookings with comprehensive details
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Booking' } } } } }
+        '200': 
+          description: List of bookings
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Booking'
     post:
-      summary: Create booking
+      summary: Create new booking
+      description: |
+        Create a new booking with automatic room availability validation.
+        Returns 409 Conflict if room is already booked for the selected dates.
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Booking' }
+            schema: 
+              $ref: '#/components/schemas/BookingCreateRequest'
       responses:
-        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Booking' } } } }
+        '201': 
+          description: Booking created successfully
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Booking'
+        '400': 
+          description: Bad request - Invalid data
+        '409': 
+          description: Conflict - Room already booked for selected dates
+        '500': 
+          description: Internal server error
 
   /api/v1/bookings/{id}:
     get:
-      summary: Get booking
+      summary: Get booking by ID
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
+          description: Booking ID
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Booking' } } } }
-        '404': { description: Not found }
+        '200': 
+          description: Booking details
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Booking'
+        '404': 
+          description: Booking not found
     put:
       summary: Update booking
+      description: |
+        Update booking with room availability validation.
+        Returns 409 Conflict if updated dates conflict with existing bookings.
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Booking' }
+            schema: 
+              $ref: '#/components/schemas/BookingUpdateRequest'
       responses:
-        '200': { description: OK }
-        '404': { description: Not found }
+        '200': 
+          description: Booking updated successfully
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Booking'
+        '404': 
+          description: Booking not found
+        '409': 
+          description: Conflict - Room already booked for updated dates
     delete:
       summary: Delete booking
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '204': { description: No content }
+        '204': 
+          description: Booking deleted successfully
+        '404': 
+          description: Booking not found
 
-  /api/v1/bookings/customer/{phoneNumber}:
-    get:
-      summary: Bookings by customer
-      parameters:
-        - in: path
-          name: phoneNumber
-          required: true
-          schema: { type: string }
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Booking' } } } } }
-
-  /api/v1/bookings/room/{roomId}:
-    get:
-      summary: Bookings by room
-      parameters:
-        - in: path
-          name: roomId
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Booking' } } } } }
-
-  /api/v1/bookings/status/{status}:
-    get:
-      summary: Bookings by status
-      parameters:
-        - in: path
-          name: status
-          required: true
-          schema: { $ref: '#/components/schemas/BookingStatus' }
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Booking' } } } } }
-
-  /api/v1/rooms:
-    get:
-      summary: List rooms
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Room' } } } } }
-    post:
-      summary: Create room
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/Room' }
-      responses:
-        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Room' } } } }
-
-  /api/v1/rooms/{id}:
-    get:
-      summary: Get room
+  /api/v1/bookings/{id}/checkin:
+    patch:
+      summary: Check-in customer
+      description: Change booking status from CONFIRMED to CHECKEDIN
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Room' } } } }
-        '404': { description: Not found }
+        '200': 
+          description: Customer checked in successfully
+        '404': 
+          description: Booking not found
+        '400': 
+          description: Invalid booking status for check-in
+
+  /api/v1/bookings/{id}/checkout:
+    patch:
+      summary: Check-out customer
+      description: Change booking status from CHECKEDIN to CHECKEDOUT
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: 
+            type: integer
+            format: int64
+      responses:
+        '200': 
+          description: Customer checked out successfully
+        '404': 
+          description: Booking not found
+        '400': 
+          description: Invalid booking status for check-out
+
+  /api/v1/bookings/customer/{phoneNumber}:
+    get:
+      summary: Get customer booking history
+      description: Retrieve all bookings for a specific customer
+      parameters:
+        - in: path
+          name: phoneNumber
+          required: true
+          schema: 
+            type: string
+          description: Customer phone number
+      responses:
+        '200': 
+          description: Customer booking history
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Booking'
+
+  /api/v1/bookings/room/{roomId}:
+    get:
+      summary: Get room bookings
+      description: Retrieve all bookings for a specific room
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema: 
+            type: integer
+            format: int64
+      responses:
+        '200': 
+          description: Room bookings
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Booking'
+
+  /api/v1/bookings/status/{status}:
+    get:
+      summary: Get bookings by status
+      parameters:
+        - in: path
+          name: status
+          required: true
+          schema: 
+            $ref: '#/components/schemas/BookingStatus'
+      responses:
+        '200': 
+          description: Bookings with specified status
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Booking'
+
+  /api/v1/rooms:
+    get:
+      summary: List all rooms
+      description: Retrieve all rooms with their configurations
+      responses:
+        '200': 
+          description: List of rooms
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Room'
+    post:
+      summary: Create new room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/RoomCreateRequest'
+      responses:
+        '201': 
+          description: Room created successfully
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Room'
+
+  /api/v1/rooms/{id}:
+    get:
+      summary: Get room by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: 
+            type: integer
+            format: int64
+      responses:
+        '200': 
+          description: Room details
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Room'
+        '404': 
+          description: Room not found
     put:
       summary: Update room
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Room' }
+            schema: 
+              $ref: '#/components/schemas/RoomUpdateRequest'
       responses:
-        '200': { description: OK }
-        '404': { description: Not found }
+        '200': 
+          description: Room updated successfully
+        '404': 
+          description: Room not found
     delete:
       summary: Delete room
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '204': { description: No content }
+        '204': 
+          description: Room deleted successfully
+        '404': 
+          description: Room not found
 
   /api/v1/rooms/check-availability:
     get:
       summary: Check room availability
+      description: |
+        Check which rooms are available for the specified date range.
+        Only returns rooms that are not booked for the given dates.
       parameters:
         - in: query
           name: checkInDate
           required: true
-          schema: { type: string, format: date }
+          schema: 
+            type: string
+            format: date-time
+          description: Check-in date and time (ISO format)
         - in: query
           name: checkOutDate
           required: true
-          schema: { type: string, format: date }
+          schema: 
+            type: string
+            format: date-time
+          description: Check-out date and time (ISO format)
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Room' } } } } }
+        '200': 
+          description: Available rooms
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Room'
 
-  /api/v1/rooms/available:
+  /api/v1/rooms/{id}/configurations:
     get:
-      summary: Available rooms (alias)
+      summary: Get room configurations
+      description: Retrieve all pricing configurations for a room
       parameters:
-        - in: query
-          name: checkInDate
+        - in: path
+          name: id
           required: true
-          schema: { type: string, format: date }
-        - in: query
-          name: checkOutDate
-          required: true
-          schema: { type: string, format: date }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Room' } } } } }
+        '200': 
+          description: Room configurations
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/RoomConfiguration'
 
   /api/v1/customer:
     get:
-      summary: List customers
+      summary: List all customers
+      description: Retrieve all customers with their booking history and ID proof status
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Customer' } } } } }
+        '200': 
+          description: List of customers
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Customer'
 
   /api/v1/customer/{phoneNumber}:
     get:
@@ -196,44 +410,70 @@ paths:
         - in: path
           name: phoneNumber
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Customer' } } } }
-        '404': { description: Not found }
+        '200': 
+          description: Customer details
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Customer'
+        '404': 
+          description: Customer not found
     put:
       summary: Update customer
       parameters:
         - in: path
           name: phoneNumber
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Customer' }
+            schema: 
+              $ref: '#/components/schemas/CustomerUpdateRequest'
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Customer updated successfully
+        '404': 
+          description: Customer not found
     delete:
       summary: Delete customer
       parameters:
         - in: path
           name: phoneNumber
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Customer deleted successfully
+        '404': 
+          description: Customer not found
 
   /api/v1/customer/bookings:
     get:
-      summary: Get bookings for authenticated customer
+      summary: Get authenticated customer bookings
+      description: Get bookings for the authenticated customer
       parameters:
         - in: header
           name: Authorization
           required: true
-          schema: { type: string, example: 'Bearer customer_token_9876543210' }
+          schema: 
+            type: string
+            example: 'Bearer customer_token_9876543210'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Booking' } } } } }
+        '200': 
+          description: Customer bookings
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Booking'
 
   /api/v1/customer/profile:
     get:
@@ -242,37 +482,43 @@ paths:
         - in: header
           name: Authorization
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Customer profile
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Customer'
     put:
       summary: Update authenticated customer profile
       parameters:
         - in: header
           name: Authorization
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              properties:
-                name: { type: string }
-                additionalPhoneNumber: { type: string }
-                remarks: { type: string }
+            schema: 
+              $ref: '#/components/schemas/CustomerProfileUpdateRequest'
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Profile updated successfully
 
   /api/v1/customer/{phoneNumber}/upload-photo-id:
     post:
       summary: Upload single ID proof
+      description: Upload a single ID proof document for a customer
       parameters:
         - in: path
           name: phoneNumber
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
       requestBody:
         required: true
         content:
@@ -283,17 +529,32 @@ paths:
                 file:
                   type: string
                   format: binary
+                  description: ID proof document (image or PDF)
       responses:
-        '200': { description: OK }
+        '200': 
+          description: ID proof uploaded successfully
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties:
+                  success: 
+                    type: boolean
+                  fileUrl: 
+                    type: string
+                  message: 
+                    type: string
 
   /api/v1/customer/{phoneNumber}/upload-id-proofs:
     post:
       summary: Upload multiple ID proofs
+      description: Upload multiple ID proof documents for a customer
       parameters:
         - in: path
           name: phoneNumber
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
       requestBody:
         required: true
         content:
@@ -303,9 +564,26 @@ paths:
               properties:
                 files:
                   type: array
-                  items: { type: string, format: binary }
+                  items: 
+                    type: string
+                    format: binary
+                  description: Multiple ID proof documents
       responses:
-        '200': { description: OK }
+        '200': 
+          description: ID proofs uploaded successfully
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties:
+                  success: 
+                    type: boolean
+                  fileUrls: 
+                    type: array
+                    items: 
+                      type: string
+                  message: 
+                    type: string
 
   /api/v1/customer/{phoneNumber}/id-proofs/{index}:
     delete:
@@ -314,13 +592,18 @@ paths:
         - in: path
           name: phoneNumber
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
         - in: path
           name: index
           required: true
-          schema: { type: integer }
+          schema: 
+            type: integer
       responses:
-        '200': { description: OK }
+        '200': 
+          description: ID proof deleted successfully
+        '404': 
+          description: ID proof not found
 
   /api/v1/auth/login:
     post:
@@ -333,10 +616,25 @@ paths:
               type: object
               required: [userId, password]
               properties:
-                userId: { type: string }
-                password: { type: string }
+                userId: 
+                  type: string
+                  description: Staff user ID
+                password: 
+                  type: string
+                  description: Staff password
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Login successful
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties:
+                  token: 
+                    type: string
+                  userType: 
+                    type: string
+                    enum: [staff]
 
   /api/v1/auth/logout:
     post:
@@ -345,9 +643,11 @@ paths:
         - in: header
           name: Authorization
           required: false
-          schema: { type: string }
+          schema: 
+            type: string
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Logout successful
 
   /api/v1/auth/customer/register:
     post:
@@ -356,9 +656,13 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Customer' }
+            schema: 
+              $ref: '#/components/schemas/CustomerRegistrationRequest'
       responses:
-        '201': { description: Created }
+        '201': 
+          description: Customer registered successfully
+        '400': 
+          description: Registration failed
 
   /api/v1/auth/customer/login:
     post:
@@ -371,36 +675,51 @@ paths:
               type: object
               required: [phoneNumber, password]
               properties:
-                phoneNumber: { type: string }
-                password: { type: string }
+                phoneNumber: 
+                  type: string
+                password: 
+                  type: string
       responses:
-        '200': { description: OK }
-
-  /api/v1/auth/customer/logout:
-    post:
-      summary: Customer logout
-      parameters:
-        - in: header
-          name: Authorization
-          required: false
-          schema: { type: string }
-      responses:
-        '200': { description: OK }
+        '200': 
+          description: Login successful
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties:
+                  token: 
+                    type: string
+                  customer: 
+                    $ref: '#/components/schemas/Customer'
 
   /api/v1/booking-requests:
     get:
       summary: List booking requests
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/BookingRequest' } } } } }
+        '200': 
+          description: List of booking requests
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/BookingRequest'
     post:
       summary: Create booking request
+      description: Create a new booking request (public endpoint)
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/BookingRequest' }
+            schema: 
+              $ref: '#/components/schemas/BookingRequestCreateRequest'
       responses:
-        '201': { description: Created }
+        '201': 
+          description: Booking request created successfully
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/BookingRequest'
 
   /api/v1/booking-requests/{id}:
     get:
@@ -409,186 +728,95 @@ paths:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '200': { description: OK }
-        '404': { description: Not found }
+        '200': 
+          description: Booking request details
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/BookingRequest'
+        '404': 
+          description: Booking request not found
     put:
       summary: Update booking request
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/BookingRequest' }
+            schema: 
+              $ref: '#/components/schemas/BookingRequestUpdateRequest'
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Booking request updated successfully
     delete:
       summary: Delete booking request
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '204': { description: No content }
+        '204': 
+          description: Booking request deleted successfully
 
   /api/v1/booking-requests/customer/{phoneNumber}:
     get:
-      summary: Requests by customer
+      summary: Get customer booking requests
       parameters:
         - in: path
           name: phoneNumber
           required: true
-          schema: { type: string }
+          schema: 
+            type: string
       responses:
-        '200': { description: OK }
-
-  /api/v1/booking-requests/status/{status}:
-    get:
-      summary: Requests by status
-      parameters:
-        - in: path
-          name: status
-          required: true
-          schema: { $ref: '#/components/schemas/BookingRequestStatus' }
-      responses:
-        '200': { description: OK }
-
-  /api/v1/booking-requests/{id}/approve:
-    put:
-      summary: Approve booking request
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '200': { description: OK }
-
-  /api/v1/booking-requests/{id}/reject:
-    put:
-      summary: Reject booking request
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '200': { description: OK }
-
-  /api/v1/invoices:
-    get:
-      summary: List invoices
-      responses:
-        '200': { description: OK }
-    post:
-      summary: Create invoice
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/Invoice' }
-      responses:
-        '201': { description: Created }
-
-  /api/v1/invoices/{id}:
-    get:
-      summary: Get invoice
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '200': { description: OK }
-        '404': { description: Not found }
-    put:
-      summary: Update invoice
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: integer, format: int64 }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/Invoice' }
-      responses:
-        '200': { description: OK }
-    delete:
-      summary: Delete invoice
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '204': { description: No content }
-
-  /api/v1/invoices/booking/{bookingId}:
-    get:
-      summary: Invoices by booking
-      parameters:
-        - in: path
-          name: bookingId
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '200': { description: OK }
-
-  /api/v1/invoices/{id}/download:
-    get:
-      summary: Download invoice by id (URL)
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { type: string } } } }
-
-  /api/v1/invoices/{bookingId}/preview:
-    get:
-      summary: Preview invoice HTML by booking id
-      parameters:
-        - in: path
-          name: bookingId
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '200': { description: OK, content: { text/html: { schema: { type: string } } } }
-
-  /api/v1/invoices/{bookingId}/download:
-    get:
-      summary: Download invoice PDF by booking id
-      parameters:
-        - in: path
-          name: bookingId
-          required: true
-          schema: { type: integer, format: int64 }
-      responses:
-        '200': { description: OK, content: { application/pdf: { schema: { type: string, format: binary } } } }
+        '200': 
+          description: Customer booking requests
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/BookingRequest'
 
   /api/v1/payments:
     get:
       summary: List payments
       responses:
-        '200': { description: OK }
+        '200': 
+          description: List of payments
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Payment'
     post:
       summary: Create payment
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Payment' }
+            schema: 
+              $ref: '#/components/schemas/PaymentCreateRequest'
       responses:
-        '201': { description: Created }
+        '201': 
+          description: Payment created successfully
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Payment'
 
   /api/v1/payments/{id}:
     get:
@@ -597,187 +825,784 @@ paths:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '200': { description: OK }
-        '404': { description: Not found }
+        '200': 
+          description: Payment details
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/Payment'
+        '404': 
+          description: Payment not found
     put:
       summary: Update payment
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Payment' }
+            schema: 
+              $ref: '#/components/schemas/PaymentUpdateRequest'
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Payment updated successfully
     delete:
       summary: Delete payment
       parameters:
         - in: path
           name: id
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '204': { description: No content }
+        '204': 
+          description: Payment deleted successfully
 
   /api/v1/payments/booking/{bookingId}:
     get:
-      summary: Payments by booking
+      summary: Get payments for booking
       parameters:
         - in: path
           name: bookingId
           required: true
-          schema: { type: integer, format: int64 }
+          schema: 
+            type: integer
+            format: int64
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Booking payments
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Payment'
+
+  /api/v1/payments/upload-screenshot:
+    post:
+      summary: Upload payment screenshot
+      description: Upload payment screenshot for a booking
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Payment screenshot image
+                bookingId:
+                  type: integer
+                  format: int64
+                  description: Booking ID
+      responses:
+        '200': 
+          description: Screenshot uploaded successfully
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties:
+                  success: 
+                    type: boolean
+                  fileUrl: 
+                    type: string
+                  message: 
+                    type: string
+
+  /api/v1/invoices/{bookingId}/preview:
+    get:
+      summary: Preview invoice HTML
+      description: Generate and preview invoice as HTML
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: 
+            type: integer
+            format: int64
+      responses:
+        '200': 
+          description: Invoice HTML preview
+          content: 
+            text/html: 
+              schema: 
+                type: string
+
+  /api/v1/invoices/{bookingId}/download:
+    get:
+      summary: Download invoice PDF
+      description: Generate and download invoice as PDF
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: 
+            type: integer
+            format: int64
+      responses:
+        '200': 
+          description: Invoice PDF download
+          content: 
+            application/pdf: 
+              schema: 
+                type: string
+                format: binary
 
   /api/v1/dashboard/today-summary:
     get:
-      summary: Today summary
+      summary: Get today's summary
+      description: Get comprehensive dashboard summary for a specific date
       parameters:
         - in: query
           name: date
           required: true
-          schema: { type: string, format: date }
+          schema: 
+            type: string
+            format: date
+          description: Date for summary (YYYY-MM-DD)
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Today's summary
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/DashboardSummary'
 
   /api/v1/dashboard/recent-bookings:
     get:
-      summary: Recent bookings
+      summary: Get recent bookings
       parameters:
         - in: query
           name: limit
           required: false
-          schema: { type: integer, default: 10 }
+          schema: 
+            type: integer
+            default: 10
+          description: Number of recent bookings to return
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Recent bookings
+          content: 
+            application/json: 
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Booking'
 
   /api/v1/dashboard/room-occupancy:
     get:
-      summary: Room occupancy
+      summary: Get room occupancy statistics
       responses:
-        '200': { description: OK }
+        '200': 
+          description: Room occupancy data
+          content: 
+            application/json: 
+              schema: 
+                type: object
+                properties:
+                  totalRooms: 
+                    type: integer
+                  occupiedRooms: 
+                    type: integer
+                  availableRooms: 
+                    type: integer
+                  occupancyRate: 
+                    type: number
+                    format: double
 
 components:
   schemas:
     Booking:
       type: object
       properties:
-        id: { type: integer, format: int64 }
-        customerPhoneNumber: { type: string }
-        roomId: { type: integer, format: int64 }
-        checkInDate: { type: string, format: date-time }
-        checkOutDate: { type: string, format: date-time }
-        bookingDurationType: { $ref: '#/components/schemas/BookingDurationType' }
-        bookingStatus: { $ref: '#/components/schemas/BookingStatus' }
-        paymentStatus: { $ref: '#/components/schemas/PaymentStatus' }
-        dailyCost: { type: number, format: double }
-        monthlyCost: { type: number, format: double }
-        earlyCheckinCost: { type: number, format: double }
-        totalAmount: { type: number, format: double }
-        remarks: { type: string }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        id: 
+          type: integer
+          format: int64
+          description: Unique booking identifier
+        customerPhoneNumber: 
+          type: string
+          description: Customer phone number
+        roomId: 
+          type: integer
+          format: int64
+          description: Room identifier
+        numberOfPeople: 
+          type: integer
+          description: Number of guests
+        checkInDate: 
+          type: string
+          format: date-time
+          description: Check-in date and time
+        checkOutDate: 
+          type: string
+          format: date-time
+          description: Check-out date and time
+        bookingDurationType: 
+          $ref: '#/components/schemas/BookingDurationType'
+        bookingStatus: 
+          $ref: '#/components/schemas/BookingStatus'
+        paymentStatus: 
+          $ref: '#/components/schemas/PaymentStatus'
+        dailyCost: 
+          type: number
+          format: double
+          description: Daily rate cost
+        monthlyCost: 
+          type: number
+          format: double
+          description: Monthly rate cost
+        earlyCheckinCost: 
+          type: number
+          format: double
+          description: Early check-in additional cost
+        lateCheckoutCost: 
+          type: number
+          format: double
+          description: Late check-out additional cost
+        totalAmount: 
+          type: number
+          format: double
+          description: Total booking amount
+        remarks: 
+          type: string
+          description: Additional remarks
+        createdAt: 
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt: 
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    BookingCreateRequest:
+      type: object
+      required: [customerPhoneNumber, roomId, checkInDate, checkOutDate, numberOfPeople]
+      properties:
+        customerPhoneNumber: 
+          type: string
+        roomId: 
+          type: integer
+          format: int64
+        numberOfPeople: 
+          type: integer
+        checkInDate: 
+          type: string
+          format: date-time
+        checkOutDate: 
+          type: string
+          format: date-time
+        bookingDurationType: 
+          $ref: '#/components/schemas/BookingDurationType'
+        dailyCost: 
+          type: number
+          format: double
+        monthlyCost: 
+          type: number
+          format: double
+        earlyCheckinCost: 
+          type: number
+          format: double
+        lateCheckoutCost: 
+          type: number
+          format: double
+        remarks: 
+          type: string
+
+    BookingUpdateRequest:
+      type: object
+      properties:
+        checkInDate: 
+          type: string
+          format: date-time
+        checkOutDate: 
+          type: string
+          format: date-time
+        numberOfPeople: 
+          type: integer
+        bookingStatus: 
+          $ref: '#/components/schemas/BookingStatus'
+        paymentStatus: 
+          $ref: '#/components/schemas/PaymentStatus'
+        dailyCost: 
+          type: number
+          format: double
+        monthlyCost: 
+          type: number
+          format: double
+        earlyCheckinCost: 
+          type: number
+          format: double
+        lateCheckoutCost: 
+          type: number
+          format: double
+        remarks: 
+          type: string
 
     Room:
       type: object
       properties:
-        id: { type: integer, format: int64 }
-        roomNumber: { type: string }
-        roomType: { $ref: '#/components/schemas/RoomType' }
-        bathroomType: { $ref: '#/components/schemas/BathroomType' }
-        isAvailable: { type: boolean }
-        dailyReferenceCost: { type: number, format: double }
-        monthlyReferenceCost: { type: number, format: double }
-        description: { type: string }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        id: 
+          type: integer
+          format: int64
+        roomNumber: 
+          type: string
+          description: Room number/identifier
+        roomType: 
+          $ref: '#/components/schemas/RoomType'
+        bathroomType: 
+          $ref: '#/components/schemas/BathroomType'
+        isAvailable: 
+          type: boolean
+          description: Current availability status
+        dailyReferenceCost: 
+          type: number
+          format: double
+          description: Reference daily cost
+        monthlyReferenceCost: 
+          type: number
+          format: double
+          description: Reference monthly cost
+        description: 
+          type: string
+          description: Room description
+        createdAt: 
+          type: string
+          format: date-time
+        updatedAt: 
+          type: string
+          format: date-time
+
+    RoomCreateRequest:
+      type: object
+      required: [roomNumber, roomType, bathroomType]
+      properties:
+        roomNumber: 
+          type: string
+        roomType: 
+          $ref: '#/components/schemas/RoomType'
+        bathroomType: 
+          $ref: '#/components/schemas/BathroomType'
+        dailyReferenceCost: 
+          type: number
+          format: double
+        monthlyReferenceCost: 
+          type: number
+          format: double
+        description: 
+          type: string
+
+    RoomUpdateRequest:
+      type: object
+      properties:
+        roomNumber: 
+          type: string
+        roomType: 
+          $ref: '#/components/schemas/RoomType'
+        bathroomType: 
+          $ref: '#/components/schemas/BathroomType'
+        isAvailable: 
+          type: boolean
+        dailyReferenceCost: 
+          type: number
+          format: double
+        monthlyReferenceCost: 
+          type: number
+          format: double
+        description: 
+          type: string
+
+    RoomConfiguration:
+      type: object
+      properties:
+        id: 
+          type: integer
+          format: int64
+        roomId: 
+          type: integer
+          format: int64
+        personCount: 
+          type: integer
+          description: Number of people this configuration supports
+        dailyCost: 
+          type: number
+          format: double
+          description: Daily cost for this person count
+        monthlyCost: 
+          type: number
+          format: double
+          description: Monthly cost for this person count
+        createdAt: 
+          type: string
+          format: date-time
+        updatedAt: 
+          type: string
+          format: date-time
 
     Customer:
       type: object
       properties:
-        phoneNumber: { type: string }
-        name: { type: string }
-        email: { type: string }
-        password: { type: string }
-        additionalPhoneNumber: { type: string }
-        documentsFolderLink: { type: string }
-        photoIdProofUrl: { type: string }
-        idProofUrls:
+        phoneNumber: 
+          type: string
+          description: Primary phone number (used as ID)
+        name: 
+          type: string
+          description: Customer full name
+        email: 
+          type: string
+          format: email
+          description: Customer email address
+        password: 
+          type: string
+          description: Customer password (hashed)
+        additionalPhoneNumber: 
+          type: string
+          description: Additional contact number
+        photoIdProofUrl: 
+          type: string
+          description: Legacy single ID proof URL
+        idProofUrls: 
           type: array
-          items: { type: string }
-        remarks: { type: string }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+          items: 
+            type: string
+          description: Multiple ID proof URLs
+        idProofSubmitted: 
+          type: boolean
+          description: Whether ID proof has been submitted
+        remarks: 
+          type: string
+          description: Additional remarks
+        createdAt: 
+          type: string
+          format: date-time
+        updatedAt: 
+          type: string
+          format: date-time
+
+    CustomerRegistrationRequest:
+      type: object
+      required: [phoneNumber, name, password]
+      properties:
+        phoneNumber: 
+          type: string
+        name: 
+          type: string
+        email: 
+          type: string
+          format: email
+        password: 
+          type: string
+        additionalPhoneNumber: 
+          type: string
+        remarks: 
+          type: string
+
+    CustomerUpdateRequest:
+      type: object
+      properties:
+        name: 
+          type: string
+        email: 
+          type: string
+          format: email
+        additionalPhoneNumber: 
+          type: string
+        remarks: 
+          type: string
+
+    CustomerProfileUpdateRequest:
+      type: object
+      properties:
+        name: 
+          type: string
+        additionalPhoneNumber: 
+          type: string
+        remarks: 
+          type: string
 
     Payment:
       type: object
       properties:
-        id: { type: integer, format: int64 }
-        bookingId: { type: integer, format: int64 }
-        amount: { type: number, format: double }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMode' }
-        paymentStatus: { $ref: '#/components/schemas/PaymentStatus' }
-        paymentScreenshotUrl: { type: string }
-        transactionId: { type: string }
-        paymentDate: { type: string, format: date-time }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        id: 
+          type: integer
+          format: int64
+        bookingId: 
+          type: integer
+          format: int64
+        amount: 
+          type: number
+          format: double
+          description: Payment amount
+        paymentMethod: 
+          $ref: '#/components/schemas/PaymentMode'
+        paymentStatus: 
+          $ref: '#/components/schemas/PaymentStatus'
+        paymentScreenshotUrl: 
+          type: string
+          description: Screenshot of payment proof
+        transactionId: 
+          type: string
+          description: Transaction reference ID
+        paymentDate: 
+          type: string
+          format: date-time
+          description: Payment date and time
+        createdAt: 
+          type: string
+          format: date-time
+        updatedAt: 
+          type: string
+          format: date-time
 
-    Invoice:
+    PaymentCreateRequest:
+      type: object
+      required: [bookingId, amount, paymentMethod]
+      properties:
+        bookingId: 
+          type: integer
+          format: int64
+        amount: 
+          type: number
+          format: double
+        paymentMethod: 
+          $ref: '#/components/schemas/PaymentMode'
+        paymentStatus: 
+          $ref: '#/components/schemas/PaymentStatus'
+        paymentScreenshotUrl: 
+          type: string
+        transactionId: 
+          type: string
+        paymentDate: 
+          type: string
+          format: date-time
+
+    PaymentUpdateRequest:
       type: object
       properties:
-        id: { type: integer, format: int64 }
-        bookingId: { type: integer, format: int64 }
-        totalAmount: { type: number, format: double }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        amount: 
+          type: number
+          format: double
+        paymentMethod: 
+          $ref: '#/components/schemas/PaymentMode'
+        paymentStatus: 
+          $ref: '#/components/schemas/PaymentStatus'
+        paymentScreenshotUrl: 
+          type: string
+        transactionId: 
+          type: string
+        paymentDate: 
+          type: string
+          format: date-time
 
     BookingRequest:
       type: object
       properties:
-        id: { type: integer, format: int64 }
-        customerPhoneNumber: { type: string }
-        roomId: { type: integer, format: int64 }
-        status: { $ref: '#/components/schemas/BookingRequestStatus' }
-        checkInDate: { type: string, format: date-time }
-        checkOutDate: { type: string, format: date-time }
-        remarks: { type: string }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        id: 
+          type: integer
+          format: int64
+        customerPhoneNumber: 
+          type: string
+        roomId: 
+          type: integer
+          format: int64
+        roomNumber: 
+          type: string
+          description: Room number for display
+        numberOfPeople: 
+          type: integer
+          description: Number of guests
+        days: 
+          type: integer
+          description: Number of days
+        status: 
+          $ref: '#/components/schemas/BookingRequestStatus'
+        checkInDate: 
+          type: string
+          format: date-time
+        checkOutDate: 
+          type: string
+          format: date-time
+        bookingDurationType: 
+          $ref: '#/components/schemas/BookingDurationType'
+        dailyCost: 
+          type: number
+          format: double
+        monthlyCost: 
+          type: number
+          format: double
+        earlyCheckinCost: 
+          type: number
+          format: double
+        lateCheckoutCost: 
+          type: number
+          format: double
+        totalAmount: 
+          type: number
+          format: double
+        remarks: 
+          type: string
+        createdAt: 
+          type: string
+          format: date-time
+        updatedAt: 
+          type: string
+          format: date-time
+
+    BookingRequestCreateRequest:
+      type: object
+      required: [customerPhoneNumber, roomId, checkInDate, checkOutDate, numberOfPeople]
+      properties:
+        customerPhoneNumber: 
+          type: string
+        roomId: 
+          type: integer
+          format: int64
+        roomNumber: 
+          type: string
+        numberOfPeople: 
+          type: integer
+        days: 
+          type: integer
+        checkInDate: 
+          type: string
+          format: date-time
+        checkOutDate: 
+          type: string
+          format: date-time
+        bookingDurationType: 
+          $ref: '#/components/schemas/BookingDurationType'
+        dailyCost: 
+          type: number
+          format: double
+        monthlyCost: 
+          type: number
+          format: double
+        earlyCheckinCost: 
+          type: number
+          format: double
+        lateCheckoutCost: 
+          type: number
+          format: double
+        totalAmount: 
+          type: number
+          format: double
+        remarks: 
+          type: string
+
+    BookingRequestUpdateRequest:
+      type: object
+      properties:
+        status: 
+          $ref: '#/components/schemas/BookingRequestStatus'
+        remarks: 
+          type: string
+
+    DashboardSummary:
+      type: object
+      properties:
+        date: 
+          type: string
+          format: date
+        totalBookings: 
+          type: integer
+        confirmedBookings: 
+          type: integer
+        checkedInBookings: 
+          type: integer
+        checkedOutBookings: 
+          type: integer
+        totalRevenue: 
+          type: number
+          format: double
+        checkIns: 
+          type: array
+          items: 
+            $ref: '#/components/schemas/Booking'
+          description: Today's check-ins
+        checkOuts: 
+          type: array
+          items: 
+            $ref: '#/components/schemas/Booking'
+          description: Today's check-outs
 
     BookingStatus:
       type: string
-      enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED]
+      enum: [PENDING, CONFIRMED, CHECKEDIN, CHECKEDOUT, CANCELLED, NO_SHOW, COMPLETED]
+      description: |
+        PENDING - Booking request submitted
+        CONFIRMED - Booking confirmed by staff
+        CHECKEDIN - Customer has checked in
+        CHECKEDOUT - Customer has checked out
+        CANCELLED - Booking cancelled
+        NO_SHOW - Customer did not show up
+        COMPLETED - Booking completed successfully
 
     BookingDurationType:
       type: string
       enum: [DAILY, MONTHLY]
+      description: |
+        DAILY - Daily rate booking
+        MONTHLY - Monthly rate booking
 
     PaymentStatus:
       type: string
       enum: [PENDING, PAID, FAILED]
+      description: |
+        PENDING - Payment pending
+        PAID - Payment completed
+        FAILED - Payment failed
 
     PaymentMode:
       type: string
       enum: [CASH, UPI, CARD, BANK_TRANSFER]
+      description: |
+        CASH - Cash payment
+        UPI - UPI payment
+        CARD - Card payment
+        BANK_TRANSFER - Bank transfer
 
     RoomType:
       type: string
       enum: [SINGLE, DOUBLE, DORMITORY]
+      description: |
+        SINGLE - Single occupancy room
+        DOUBLE - Double occupancy room
+        DORMITORY - Dormitory style room
 
     BathroomType:
       type: string
       enum: [ATTACHED, SHARED]
+      description: |
+        ATTACHED - Private attached bathroom
+        SHARED - Shared bathroom
 
     BookingRequestStatus:
       type: string
       enum: [PENDING, APPROVED, REJECTED]
+      description: |
+        PENDING - Request pending approval
+        APPROVED - Request approved
+        REJECTED - Request rejected
 
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
 
+security:
+  - BearerAuth: []

@@ -5,10 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.example.profpride.enums.RoomType;
 import com.example.profpride.enums.BathroomType;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "room")
@@ -16,18 +13,10 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Room {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Room extends BaseEntity {
     
     @Column(name = "room_number", unique = true, nullable = false)
     private String roomNumber;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "room_type", nullable = false)
-    private RoomType roomType;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "bathroom_type", nullable = false)
@@ -36,29 +25,8 @@ public class Room {
     @Column(name = "is_available")
     private Boolean isAvailable = true;
     
-    @Column(name = "daily_reference_cost", precision = 10, scale = 2)
-    private BigDecimal dailyReferenceCost = BigDecimal.ZERO;
-    
-    @Column(name = "monthly_reference_cost", precision = 10, scale = 2)
-    private BigDecimal monthlyReferenceCost = BigDecimal.ZERO;
-    
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    // Room configurations are managed separately through RoomConfigurationService
 }

@@ -51,12 +51,78 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.customer-info {
+  flex: 1;
+}
+
+.customer-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.3px;
+}
+
+.customer-phone {
+  font-size: 16px;
+  color: #6c757d;
+  margin: 0 0 4px 0;
+  font-weight: 500;
+}
+
+.customer-email {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0;
+  font-weight: 400;
+}
+
+.booking-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Mobile compact version */
 @media (max-width: 768px) {
   .booking-header {
     margin-bottom: 8px;
+    padding: 12px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .customer-name {
+    font-size: 18px;
+  }
+  
+  .customer-phone {
+    font-size: 14px;
+  }
+  
+  .customer-email {
+    font-size: 12px;
+  }
+  
+  .status-badge {
+    padding: 6px 12px;
+    font-size: 11px;
   }
 }
 
@@ -86,6 +152,58 @@
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+}
+
+.payment-btn {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  color: white;
+}
+
+.preview-btn {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+}
+
+.checkin-btn {
+  background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+  color: white;
+}
+
+.checkout-btn {
+  background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+  color: white;
 }
 
 .booking-details {
@@ -299,12 +417,16 @@
   .booking-actions {
     width: 100%;
     justify-content: flex-start;
-    gap: 4px;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
   }
   
-  .booking-actions .btn {
-    padding: 6px 10px;
+  .action-btn {
+    padding: 6px 12px;
     font-size: 12px;
+    flex: 1;
+    min-width: 0;
   }
   
   .booking-details {
@@ -344,4 +466,129 @@
   .booking-id {
     font-size: 12px;
   }
+}
+
+/* Preview Modal Styles */
+.booking-preview {
+  padding: 20px 0;
+}
+
+.preview-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.preview-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.preview-section h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #007bff;
+}
+
+.preview-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.preview-label {
+  font-weight: 500;
+  color: #6c757d;
+  min-width: 120px;
+}
+
+.preview-value {
+  color: #2c3e50;
+  font-weight: 400;
+  text-align: right;
+  flex: 1;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.confirmed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.checkedin {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.status-badge.checkedout {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+.status-badge.cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.payments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payment-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.payment-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.payment-amount {
+  font-weight: 600;
+  color: #28a745;
+}
+
+.payment-method {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.payment-date {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.preview-remarks {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 0;
+  color: #495057;
+  font-style: italic;
 }

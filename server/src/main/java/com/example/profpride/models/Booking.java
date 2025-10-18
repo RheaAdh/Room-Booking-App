@@ -18,17 +18,16 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Booking {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Booking extends BaseEntity {
     
     @Column(name = "customer_phone_number", length = 20, nullable = false)
     private String customerPhoneNumber;
     
     @Column(name = "room_id", nullable = false)
     private Long roomId;
+    
+    @Column(name = "number_of_people", nullable = false)
+    private Integer numberOfPeople = 1;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", insertable = false, updatable = false)
@@ -62,26 +61,12 @@ public class Booking {
     @Column(name = "early_checkin_cost", precision = 10, scale = 2)
     private BigDecimal earlyCheckinCost = BigDecimal.ZERO;
     
+    @Column(name = "late_checkout_cost", precision = 10, scale = 2)
+    private BigDecimal lateCheckoutCost = BigDecimal.ZERO;
+    
     @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalAmount;
     
     @Column(name = "remarks", length = 500)
     private String remarks;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

@@ -31,6 +31,37 @@
   font-weight: 700;
 }
 
+.nav-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 20px;
+}
+
+.nav-tab {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-tab:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.nav-tab.active {
+  background: #003580;
+  color: white;
+}
+
 .nav-actions {
   display: flex;
   align-items: center;
@@ -257,6 +288,13 @@
     height: auto;
     padding: 16px 20px;
     gap: 16px;
+  }
+  
+  .nav-tabs {
+    order: -1;
+    margin: 0;
+    width: 100%;
+    justify-content: center;
   }
   
   .nav-brand h2 {

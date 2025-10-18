@@ -39,10 +39,9 @@ public class RoomService {
     public Room updateRoom(Long id, Room updatedRoom) {
         return roomRepository.findById(id).map(room -> {
             room.setRoomNumber(updatedRoom.getRoomNumber());
-            room.setRoomType(updatedRoom.getRoomType());
             room.setBathroomType(updatedRoom.getBathroomType());
-            room.setDailyReferenceCost(updatedRoom.getDailyReferenceCost());
-            room.setMonthlyReferenceCost(updatedRoom.getMonthlyReferenceCost());
+            room.setDescription(updatedRoom.getDescription());
+            room.setIsAvailable(updatedRoom.getIsAvailable());
             return roomRepository.save(room);
         }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
     }

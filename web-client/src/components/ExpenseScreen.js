@@ -21,9 +21,10 @@ const ExpenseScreen = () => {
   const fetchExpenses = async () => {
     try {
       const response = await api.get('/expenses');
-      setExpenses(response.data);
+      setExpenses(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching expenses:', error);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,7 @@ const ExpenseScreen = () => {
           <h3 className="card-title">All Expenses</h3>
         </div>
         <div className="card-body">
-          {expenses.length === 0 ? (
+          {(!expenses || expenses.length === 0) ? (
             <div className="empty-state">
               <p>No expenses found. Add your first expense!</p>
             </div>
@@ -121,7 +122,7 @@ const ExpenseScreen = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {expenses.map(expense => (
+                  {(expenses || []).map(expense => (
                     <tr key={expense.id}>
                       <td>{expense.description}</td>
                       <td className="text-danger">₹{expense.amount}</td>

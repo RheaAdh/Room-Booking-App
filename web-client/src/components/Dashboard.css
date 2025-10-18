@@ -713,6 +713,23 @@
   margin: 0 auto;
 }
 
+.stats-section {
+  margin-bottom: 30px;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.stats-section h2 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 20px;
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
 /* Summary Screen */
 .summary-screen {
   max-width: 1200px;

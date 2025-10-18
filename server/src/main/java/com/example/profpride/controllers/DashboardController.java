@@ -47,11 +47,11 @@ public class DashboardController {
                 startOfDay, endOfDay, startOfDay, endOfDay
             );
 
-            // Get check-ins for today
-            List<Booking> checkIns = bookingRepository.findByCheckInDateBetween(startOfDay, endOfDay);
+            // Get check-ins for today (CONFIRMED bookings that are due for check-in today)
+            List<Booking> checkIns = bookingRepository.findByCheckInDateBetweenAndBookingStatus(startOfDay, endOfDay, com.example.profpride.enums.BookingStatus.CONFIRMED);
             
-            // Get check-outs for today
-            List<Booking> checkOuts = bookingRepository.findByCheckOutDateBetween(startOfDay, endOfDay);
+            // Get check-outs for today (CHECKEDIN bookings that are due for check-out today)
+            List<Booking> checkOuts = bookingRepository.findByCheckOutDateBetweenAndBookingStatus(startOfDay, endOfDay, com.example.profpride.enums.BookingStatus.CHECKEDIN);
 
             // Calculate occupancy rate
             long occupiedRooms = totalRooms - availableRooms;
@@ -65,6 +65,7 @@ public class DashboardController {
                     detail.put("roomNumber", getRoomNumber(booking.getRoomId()));
                     detail.put("phoneNumber", booking.getCustomerPhoneNumber());
                     detail.put("bookingId", booking.getId());
+                    detail.put("bookingStatus", booking.getBookingStatus());
                     return detail;
                 })
                 .collect(java.util.stream.Collectors.toList());
@@ -76,6 +77,7 @@ public class DashboardController {
                     detail.put("roomNumber", getRoomNumber(booking.getRoomId()));
                     detail.put("phoneNumber", booking.getCustomerPhoneNumber());
                     detail.put("bookingId", booking.getId());
+                    detail.put("bookingStatus", booking.getBookingStatus());
                     return detail;
                 })
                 .collect(java.util.stream.Collectors.toList());
@@ -107,7 +109,9 @@ public class DashboardController {
             summary.put("checkIns", checkInDetails);
             summary.put("checkOuts", checkOutDetails);
             summary.put("pendingDues", pendingDuesDetails);
-            summary.put("revenue", calculateTodayRevenue(checkOuts));
+            // Calculate total revenue from all bookings
+            List<Booking> allBookings = bookingRepository.findAll();
+            summary.put("revenue", calculateTodayRevenue(allBookings));
 
             return ResponseEntity.ok(summary);
 

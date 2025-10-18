@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -14,7 +13,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Customer {
+public class Customer extends BaseEntityWithCustomId {
     
     @Id
     @Column(name = "phone_number", length = 20)
@@ -38,6 +37,9 @@ public class Customer {
     @Column(name = "photo_id_proof_url", columnDefinition = "TEXT")
     private String photoIdProofUrl;
     
+    @Column(name = "payment_screenshot_url", columnDefinition = "TEXT")
+    private String paymentScreenshotUrl;
+    
     @ElementCollection
     @CollectionTable(name = "customer_id_proof_urls", joinColumns = @JoinColumn(name = "customer_phone_number"))
     @Column(name = "id_proof_url", columnDefinition = "TEXT")
@@ -46,20 +48,15 @@ public class Customer {
     @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
     
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "is_id_proof_submitted", nullable = false)
+    private Boolean idProofSubmitted = false;
     
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+    // Explicit getter to ensure proper JSON serialization
+    public Boolean getIdProofSubmitted() {
+        return idProofSubmitted;
     }
     
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    public void setIdProofSubmitted(Boolean idProofSubmitted) {
+        this.idProofSubmitted = idProofSubmitted;
     }
 }

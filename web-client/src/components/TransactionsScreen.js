@@ -13,8 +13,8 @@ const TransactionsScreen = () => {
   const fetchTransactionsData = async () => {
     setLoading(true);
     try {
-      // Use bookings endpoint since it contains transaction-like data
-      const response = await api.get('/bookings');
+      // Fetch payments data for transactions
+      const response = await api.get('/payments');
       setTransactions(response.data);
     } catch (error) {
       console.error('Error fetching transactions data:', error);
@@ -72,33 +72,37 @@ const TransactionsScreen = () => {
           <div className="transactions-content">
             {/* Payments */}
             <div className="transactions-section">
-              <h4>💰 Payments ({transactions.payments?.length || 0})</h4>
-              {transactions.payments && transactions.payments.length > 0 ? (
+              <h4>💰 Payments ({transactions?.length || 0})</h4>
+              {transactions && transactions.length > 0 ? (
                 <div className="transactions-table">
                   <table>
                     <thead>
                       <tr>
                         <th>Date</th>
-                        <th>Customer</th>
-                        <th>Room</th>
+                        <th>Booking ID</th>
                         <th>Amount</th>
-                        <th>Mode</th>
-                        <th>Description</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Transaction ID</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {transactions.payments.map((payment, index) => (
+                      {transactions.map((payment, index) => (
                         <tr key={index}>
                           <td>{formatDate(payment.paymentDate)}</td>
-                          <td>{payment.customerName}</td>
-                          <td>Room {payment.roomNumber}</td>
+                          <td>#{payment.bookingId}</td>
                           <td className="amount positive">{formatAmount(payment.amount)}</td>
                           <td>
-                            <span className={`payment-mode ${payment.paymentMode?.toLowerCase()}`}>
-                              {payment.paymentMode}
+                            <span className={`payment-mode ${payment.paymentMethod?.toLowerCase()}`}>
+                              {payment.paymentMethod}
                             </span>
                           </td>
-                          <td>{payment.description || '-'}</td>
+                          <td>
+                            <span className={`payment-status ${payment.paymentStatus?.toLowerCase()}`}>
+                              {payment.paymentStatus}
+                            </span>
+                          </td>
+                          <td>{payment.transactionId || '-'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -109,62 +113,26 @@ const TransactionsScreen = () => {
               )}
             </div>
 
-            {/* Expenses */}
-            <div className="transactions-section">
-              <h4>💸 Expenses ({transactions.expenses?.length || 0})</h4>
-              {transactions.expenses && transactions.expenses.length > 0 ? (
-                <div className="transactions-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Category</th>
-                        <th>Amount</th>
-                        <th>Description</th>
-                        <th>Payment Mode</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.expenses.map((expense, index) => (
-                        <tr key={index}>
-                          <td>{formatDate(expense.expenseDate)}</td>
-                          <td>
-                            <span className="expense-category">
-                              {expense.category}
-                            </span>
-                          </td>
-                          <td className="amount negative">{formatAmount(expense.amount)}</td>
-                          <td>{expense.description || '-'}</td>
-                          <td>
-                            <span className={`payment-mode ${expense.paymentMode?.toLowerCase()}`}>
-                              {expense.paymentMode}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="no-data">No expenses found</p>
-              )}
-            </div>
 
             {/* Summary */}
             <div className="transactions-summary">
               <div className="summary-cards">
                 <div className="summary-card">
                   <h5>Total Payments</h5>
-                  <p className="amount positive">{formatAmount(transactions.totalPayments)}</p>
+                  <p className="amount positive">
+                    {formatAmount(transactions?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0)}
+                  </p>
                 </div>
                 <div className="summary-card">
-                  <h5>Total Expenses</h5>
-                  <p className="amount negative">{formatAmount(transactions.totalExpenses)}</p>
+                  <h5>Completed Payments</h5>
+                  <p className="amount positive">
+                    {formatAmount(transactions?.filter(p => p.paymentStatus === 'COMPLETED').reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0)}
+                  </p>
                 </div>
                 <div className="summary-card">
-                  <h5>Net Cash Flow</h5>
-                  <p className={`amount ${(transactions.totalPayments || 0) - (transactions.totalExpenses || 0) >= 0 ? 'positive' : 'negative'}`}>
-                    {formatAmount((transactions.totalPayments || 0) - (transactions.totalExpenses || 0))}
+                  <h5>Pending Payments</h5>
+                  <p className="amount negative">
+                    {formatAmount(transactions?.filter(p => p.paymentStatus === 'PENDING').reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0)}
                   </p>
                 </div>
               </div>

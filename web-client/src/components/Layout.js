@@ -9,16 +9,16 @@ const Layout = ({ children }) => {
   const { user, logout } = useAuth();
 
   const menuItems = [
-    { path: '/adminpvt/stats', label: 'Stats', icon: '📊' },
     { path: '/adminpvt/summary', label: 'Summary', icon: '📋' },
-    { path: '/adminpvt/transactions', label: 'Transactions', icon: '💳' },
-    { path: '/adminpvt/room-availability', label: 'Room Availability', icon: '🏠' },
+    { path: '/adminpvt/contacts', label: 'Contacts', icon: '👥' },
     { path: '/adminpvt/bookings', label: 'Bookings', icon: '📝' },
     { path: '/adminpvt/booking-grid', label: 'Booking Grid', icon: '📅' },
-    { path: '/adminpvt/booking-requests', label: 'Booking Requests', icon: '📨' },
     { path: '/adminpvt/rooms', label: 'Rooms', icon: '🏢' },
+    { path: '/adminpvt/booking-requests', label: 'Booking Requests', icon: '📨' },
     { path: '/adminpvt/expenses', label: 'Expenses', icon: '💸' },
-    { path: '/adminpvt/contacts', label: 'Contacts', icon: '👥' },
+    { path: '/adminpvt/transactions', label: 'Transactions', icon: '💳' },
+    { path: '/adminpvt/stats', label: 'Stats', icon: '📊' },
+    { path: '/adminpvt/room-availability', label: 'Room Availability', icon: '🏠' },
   ];
 
   const toggleSidebar = () => {

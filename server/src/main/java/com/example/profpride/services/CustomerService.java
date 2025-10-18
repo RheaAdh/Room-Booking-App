@@ -53,6 +53,7 @@ public class CustomerService {
                 newCustomer.setDocumentsFolderLink(updatedCustomer.getDocumentsFolderLink());
                 newCustomer.setPhotoIdProofUrl(updatedCustomer.getPhotoIdProofUrl());
                 newCustomer.setIdProofUrls(customer.getIdProofUrls()); // Keep existing ID proofs
+                newCustomer.setIdProofSubmitted(updatedCustomer.getIdProofSubmitted());
                 newCustomer.setRemarks(updatedCustomer.getRemarks());
                 newCustomer.setCreatedAt(customer.getCreatedAt()); // Keep original creation date
                 newCustomer.setUpdatedAt(java.time.LocalDateTime.now());
@@ -68,6 +69,7 @@ public class CustomerService {
                 customer.setAdditionalPhoneNumber(updatedCustomer.getAdditionalPhoneNumber());
                 customer.setDocumentsFolderLink(updatedCustomer.getDocumentsFolderLink());
                 customer.setPhotoIdProofUrl(updatedCustomer.getPhotoIdProofUrl());
+                customer.setIdProofSubmitted(updatedCustomer.getIdProofSubmitted());
                 customer.setRemarks(updatedCustomer.getRemarks());
                 customer.setUpdatedAt(java.time.LocalDateTime.now());
                 return customerRepository.save(customer);
@@ -100,6 +102,13 @@ public class CustomerService {
     public Customer updateCustomerIdProofUrls(String phoneNumber, List<String> idProofUrls) {
         return customerRepository.findById(phoneNumber).map(customer -> {
             customer.setIdProofUrls(idProofUrls);
+            return customerRepository.save(customer);
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+    }
+
+    public Customer updateCustomerIdProofSubmitted(String phoneNumber, Boolean idProofSubmitted) {
+        return customerRepository.findById(phoneNumber).map(customer -> {
+            customer.setIdProofSubmitted(idProofSubmitted);
             return customerRepository.save(customer);
         }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
     }

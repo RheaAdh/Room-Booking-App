@@ -19,6 +19,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     // Dashboard queries
     List<Booking> findByCheckInDateBetween(LocalDateTime start, LocalDateTime end);
     List<Booking> findByCheckOutDateBetween(LocalDateTime start, LocalDateTime end);
+    List<Booking> findByCheckInDateBetweenAndBookingStatus(LocalDateTime start, LocalDateTime end, BookingStatus status);
+    List<Booking> findByCheckOutDateBetweenAndBookingStatus(LocalDateTime start, LocalDateTime end, BookingStatus status);
     List<Booking> findTop10ByOrderByCreatedAtDesc();
     
         @Query("SELECT b FROM Booking b WHERE (b.checkInDate BETWEEN :start1 AND :end1) OR (b.checkOutDate BETWEEN :start2 AND :end2)")

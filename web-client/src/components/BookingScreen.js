@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 // import DatePicker from 'react-datepicker';
 // import 'react-datepicker/dist/react-datepicker.css';
+import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
+import { toLocalDateTimeString, fromLocalDateTimeString, formatDateForDisplay, toLocalDateString, getTodayDateString } from '../utils/dateUtils';
 import './BookingScreen.css';
 
 const BookingScreen = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [roomConfigurations, setRoomConfigurations] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,22 +18,30 @@ const BookingScreen = () => {
   // Modal states
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isEditingPayment, setIsEditingPayment] = useState(false);
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
+  const [selectedImageTitle, setSelectedImageTitle] = useState('');
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [conflictMessage, setConflictMessage] = useState('');
   
   // Form states
   const [formData, setFormData] = useState({
     customerPhoneNumber: '',
     roomId: '',
+    numberOfPeople: '',
     checkInDate: new Date(),
     checkOutDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
     bookingStatus: 'CONFIRMED',
     bookingDurationType: 'DAILY',
     dailyCost: '',
     monthlyCost: '',
-    earlyCheckinCost: ''
+    earlyCheckinCost: '',
+    lateCheckoutCost: ''
   });
   
   const [paymentData, setPaymentData] = useState({
@@ -46,9 +58,10 @@ const BookingScreen = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [bookingsRes, roomsRes, customersRes] = await Promise.all([
+      const [bookingsRes, roomsRes, roomConfigsRes, customersRes] = await Promise.all([
         api.get('/bookings'),
         api.get('/rooms'),
+        api.get('/room-configurations'),
         api.get('/customer')
       ]);
       
@@ -73,6 +86,7 @@ const BookingScreen = () => {
       
       setBookings(bookingsWithPayments);
       setRooms(roomsRes.data);
+      setRoomConfigurations(roomConfigsRes.data);
       setCustomers(customersRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -82,13 +96,45 @@ const BookingScreen = () => {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newFormData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Auto-populate costs when room or number of people changes
+      if (field === 'roomId' || field === 'numberOfPeople') {
+        const roomConfig = getRoomConfiguration(newFormData.roomId, newFormData.numberOfPeople);
+        console.log('Auto-populating costs:', {
+          field,
+          roomId: newFormData.roomId,
+          numberOfPeople: newFormData.numberOfPeople,
+          roomConfig
+        });
+        if (roomConfig) {
+          newFormData.dailyCost = roomConfig.dailyCost;
+          newFormData.monthlyCost = roomConfig.monthlyCost;
+          console.log('Costs populated:', {
+            dailyCost: newFormData.dailyCost,
+            monthlyCost: newFormData.monthlyCost
+          });
+        }
+      }
+      
+      return newFormData;
+    });
+  };
+
+  const getRoomConfiguration = (roomId, numberOfPeople) => {
+    return roomConfigurations.find(config => 
+      config.roomId === parseInt(roomId) && config.personCount === parseInt(numberOfPeople)
+    );
   };
 
   const filteredBookings = bookings.filter(booking => {
+    // Exclude CHECKEDOUT bookings
+    if (booking.bookingStatus === 'CHECKEDOUT') return false;
+    
     if (!searchTerm) return true;
     // Find customer by phone number
     const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
@@ -153,8 +199,8 @@ const BookingScreen = () => {
       
       const bookingPayload = {
         ...formData,
-        checkInDate: formData.checkInDate.toISOString(),
-        checkOutDate: formData.checkOutDate.toISOString(),
+        checkInDate: toLocalDateTimeString(formData.checkInDate),
+        checkOutDate: toLocalDateTimeString(formData.checkOutDate),
         totalAmount: totalCost
       };
       
@@ -173,7 +219,8 @@ const BookingScreen = () => {
     } catch (error) {
       console.error('Error creating/updating booking:', error);
       if (error.response?.status === 409) {
-        alert('Room is already booked for the selected dates. Please choose different dates or room.');
+        setConflictMessage('Room is already booked for the selected dates. Please choose different dates or room.');
+        setShowConflictModal(true);
       } else {
         alert('Error creating/updating booking. Please try again.');
       }
@@ -181,16 +228,22 @@ const BookingScreen = () => {
   };
 
   const handleEditBooking = (booking) => {
+    // Ensure dates are valid, fallback to current date if invalid
+    const checkInDate = fromLocalDateTimeString(booking.checkInDate) || new Date();
+    const checkOutDate = fromLocalDateTimeString(booking.checkOutDate) || new Date(Date.now() + 24 * 60 * 60 * 1000);
+    
     setFormData({
       customerPhoneNumber: booking.customerPhoneNumber || '',
       roomId: booking.roomId || '',
-      checkInDate: new Date(booking.checkInDate),
-      checkOutDate: new Date(booking.checkOutDate),
+      numberOfPeople: booking.numberOfPeople || 1,
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
       bookingStatus: booking.bookingStatus,
       bookingDurationType: booking.bookingDurationType || 'DAILY',
       dailyCost: booking.dailyCost || '',
       monthlyCost: booking.monthlyCost || '',
-      earlyCheckinCost: booking.earlyCheckinCost || ''
+      earlyCheckinCost: booking.earlyCheckinCost || '',
+      lateCheckoutCost: booking.lateCheckoutCost || ''
     });
     
     setSelectedBooking(booking);
@@ -206,22 +259,36 @@ const BookingScreen = () => {
     } catch (error) {
       console.error('Error updating booking:', error);
       if (error.response?.status === 409) {
-        alert('Room is already booked for the selected dates. Please choose different dates or room.');
+        setConflictMessage('Room is already booked for the selected dates. Please choose different dates or room.');
+        setShowConflictModal(true);
       } else {
         alert('Error updating booking. Please try again.');
       }
     }
   };
 
-  const handleDeleteBooking = async (bookingId) => {
-    if (window.confirm('Are you sure you want to delete this booking?')) {
+  const handleCheckIn = async (bookingId) => {
+    if (window.confirm('Are you sure you want to check-in this customer?')) {
       try {
-        await api.delete(`/bookings/${bookingId}`);
+        await api.patch(`/bookings/${bookingId}/checkin`);
         fetchData(); // Refresh data
-        alert('Booking deleted successfully!');
+        alert('Customer checked-in successfully!');
       } catch (error) {
-        console.error('Error deleting booking:', error);
-        alert('Error deleting booking. Please try again.');
+        console.error('Error checking in:', error);
+        alert('Error checking in customer. Please try again.');
+      }
+    }
+  };
+
+  const handleCheckOut = async (bookingId) => {
+    if (window.confirm('Are you sure you want to check-out this customer?')) {
+      try {
+        await api.patch(`/bookings/${bookingId}/checkout`);
+        fetchData(); // Refresh data
+        alert('Customer checked-out successfully!');
+      } catch (error) {
+        console.error('Error checking out:', error);
+        alert('Error checking out customer. Please try again.');
       }
     }
   };
@@ -229,12 +296,16 @@ const BookingScreen = () => {
   const handleAddPayment = async (e) => {
     e.preventDefault();
     try {
+      // Convert date to proper format for backend
+      const paymentDate = new Date(paymentData.createdAt);
+      paymentDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+      
       const paymentPayload = {
-        bookingId: selectedBooking.id, // Add the required bookingId
-        amount: parseFloat(paymentData.amount) || 0, // Ensure amount is a number
-        paymentMethod: paymentData.mode, // Map mode to paymentMethod
+        bookingId: selectedBooking.id,
+        amount: parseFloat(paymentData.amount) || 0,
+        paymentMethod: paymentData.mode, // This should match PaymentMode enum values
         paymentScreenshotUrl: paymentData.paymentScreenshotUrl || '',
-        paymentDate: paymentData.createdAt.toISOString().split('T')[0] // Map createdAt to paymentDate in YYYY-MM-DD format
+        paymentDate: toLocalDateTimeString(paymentDate) // Send as local datetime string, backend will parse it
       };
       
       console.log('Payment payload:', paymentPayload);
@@ -303,22 +374,58 @@ const BookingScreen = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // For now, just show an error message since the upload endpoint doesn't exist
-    alert('❌ Payment screenshot upload is not available yet. Please contact the administrator to upload payment screenshots manually.');
-    e.target.value = ''; // Clear the file input
-  };
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size must be less than 10MB');
+      return;
+    }
 
-  const generateInvoice = async (bookingId) => {
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload a valid image (JPEG, PNG) or PDF file');
+      return;
+    }
+
+    if (!selectedBooking || !selectedBooking.customerPhoneNumber) {
+      alert('❌ No booking selected. Please select a booking first.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
     try {
-      const response = await api.get(`/invoices/${bookingId}/preview`);
-      const invoiceWindow = window.open('', '_blank');
-      invoiceWindow.document.write(response.data);
-      invoiceWindow.document.close();
+      const response = await api.post('/payments/upload-screenshot-new', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        params: {
+          phoneNumber: selectedBooking.customerPhoneNumber
+        }
+      });
+
+      if (response.data.success) {
+        setPaymentData(prev => ({
+          ...prev,
+          paymentScreenshotUrl: response.data.fileUrl
+        }));
+        alert('✅ Payment screenshot uploaded successfully!');
+      } else {
+        alert('❌ Error uploading payment screenshot: ' + response.data.message);
+      }
     } catch (error) {
-      console.error('Error generating invoice:', error);
-      alert('Error generating invoice. Please try again.');
+      console.error('Error uploading payment screenshot:', error);
+      alert('❌ Error uploading payment screenshot. Please try again.');
     }
   };
+
+  const handleViewImage = (imageUrl, title) => {
+    setSelectedImageUrl(imageUrl);
+    setSelectedImageTitle(title);
+    setShowImageModal(true);
+  };
+
 
   const downloadInvoicePdf = async (bookingId) => {
     try {
@@ -365,6 +472,7 @@ const BookingScreen = () => {
     setFormData({
       customerPhoneNumber: '',
       roomId: '',
+      numberOfPeople: 1,
       checkInDate: new Date(),
       checkOutDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
       bookingStatus: 'CONFIRMED',
@@ -398,6 +506,19 @@ const BookingScreen = () => {
     
     const config = modeConfig[mode] || { class: 'badge-secondary', text: mode };
     return <span className={`badge ${config.class}`}>{config.text}</span>;
+  };
+
+  const getStatusColor = (status) => {
+    const statusColors = {
+      'PENDING': '#ffc107',
+      'CONFIRMED': '#28a745',
+      'CHECKEDIN': '#17a2b8',
+      'CHECKEDOUT': '#6c757d',
+      'CANCELLED': '#dc3545',
+      'NO_SHOW': '#fd7e14',
+      'COMPLETED': '#20c997'
+    };
+    return statusColors[status] || '#6c757d';
   };
 
   const calculatePaymentBreakdown = (booking) => {
@@ -473,126 +594,191 @@ const BookingScreen = () => {
                 
                 return (
                 <div key={booking.id} className="booking-item">
+                  {/* Customer Information Header */}
                   <div className="booking-header">
-                    <div className="booking-info">
-                      <h4>{customer?.name || 'Unknown Customer'}</h4>
-                      <p className="booking-id">Booking #{booking.id}</p>
+                    <div className="customer-info">
+                      <h3 className="customer-name">{customer?.name || 'Unknown Customer'}</h3>
+                      <p className="customer-phone">{booking.customerPhoneNumber}</p>
+                      {customer?.email && <p className="customer-email">{customer.email}</p>}
                     </div>
-                    <div className="booking-actions">
-                      {getStatusBadge(booking.bookingStatus)}
-                      <button
-                        className="btn btn-sm btn-warning"
-                        onClick={() => handleEditBooking(booking)}
+                    <div className="booking-status">
+                      <span 
+                        className="status-badge"
+                        style={{ backgroundColor: getStatusColor(booking.bookingStatus) }}
                       >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-sm btn-secondary"
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setShowPaymentModal(true);
-                        }}
-                      >
-                        Add Payment
-                      </button>
-                      <button
-                        className="btn btn-sm btn-info"
-                        onClick={() => generateInvoice(booking.id)}
-                      >
-                        📄 Preview
-                      </button>
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => downloadInvoicePdf(booking.id)}
-                      >
-                        📥 Download PDF
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDeleteBooking(booking.id)}
-                      >
-                        Delete
-                      </button>
+                        {booking.bookingStatus}
+                      </span>
                     </div>
                   </div>
                   
                   <div className="booking-details">
+                    {/* Room Information */}
                     <div className="detail-row">
                       <span className="detail-label">Room:</span>
                       <span className="detail-value">
                         {room?.roomNumber || `Room ${booking.roomId}`} ({room?.roomType || 'N/A'})
                       </span>
                     </div>
+                    
+                    {/* Booking Dates */}
                     <div className="detail-row">
                       <span className="detail-label">Check-in:</span>
                       <span className="detail-value">
-                        {new Date(booking.checkInDate).toLocaleDateString()}
+                        {formatDateForDisplay(booking.checkInDate)}
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Check-out:</span>
                       <span className="detail-value">
-                        {new Date(booking.checkOutDate).toLocaleDateString()}
+                        {formatDateForDisplay(booking.checkOutDate)}
                       </span>
                     </div>
+                    
+                    {/* Duration and Type */}
                     <div className="detail-row">
-                      <span className="detail-label">Phone:</span>
+                      <span className="detail-label">Duration:</span>
                       <span className="detail-value">
-                        {booking.customer?.phoneNumber || 'N/A'}
+                        {Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24))} days
                       </span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-label">Duration Type:</span>
+                      <span className="detail-label">Booking Type:</span>
                       <span className="detail-value">
                         {booking.bookingDurationType || 'N/A'}
                       </span>
                     </div>
-                    {booking.dailyCost && (
+                    
+                    {/* Number of People */}
+                    <div className="detail-row">
+                      <span className="detail-label">Guests:</span>
+                      <span className="detail-value">
+                        {booking.numberOfPeople || 'N/A'} people
+                      </span>
+                    </div>
+                    
+                    {/* Financial Information */}
+                    <div className="detail-row">
+                      <span className="detail-label">Daily Rate:</span>
+                      <span className="detail-value">
+                        ₹{booking.dailyCost || '0'}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Monthly Rate:</span>
+                      <span className="detail-value">
+                        ₹{booking.monthlyCost || '0'}
+                      </span>
+                    </div>
+                    {booking.earlyCheckinCost > 0 && (
                       <div className="detail-row">
-                        <span className="detail-label">Daily Cost:</span>
-                        <span className="detail-value">₹{booking.dailyCost}</span>
+                        <span className="detail-label">Early Check-in:</span>
+                        <span className="detail-value">
+                          ₹{booking.earlyCheckinCost}
+                        </span>
                       </div>
                     )}
-                    {booking.monthlyCost && (
+                    {booking.lateCheckoutCost > 0 && (
                       <div className="detail-row">
-                        <span className="detail-label">Monthly Cost:</span>
-                        <span className="detail-value">₹{booking.monthlyCost}</span>
+                        <span className="detail-label">Late Check-out:</span>
+                        <span className="detail-value">
+                          ₹{booking.lateCheckoutCost}
+                        </span>
                       </div>
                     )}
-                    {booking.earlyCheckinCost && (
-                      <div className="detail-row">
-                        <span className="detail-label">Early Check-in Cost:</span>
-                        <span className="detail-value">₹{booking.earlyCheckinCost}</span>
-                      </div>
-                    )}
+                    <div className="detail-row">
+                      <span className="detail-label">Total Amount:</span>
+                      <span className="detail-value" style={{ fontWeight: 'bold', color: '#2c3e50' }}>
+                        ₹{booking.totalAmount || '0'}
+                      </span>
+                    </div>
+                    
+                    {/* Payment Status */}
                     {(() => {
                       const breakdown = calculatePaymentBreakdown(booking);
                       return (
-                        <>
-                          <div className="detail-row">
-                            <span className="detail-label">Total Amount:</span>
-                            <span className="detail-value">₹{breakdown.totalAmount.toFixed(2)}</span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="detail-label">Total Paid:</span>
-                            <span className="detail-value" style={{ color: '#28a745' }}>₹{breakdown.totalPaid.toFixed(2)}</span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="detail-label">Due Amount:</span>
-                            <span className="detail-value" style={{ 
-                              color: breakdown.dueAmount > 0 ? '#dc3545' : '#28a745',
-                              fontWeight: 'bold'
-                            }}>
-                              ₹{breakdown.dueAmount.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="detail-label">Payment Count:</span>
-                            <span className="detail-value">{breakdown.paymentCount} payment(s)</span>
-                          </div>
-                        </>
+                        <div className="detail-row">
+                          <span className="detail-label">Due Amount:</span>
+                          <span className="detail-value" style={{ 
+                            color: breakdown.dueAmount > 0 ? '#dc3545' : '#28a745',
+                            fontWeight: 'bold'
+                          }}>
+                            ₹{breakdown.dueAmount.toFixed(2)}
+                          </span>
+                        </div>
                       );
                     })()}
+                    
+                    {/* Booking ID and Timestamps */}
+                    <div className="detail-row">
+                      <span className="detail-label">Booking ID:</span>
+                      <span className="detail-value">
+                        #{booking.id}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Created:</span>
+                      <span className="detail-value">
+                        {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'N/A'}
+                      </span>
+                    </div>
+                    {booking.remarks && (
+                      <div className="detail-row">
+                        <span className="detail-label">Remarks:</span>
+                        <span className="detail-value">
+                          {booking.remarks}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="booking-actions">
+                    <button 
+                      className="action-btn edit-btn"
+                      onClick={() => handleEditBooking(booking)}
+                    >
+                      ✏️ Edit Booking
+                    </button>
+                    <button 
+                      className="action-btn payment-btn"
+                      onClick={() => {
+                        setSelectedBooking(booking);
+                        setShowPaymentModal(true);
+                      }}
+                    >
+                      💳 Add Payment
+                    </button>
+                    <button 
+                      className="action-btn preview-btn"
+                      onClick={() => {
+                        setSelectedBooking(booking);
+                        setShowPreviewModal(true);
+                      }}
+                    >
+                      📄 Preview
+                    </button>
+                    {booking.bookingStatus === 'CONFIRMED' && (
+                      <button 
+                        className="action-btn checkin-btn"
+                        onClick={() => handleCheckIn(booking.id)}
+                      >
+                        ✅ Check-in
+                      </button>
+                    )}
+                    {booking.bookingStatus === 'CHECKEDIN' && (
+                      <button 
+                        className="action-btn checkout-btn"
+                        onClick={() => handleCheckOut(booking.id)}
+                      >
+                        🚪 Check-out
+                      </button>
+                    )}
                   </div>
 
                   {/* Payments */}
@@ -685,6 +871,26 @@ const BookingScreen = () => {
                     </option>
                   ))}
                 </select>
+                {!formData.customerPhoneNumber && (
+                  <div style={{ marginTop: '8px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-link"
+                      onClick={() => navigate('/adminpvt/contacts')}
+                      style={{ 
+                        color: '#007bff', 
+                        textDecoration: 'underline', 
+                        fontSize: '14px',
+                        padding: '0',
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      + Create New Customer
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -698,9 +904,41 @@ const BookingScreen = () => {
                   <option value="">Select Room</option>
                   {rooms.map(room => (
                     <option key={room.id} value={room.id}>
-                      {room.roomNumber} - {room.roomType} (₹{room.monthlyReferenceCost || room.dailyReferenceCost}/month)
+                      {room.roomNumber} - {room.bathroomType}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Number of People</label>
+                <select
+                  className="form-control"
+                  value={formData.numberOfPeople}
+                  onChange={(e) => handleInputChange('numberOfPeople', parseInt(e.target.value))}
+                  required
+                  disabled={!formData.roomId}
+                >
+                  <option value="">{formData.roomId ? 'Select Number of People' : 'Select Room First'}</option>
+                  {formData.roomId ? 
+                    (() => {
+                      const configs = roomConfigurations.filter(config => config.roomId === parseInt(formData.roomId));
+                      console.log('Room ID:', formData.roomId, 'Configs:', configs);
+                      return configs
+                        .map(config => config.personCount)
+                        .sort((a, b) => a - b)
+                        .map(num => (
+                          <option key={num} value={num}>
+                            {num} {num === 1 ? 'Person' : 'People'}
+                          </option>
+                        ));
+                    })() : 
+                    [1, 2, 3, 4, 5].map(num => (
+                      <option key={num} value={num}>
+                        {num} {num === 1 ? 'Person' : 'People'}
+                      </option>
+                    ))
+                  }
                 </select>
               </div>
 
@@ -708,7 +946,7 @@ const BookingScreen = () => {
                 <label className="form-label">Check-in Date</label>
                 <input
                   type="date"
-                  value={formData.checkInDate.toISOString().split('T')[0]}
+                  value={toLocalDateString(formData.checkInDate)}
                   onChange={(e) => handleInputChange('checkInDate', new Date(e.target.value))}
                   className="form-control"
                 />
@@ -718,10 +956,10 @@ const BookingScreen = () => {
                 <label className="form-label">Check-out Date</label>
                 <input
                   type="date"
-                  value={formData.checkOutDate.toISOString().split('T')[0]}
+                  value={toLocalDateString(formData.checkOutDate)}
                   onChange={(e) => handleInputChange('checkOutDate', new Date(e.target.value))}
                   className="form-control"
-                  min={formData.checkInDate.toISOString().split('T')[0]}
+                  min={toLocalDateString(formData.checkInDate)}
                 />
               </div>
 
@@ -742,6 +980,9 @@ const BookingScreen = () => {
                 <label className="form-label">
                   Daily Cost (₹) 
                   {formData.bookingDurationType === 'DAILY' && <span style={{ color: 'red' }}> *</span>}
+                  <small style={{ color: '#6c757d', marginLeft: '8px' }}>
+                    (Auto-populated, editable for bargaining)
+                  </small>
                 </label>
                 <input
                   type="number"
@@ -752,6 +993,10 @@ const BookingScreen = () => {
                   step="0.01"
                   placeholder="Enter daily cost"
                   required={formData.bookingDurationType === 'DAILY'}
+                  style={{ 
+                    backgroundColor: formData.dailyCost ? '#f8f9fa' : 'white',
+                    border: formData.dailyCost ? '1px solid #28a745' : '1px solid #ced4da'
+                  }}
                 />
               </div>
 
@@ -759,6 +1004,9 @@ const BookingScreen = () => {
                 <label className="form-label">
                   Monthly Cost (₹) 
                   {formData.bookingDurationType === 'MONTHLY' && <span style={{ color: 'red' }}> *</span>}
+                  <small style={{ color: '#6c757d', marginLeft: '8px' }}>
+                    (Auto-populated, editable for bargaining)
+                  </small>
                 </label>
                 <input
                   type="number"
@@ -769,6 +1017,10 @@ const BookingScreen = () => {
                   step="0.01"
                   placeholder="Enter monthly cost"
                   required={formData.bookingDurationType === 'MONTHLY'}
+                  style={{ 
+                    backgroundColor: formData.monthlyCost ? '#f8f9fa' : 'white',
+                    border: formData.monthlyCost ? '1px solid #28a745' : '1px solid #ced4da'
+                  }}
                 />
               </div>
 
@@ -786,17 +1038,32 @@ const BookingScreen = () => {
               </div>
 
               <div className="form-group">
+                <label className="form-label">Late Check-out Cost (₹)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={formData.lateCheckoutCost}
+                  onChange={(e) => handleInputChange('lateCheckoutCost', e.target.value)}
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter late check-out cost (optional)"
+                />
+              </div>
+
+              <div className="form-group">
                 <label className="form-label">Status</label>
                 <select
                   className="form-control"
                   value={formData.bookingStatus}
                   onChange={(e) => handleInputChange('bookingStatus', e.target.value)}
                 >
-                  <option value="NEW">New</option>
+                  <option value="PENDING">Pending</option>
                   <option value="CONFIRMED">Confirmed</option>
-                  <option value="CHECKED_IN">Checked In</option>
-                  <option value="CHECKED_OUT">Checked Out</option>
+                  <option value="CHECKEDIN">Checked In</option>
+                  <option value="CHECKEDOUT">Checked Out</option>
                   <option value="CANCELLED">Cancelled</option>
+                  <option value="NO_SHOW">No Show</option>
+                  <option value="COMPLETED">Completed</option>
                 </select>
               </div>
 
@@ -916,10 +1183,10 @@ const BookingScreen = () => {
                 <label className="form-label">Payment Date</label>
                 <input
                   type="date"
-                  value={paymentData.createdAt.toISOString().split('T')[0]}
+                  value={toLocalDateString(paymentData.createdAt)}
                   onChange={(e) => handlePaymentInputChange('createdAt', new Date(e.target.value))}
                   className="form-control"
-                  max={new Date().toISOString().split('T')[0]}
+                  max={getTodayDateString()}
                 />
               </div>
 
@@ -936,15 +1203,49 @@ const BookingScreen = () => {
                     <img 
                       src={paymentData.paymentScreenshotUrl} 
                       alt="Payment Screenshot" 
-                      style={{ maxWidth: '200px', maxHeight: '150px', border: '1px solid #ddd', borderRadius: '4px' }}
+                      style={{ 
+                        maxWidth: '200px', 
+                        maxHeight: '150px', 
+                        border: '1px solid #ddd', 
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => handleViewImage(paymentData.paymentScreenshotUrl, 'Payment Screenshot')}
+                      title="Click to view full size"
                     />
-                    <button 
-                      type="button"
-                      onClick={() => setPaymentData({...paymentData, paymentScreenshotUrl: ''})}
-                      style={{ marginLeft: '10px', padding: '4px 8px', fontSize: '12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px' }}
-                    >
-                      Remove
-                    </button>
+                    <div style={{ marginTop: '5px' }}>
+                      <button 
+                        type="button"
+                        onClick={() => handleViewImage(paymentData.paymentScreenshotUrl, 'Payment Screenshot')}
+                        style={{ 
+                          marginRight: '5px', 
+                          padding: '4px 8px', 
+                          fontSize: '12px', 
+                          backgroundColor: '#007bff', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        👁️ View
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setPaymentData({...paymentData, paymentScreenshotUrl: ''})}
+                        style={{ 
+                          padding: '4px 8px', 
+                          fontSize: '12px', 
+                          backgroundColor: '#dc3545', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -963,6 +1264,263 @@ const BookingScreen = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreviewModal && selectedBooking && (
+        <div className="modal-overlay">
+          <div className="modal" style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <h3>📄 Booking Preview - #{selectedBooking.id}</h3>
+              <button className="modal-close" onClick={() => {
+                setShowPreviewModal(false);
+                setSelectedBooking(null);
+              }}>×</button>
+            </div>
+            <div className="modal-body">
+              {(() => {
+                const customer = customers.find(c => c.phoneNumber === selectedBooking.customerPhoneNumber);
+                const room = rooms.find(r => r.id === selectedBooking.roomId);
+                const breakdown = calculatePaymentBreakdown(selectedBooking);
+                
+                return (
+                  <div className="booking-preview">
+                    <div className="preview-section">
+                      <h4>Customer Information</h4>
+                      <div className="preview-details">
+                        <div className="preview-row">
+                          <span className="preview-label">Name:</span>
+                          <span className="preview-value">{customer?.name || 'Unknown Customer'}</span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Phone:</span>
+                          <span className="preview-value">{selectedBooking.customerPhoneNumber}</span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Email:</span>
+                          <span className="preview-value">{customer?.email || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="preview-section">
+                      <h4>Booking Details</h4>
+                      <div className="preview-details">
+                        <div className="preview-row">
+                          <span className="preview-label">Room:</span>
+                          <span className="preview-value">
+                            {room?.roomNumber || `Room ${selectedBooking.roomId}`} ({room?.bathroomType || 'N/A'})
+                          </span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Check-in:</span>
+                          <span className="preview-value">{new Date(selectedBooking.checkInDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Check-out:</span>
+                          <span className="preview-value">{new Date(selectedBooking.checkOutDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Duration Type:</span>
+                          <span className="preview-value">{selectedBooking.bookingDurationType || 'N/A'}</span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Status:</span>
+                          <span className="preview-value">
+                            <span className={`status-badge ${selectedBooking.bookingStatus?.toLowerCase()}`}>
+                              {selectedBooking.bookingStatus}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="preview-section">
+                      <h4>Cost Breakdown</h4>
+                      <div className="preview-details">
+                        {selectedBooking.dailyCost && (
+                          <div className="preview-row">
+                            <span className="preview-label">Daily Cost:</span>
+                            <span className="preview-value">₹{selectedBooking.dailyCost}</span>
+                          </div>
+                        )}
+                        {selectedBooking.monthlyCost && (
+                          <div className="preview-row">
+                            <span className="preview-label">Monthly Cost:</span>
+                            <span className="preview-value">₹{selectedBooking.monthlyCost}</span>
+                          </div>
+                        )}
+                        {selectedBooking.earlyCheckinCost && (
+                          <div className="preview-row">
+                            <span className="preview-label">Early Check-in Cost:</span>
+                            <span className="preview-value">₹{selectedBooking.earlyCheckinCost}</span>
+                          </div>
+                        )}
+                        {selectedBooking.lateCheckoutCost && (
+                          <div className="preview-row">
+                            <span className="preview-label">Late Check-out Cost:</span>
+                            <span className="preview-value">₹{selectedBooking.lateCheckoutCost}</span>
+                          </div>
+                        )}
+                        <div className="preview-row">
+                          <span className="preview-label">Total Amount:</span>
+                          <span className="preview-value">₹{breakdown.totalAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Total Paid:</span>
+                          <span className="preview-value" style={{ color: '#28a745' }}>₹{breakdown.totalPaid.toFixed(2)}</span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Due Amount:</span>
+                          <span className="preview-value" style={{ 
+                            color: breakdown.dueAmount > 0 ? '#dc3545' : '#28a745',
+                            fontWeight: 'bold'
+                          }}>
+                            ₹{breakdown.dueAmount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="preview-row">
+                          <span className="preview-label">Payment Count:</span>
+                          <span className="preview-value">{breakdown.paymentCount} payment(s)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedBooking.payments && selectedBooking.payments.length > 0 && (
+                      <div className="preview-section">
+                        <h4>Payment History</h4>
+                        <div className="payments-list">
+                          {selectedBooking.payments.map((payment, index) => (
+                            <div key={index} className="payment-item">
+                              <div className="payment-info">
+                                <span className="payment-amount">₹{payment.amount}</span>
+                                <span className="payment-method">{payment.paymentMethod}</span>
+                                <span className="payment-date">
+                                  {new Date(payment.paymentDate).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedBooking.remarks && (
+                      <div className="preview-section">
+                        <h4>Remarks</h4>
+                        <p className="preview-remarks">{selectedBooking.remarks}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  setSelectedBooking(null);
+                }}
+              >
+                Close
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-success"
+                onClick={() => downloadInvoicePdf(selectedBooking.id)}
+              >
+                📥 Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Viewing Modal */}
+      {showImageModal && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal" style={{ maxWidth: '90vw', maxHeight: '90vh', width: 'auto', height: 'auto' }}>
+            <div className="modal-header">
+              <h3>{selectedImageTitle}</h3>
+              <button className="modal-close" onClick={() => setShowImageModal(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px', textAlign: 'center' }}>
+              <img 
+                src={selectedImageUrl} 
+                alt={selectedImageTitle}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '70vh', 
+                  objectFit: 'contain',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px'
+                }}
+              />
+              <div style={{ marginTop: '15px' }}>
+                <a 
+                  href={selectedImageUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{ marginRight: '10px' }}
+                >
+                  🔗 Open in New Tab
+                </a>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => setShowImageModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Room Conflict Modal */}
+      {showConflictModal && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal" style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ backgroundColor: '#dc3545', color: 'white' }}>
+              <h3>🚫 Room Not Available</h3>
+              <button 
+                className="modal-close" 
+                onClick={() => setShowConflictModal(false)}
+                style={{ color: 'white' }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                <div style={{ fontSize: '48px', marginBottom: '10px' }}>⚠️</div>
+                <p style={{ fontSize: '16px', margin: '0', color: '#dc3545' }}>
+                  {conflictMessage}
+                </p>
+              </div>
+              <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: '#495057' }}>What you can do:</h4>
+                <ul style={{ margin: '0', paddingLeft: '20px', color: '#6c757d' }}>
+                  <li>Choose different check-in or check-out dates</li>
+                  <li>Select a different room</li>
+                  <li>Check room availability for your preferred dates</li>
+                </ul>
+              </div>
+            </div>
+            <div className="modal-footer" style={{ justifyContent: 'center' }}>
+              <button 
+                className="btn btn-primary"
+                onClick={() => setShowConflictModal(false)}
+                style={{ padding: '10px 20px' }}
+              >
+                I Understand
+              </button>
+            </div>
           </div>
         </div>
       )}

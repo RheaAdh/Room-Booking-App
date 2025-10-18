@@ -16,11 +16,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BookingRequest {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class BookingRequest extends BaseEntity {
     
     @Column(name = "customer_name", nullable = false)
     private String customerName;
@@ -50,8 +46,20 @@ public class BookingRequest {
     @Column(name = "early_checkin_cost", precision = 10, scale = 2)
     private BigDecimal earlyCheckinCost = BigDecimal.ZERO;
     
+    @Column(name = "late_checkout_cost", precision = 10, scale = 2)
+    private BigDecimal lateCheckoutCost = BigDecimal.ZERO;
+    
+    @Column(name = "number_of_people")
+    private Integer numberOfPeople = 1;
+    
+    @Column(name = "room_number")
+    private String roomNumber;
+    
+    @Column(name = "days")
+    private Integer days;
+    
     @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
-    private BigDecimal totalAmount;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -59,21 +67,4 @@ public class BookingRequest {
     
     @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

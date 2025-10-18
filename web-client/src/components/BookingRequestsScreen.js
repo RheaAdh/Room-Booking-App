@@ -17,9 +17,10 @@ const BookingRequestsScreen = () => {
     setLoading(true);
     try {
       const response = await api.get('/booking-requests');
-      setBookingRequests(response.data);
+      setBookingRequests(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching booking requests:', error);
+      setBookingRequests([]);
     } finally {
       setLoading(false);
     }
@@ -67,17 +68,18 @@ const BookingRequestsScreen = () => {
     );
   };
 
-  const filteredRequests = bookingRequests.filter(request => {
+  const filteredRequests = (bookingRequests || []).filter(request => {
     if (filter === 'ALL') return true;
     return request.status === filter;
   });
 
   const getFilterCounts = () => {
+    const requests = bookingRequests || [];
     return {
-      ALL: bookingRequests.length,
-      PENDING: bookingRequests.filter(r => r.status === 'PENDING').length,
-      APPROVED: bookingRequests.filter(r => r.status === 'APPROVED').length,
-      REJECTED: bookingRequests.filter(r => r.status === 'REJECTED').length
+      ALL: requests.length,
+      PENDING: requests.filter(r => r.status === 'PENDING').length,
+      APPROVED: requests.filter(r => r.status === 'APPROVED').length,
+      REJECTED: requests.filter(r => r.status === 'REJECTED').length
     };
   };
 
@@ -189,13 +191,7 @@ const BookingRequestsScreen = () => {
               </div>
 
               <div className="request-actions">
-                <button 
-                  className="action-btn view-btn"
-                  onClick={() => handleViewDetails(request)}
-                >
-                  👁️ View Details
-                </button>
-                
+
                 {request.status === 'PENDING' && (
                   <>
                     <button 

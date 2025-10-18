@@ -16,11 +16,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Payment {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Payment extends BaseEntity {
 
     @Column(name = "booking_id", nullable = false)
     private Long bookingId;
@@ -45,26 +41,14 @@ public class Payment {
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        super.onCreate();
         if (paymentDate == null) {
             paymentDate = LocalDateTime.now();
         }
         if (paymentStatus == null) {
             paymentStatus = PaymentStatus.PENDING;
         }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }

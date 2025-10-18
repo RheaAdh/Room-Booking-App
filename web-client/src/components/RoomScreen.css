@@ -46,6 +46,69 @@
   color: #2c3e50;
 }
 
+.configurations {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+}
+
+.configurations h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  margin: 0 0 12px 0;
+}
+
+.config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.config-info {
+  color: #495057;
+  flex: 1;
+}
+
+.config-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-xs {
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  border-radius: 3px;
+}
+
+.btn-xs.btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+.btn-xs.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+}
+
+.btn-xs:hover {
+  opacity: 0.8;
+}
+
 @media (max-width: 768px) {
   .rooms-grid {
     grid-template-columns: 1fr;

@@ -134,7 +134,7 @@ public class InvoiceService {
                 "<div class='invoice-header'>" +
                 "<div class='logo'>🏨</div>" +
                 "<h1>PROFESSIONAL PRIDE</h1>" +
-                "<p class='subtitle'>Premium Room Booking Services</p>" +
+                "<p class='subtitle'>ECC Road, Whitefield, Bangalore - 560066</p>" +
                 "</div>" +
                 "<div class='invoice-content'>" +
                 "<div class='invoice-meta'>" +
@@ -165,11 +165,15 @@ public class InvoiceService {
                 "<td>" + (booking.getBookingDurationType().equals("DAILY") ? 
                     java.time.temporal.ChronoUnit.DAYS.between(booking.getCheckInDate().toLocalDate(), booking.getCheckOutDate().toLocalDate()) + " days" : 
                     "1 month") + "</td>" +
-                "<td>₹" + (booking.getBookingDurationType().equals("DAILY") ? booking.getDailyCost() : booking.getMonthlyCost()) + "</td>" +
-                "<td>₹" + booking.getTotalAmount() + "</td>" +
+                "<td>₹" + (booking.getBookingDurationType().equals("DAILY") ? 
+                    (booking.getDailyCost() != null ? booking.getDailyCost() : "0") : 
+                    (booking.getMonthlyCost() != null ? booking.getMonthlyCost() : "0")) + "</td>" +
+                "<td>₹" + (booking.getTotalAmount() != null ? booking.getTotalAmount() : "0") + "</td>" +
                 "</tr>" +
-                (booking.getEarlyCheckinCost().compareTo(java.math.BigDecimal.ZERO) > 0 ? 
+                (booking.getEarlyCheckinCost() != null && booking.getEarlyCheckinCost().compareTo(java.math.BigDecimal.ZERO) > 0 ? 
                     "<tr><td>Early Check-in Fee</td><td>-</td><td>₹" + booking.getEarlyCheckinCost() + "</td><td>₹" + booking.getEarlyCheckinCost() + "</td></tr>" : "") +
+                (booking.getLateCheckoutCost() != null && booking.getLateCheckoutCost().compareTo(java.math.BigDecimal.ZERO) > 0 ? 
+                    "<tr><td>Late Check-out Fee</td><td>-</td><td>₹" + booking.getLateCheckoutCost() + "</td><td>₹" + booking.getLateCheckoutCost() + "</td></tr>" : "") +
                 "<tr class='total-row'>" +
                 "<td colspan='3'><strong>Total Amount</strong></td>" +
                 "<td><strong>₹" + booking.getTotalAmount() + "</strong></td>" +
@@ -199,7 +203,7 @@ public class InvoiceService {
                 "<div style='margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;'>" +
                 "<div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>" +
                 "<span><strong>Total Amount:</strong></span>" +
-                "<span><strong>₹" + booking.getTotalAmount() + "</strong></span>" +
+                "<span><strong>₹" + (booking.getTotalAmount() != null ? booking.getTotalAmount() : "0") + "</strong></span>" +
                 "</div>" +
                 "<div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>" +
                 "<span><strong>Total Paid:</strong></span>" +
@@ -210,17 +214,13 @@ public class InvoiceService {
                 "<span style='color: " + (dueAmount.compareTo(BigDecimal.ZERO) > 0 ? "#dc3545" : "#28a745") + "; font-size: 1.2em;'><strong>₹" + dueAmount + "</strong></span>" +
                 "</div>" +
                 "<div style='display: flex; justify-content: space-between;'>" +
-                "<span><strong>Payment Count:</strong></span>" +
-                "<span><strong>" + payments.size() + " payment(s)</strong></span>" +
                 "</div>" +
                 "</div>" +
                 "</div>" +
                 "</div>" +
                 "<div class='invoice-footer'>" +
                 "<h3>Thank You for Choosing Professional Pride!</h3>" +
-                "<p>We appreciate your business and look forward to serving you again.</p>" +
-                "<p>For any queries, please contact us at: +91-XXXX-XXXXXX</p>" +
-                "<p style='margin-top: 20px; font-size: 0.9em; color: #999;'>This is a computer-generated invoice. No signature required.</p>" +
+                "<p>For any queries, please contact us at: +91-9731177065</p>" +
                 "</div>" +
                 "</div>" +
                 "</body></html>";
@@ -235,7 +235,6 @@ public class InvoiceService {
         try {
             // For now, return a simple PDF-like response
             // In a real implementation, you would use a PDF library like iText or Apache PDFBox
-            String htmlContent = generateInvoicePreview(bookingId);
             
             // Convert HTML to PDF bytes (simplified - in real implementation use proper PDF library)
             String pdfContent = "%PDF-1.4\n" +

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../config/api';
+import { toLocalDateTimeString } from '../utils/dateUtils';
 import './PublicRoomView.css';
 
 const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => {
   const [rooms, setRooms] = useState([]);
+  const [roomConfigurations, setRoomConfigurations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
@@ -11,8 +13,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [filters, setFilters] = useState({
-    roomType: '',
-    bathroomType: ''
+    numberOfPeople: ''
   });
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [bookingData, setBookingData] = useState({
@@ -20,25 +21,26 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
     customerPhone: '',
     checkInDate: '',
     checkOutDate: '',
+    numberOfPeople: 1,
     bookingDurationType: 'DAILY',
     dailyCost: '',
     monthlyCost: '',
     totalAmount: 0
   });
 
-  const calculateTotalCost = useCallback((room, durationType, days) => {
+  const calculateTotalCost = useCallback((roomConfig, durationType, days) => {
     let baseCost = 0;
-    if (durationType === 'DAILY' && room.dailyReferenceCost) {
-      baseCost = room.dailyReferenceCost * days;
-    } else if (durationType === 'MONTHLY' && room.monthlyReferenceCost) {
-      baseCost = room.monthlyReferenceCost;
-    } else if (room.dailyReferenceCost) {
-      baseCost = room.dailyReferenceCost * days;
+    if (durationType === 'DAILY' && roomConfig.dailyCost) {
+      baseCost = roomConfig.dailyCost * days;
+    } else if (durationType === 'MONTHLY' && roomConfig.monthlyCost) {
+      baseCost = roomConfig.monthlyCost;
+    } else if (roomConfig.dailyCost) {
+      baseCost = roomConfig.dailyCost * days;
     }
     return baseCost;
   }, []);
 
-  const handleBookRoom = useCallback((room) => {
+  const handleBookRoom = useCallback((room, roomConfig) => {
     if (!checkInDate || !checkOutDate) {
       alert('Please select check-in and check-out dates first to proceed with booking');
       return;
@@ -49,6 +51,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
       // Store the room and dates for after login
       const bookingInfo = {
         room,
+        roomConfig,
         checkInDate,
         checkOutDate
       };
@@ -59,7 +62,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
     
     // User is logged in, proceed with booking
     const days = Math.ceil((new Date(checkOutDate) - new Date(checkInDate)) / (1000 * 60 * 60 * 24));
-    const totalCost = calculateTotalCost(room, 'DAILY', days);
+    const totalCost = calculateTotalCost(roomConfig, 'DAILY', days);
     
     setSelectedRoom(room);
     setBookingData({
@@ -67,9 +70,10 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
       customerPhone: customer.phoneNumber,
       checkInDate: checkInDate,
       checkOutDate: checkOutDate,
+      numberOfPeople: roomConfig.personCount,
       bookingDurationType: 'DAILY',
-      dailyCost: room.dailyReferenceCost || 0,
-      monthlyCost: room.monthlyReferenceCost || 0,
+      dailyCost: roomConfig.dailyCost || 0,
+      monthlyCost: roomConfig.monthlyCost || 0,
       totalAmount: totalCost
     });
     setShowBookingModal(true);
@@ -104,11 +108,16 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
 
   const fetchRooms = async () => {
     try {
-      const response = await api.get('/rooms');
-      setRooms(response.data || []);
+      const [roomsRes, roomConfigsRes] = await Promise.all([
+        api.get('/rooms'),
+        api.get('/room-configurations')
+      ]);
+      setRooms(roomsRes.data || []);
+      setRoomConfigurations(roomConfigsRes.data || []);
     } catch (error) {
       console.error('Error fetching rooms:', error);
       setRooms([]);
+      setRoomConfigurations([]);
       // You could show a user-friendly error message here
     } finally {
       setLoading(false);
@@ -121,12 +130,18 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
       return;
     }
 
+    if (!filters.numberOfPeople) {
+      alert('Please select number of people');
+      return;
+    }
+
     if (new Date(checkInDate) >= new Date(checkOutDate)) {
       alert('Check-out date must be after check-in date');
       return;
     }
 
     try {
+      // Convert dates to ISO format with time (same as RoomAvailabilityScreen)
       const checkInDateTime = new Date(checkInDate + 'T10:00:00').toISOString();
       const checkOutDateTime = new Date(checkOutDate + 'T10:00:00').toISOString();
       
@@ -204,11 +219,52 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
+  // Function to get room image
+  const getRoomImage = (roomId) => {
+    // Available images: 1, 2, 3, 4, 5, 6, 8, 9, 10, 11 (missing 7)
+    const availableImages = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11];
+    const imageIndex = (roomId - 1) % availableImages.length;
+    return `/rooms/${availableImages[imageIndex]}.jpg`;
+  };
+
+  // Calculate pricing based on dates and configuration
+  const calculatePricing = (config, checkIn, checkOut) => {
+    if (!checkIn || !checkOut) return null;
+    
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const days = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    
+    if (days <= 0) return null;
+    
+    const isMonthly = days > 30;
+    const rate = isMonthly ? config.monthlyCost : config.dailyCost;
+    const totalCost = isMonthly ? rate : rate * days;
+    
+    return {
+      days,
+      isMonthly,
+      rate,
+      totalCost,
+      rateType: isMonthly ? 'month' : 'day'
+    };
+  };
+
   const filterRooms = (roomsToFilter) => {
+    // Ensure roomsToFilter is an array before calling filter
+    if (!Array.isArray(roomsToFilter)) {
+      return [];
+    }
     return roomsToFilter.filter(room => {
-      const roomTypeMatch = !filters.roomType || room.roomType === filters.roomType;
-      const bathroomTypeMatch = !filters.bathroomType || room.bathroomType === filters.bathroomType;
-      return roomTypeMatch && bathroomTypeMatch;
+      // Filter by number of people - check if room can accommodate the requested number
+      if (filters.numberOfPeople) {
+        const requestedPeople = parseInt(filters.numberOfPeople);
+        // Check if any room configuration can accommodate this many people
+        const roomConfigs = roomConfigurations.filter(config => config.roomId === room.id);
+        const canAccommodate = roomConfigs.some(config => config.personCount >= requestedPeople);
+        return canAccommodate;
+      }
+      return true;
     });
   };
 
@@ -230,91 +286,81 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
 
   return (
     <div className="public-room-view">
-      {/* Header */}
-      <header className="public-header">
-        <div className="container">
-          <h1>🏨 Professionals Pride</h1>
-          <p>Your comfortable stay awaits</p>
-        </div>
-      </header>
 
-      {/* Search Section */}
-      <div className="search-section">
+
+      {/* Airbnb-style Search Section */}
+      <div className="airbnb-search-section">
         <div className="container">
-          <div className="search-form">
-            <div className="form-group">
-              <label>Check-in Date</label>
+          <div className="search-header">
+            <h2>Find your perfect stay</h2>
+            <p>Search and filter rooms based on your preferences</p>
+          </div>
+          
+          <div className="search-filters">
+            <div className="filter-group">
+              <label className="filter-label">Check-in</label>
               <input
                 type="date"
                 value={checkInDate}
                 onChange={(e) => setCheckInDate(e.target.value)}
-                className="form-control"
+                min={new Date().toISOString().split('T')[0]}
+                className="filter-input"
+                placeholder="Add dates"
               />
             </div>
-            <div className="form-group">
-              <label>Check-out Date</label>
+            
+            <div className="filter-group">
+              <label className="filter-label">Check-out</label>
               <input
                 type="date"
                 value={checkOutDate}
                 onChange={(e) => setCheckOutDate(e.target.value)}
                 min={checkInDate}
-                className="form-control"
+                className="filter-input"
+                placeholder="Add dates"
               />
             </div>
-            <button 
-              className="btn btn-primary"
-              onClick={checkAvailability}
-              disabled={!checkInDate || !checkOutDate}
-            >
-              🔍 Check Availability
-            </button>
-          </div>
-
-          {/* Filters */}
-          <div className="filters-section">
-            <h3>Filter Rooms</h3>
-            <div className="filters-form">
-              <div className="form-group">
-                <label>Room Type</label>
-                <select
-                  value={filters.roomType}
-                  onChange={(e) => handleFilterChange('roomType', e.target.value)}
-                  className="form-control"
-                >
-                  <option value="">All Room Types</option>
-                  <option value="SINGLE">Single</option>
-                  <option value="DOUBLE">Double</option>
-                  <option value="TRIPLE">Triple</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Bathroom Type</label>
-                <select
-                  value={filters.bathroomType}
-                  onChange={(e) => handleFilterChange('bathroomType', e.target.value)}
-                  className="form-control"
-                >
-                  <option value="">All Bathroom Types</option>
-                  <option value="ATTACHED">Attached</option>
-                  <option value="COMMON">Common</option>
-                </select>
-              </div>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => setFilters({ roomType: '', bathroomType: '' })}
+            
+            <div className="filter-group">
+              <label className="filter-label">Guests</label>
+              <select
+                value={filters.numberOfPeople}
+                onChange={(e) => handleFilterChange('numberOfPeople', e.target.value)}
+                className="filter-input"
               >
-                Clear Filters
+                <option value="">How many guests?</option>
+                <option value="1">1 guest</option>
+                <option value="2">2 guests</option>
+                <option value="3">3 guests</option>
+                <option value="4">4 guests</option>
+                <option value="5">5 guests</option>
+                <option value="6">6 guests</option>
+                <option value="7">7 guests</option>
+                <option value="8">8 guests</option>
+              </select>
+            </div>
+            
+            <div className="filter-actions">
+              <button 
+                className="search-btn"
+                onClick={checkAvailability}
+                disabled={!checkInDate || !checkOutDate || !filters.numberOfPeople}
+              >
+                <span className="search-icon">🔍</span>
+                Search
               </button>
+              {availableRooms.length > 0 && (
+                <button 
+                  className="clear-btn"
+                  onClick={() => setAvailableRooms([])}
+                >
+                  Show All
+                </button>
+              )}
             </div>
           </div>
           
-          {checkInDate && checkOutDate && (
-            <div className="search-info">
-              <p><strong>Duration:</strong> {getDaysDifference()} day(s)</p>
-              <p><strong>Period:</strong> {formatDate(checkInDate)} to {formatDate(checkOutDate)}</p>
-            </div>
-          )}
+          
         </div>
       </div>
 
@@ -322,20 +368,28 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
       <div className="rooms-section">
         <div className="container">
           <div className="rooms-header">
-            <h2>Available Rooms</h2>
+            <h2>{availableRooms.length > 0 ? 'Available Rooms' : 'All Rooms'}</h2>
             {(() => {
               const roomsToShow = availableRooms.length > 0 ? availableRooms : rooms;
-              const filteredRooms = filterRooms(roomsToShow);
-              const totalRooms = roomsToShow.length;
+              const filteredRooms = filterRooms(roomsToShow || []);
+              const totalRooms = (roomsToShow || []).length;
               const filteredCount = filteredRooms.length;
+              
+              if (availableRooms.length > 0) {
+                return (
+                  <div className="availability-info">
+                    <p>Showing rooms available for {filters.numberOfPeople} people from {formatDate(checkInDate)} to {formatDate(checkOutDate)}</p>
+                  </div>
+                );
+              }
               
               if (totalRooms !== filteredCount) {
                 return (
                   <div className="filter-summary">
                     Showing {filteredCount} of {totalRooms} rooms
-                    {(filters.roomType || filters.bathroomType) && (
+                    {filters.numberOfPeople && (
                       <span className="active-filters">
-                        {' '}(filtered by {[filters.roomType, filters.bathroomType].filter(Boolean).join(', ')})
+                        {' '}(filtered by {filters.numberOfPeople} people)
                       </span>
                     )}
                   </div>
@@ -347,7 +401,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
           
           {(() => {
             const roomsToShow = availableRooms.length > 0 ? availableRooms : rooms;
-            const filteredRooms = filterRooms(roomsToShow);
+            const filteredRooms = filterRooms(roomsToShow || []);
             
             if (filteredRooms.length === 0) {
               return (
@@ -364,42 +418,74 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
             
             return (
               <div className="rooms-grid">
-                {filteredRooms.map(room => (
-                <div key={room.id} className="room-card">
-                  <div className="room-image">
-                    <div className="room-type-badge">{room.roomType}</div>
-                  </div>
+                {filteredRooms.map(room => {
+                  const roomConfigs = roomConfigurations.filter(config => config.roomId === room.id);
+                  return (
+                    <div key={room.id} className="room-card">
+                      <div className="room-image">
+                        <img 
+                          src={getRoomImage(room.id)} 
+                          alt={`Room ${room.roomNumber}`}
+                          className="room-photo"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
+                          }}
+                        />
+                        <div className="room-badges">
+                          <span className="badge wifi">Free WiFi</span>
+                        </div>
+                      </div>
+                      
+                      <div className="room-content">
+                        <div className="room-header">
+                          <h3>Room {room.roomNumber}</h3>
                   
-                  <div className="room-content">
-                    <h3>Room {room.roomNumber}</h3>
-                    <div className="room-features">
-                      <span className="feature">🛏️ {room.roomType}</span>
-                      <span className="feature">🚿 {room.bathroomType}</span>
-                    </div>
-                    
-                    <div className="room-pricing">
-                      <div className="price-item">
-                        <span className="price-label">Daily Rate:</span>
-                        <span className="price-value">₹{room.dailyReferenceCost || 0}</span>
+      
+                        
+                        <div className="room-features">
+                          <span className="feature">🚿 {room.bathroomType}</span>
+                        </div>
+                        
+                        </div>  
+                        <div className="room-configurations">
+                          
+                          {roomConfigs.map(config => (
+                            <div key={config.id} className="config-option">
+                              <div className="config-info">
+                                <span className="person-count">{config.personCount} {config.personCount === 1 ? 'Person' : 'People'}</span>
+                                <div className="config-pricing">
+                                  <span className="daily-rate">₹{config.dailyCost}/day</span>
+                                  <span className="monthly-rate">₹{config.monthlyCost}/month</span>
+                                </div>
+                              </div>
+                              <div className="config-actions">
+                                {(() => {
+                                  const pricing = calculatePricing(config, checkInDate, checkOutDate);
+                                  return (
+                                    <button 
+                                      className="btn btn-primary btn-sm"
+                                      onClick={() => handleBookRoom(room, config)}
+                                      disabled={!checkInDate || !checkOutDate}
+                                    >
+                                      {!checkInDate || !checkOutDate 
+                                        ? 'Select Dates First' 
+                                        : pricing 
+                                          ? `Book Now - ₹${pricing.totalCost} (${pricing.days} ${pricing.rateType}${pricing.days > 1 ? 's' : ''})`
+                                          : 'Book Now'
+                                      }
+                                    </button>
+                                  );
+                                })()}
+                           
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="price-item">
-                        <span className="price-label">Monthly Rate:</span>
-                        <span className="price-value">₹{room.monthlyReferenceCost || 0}</span>
-                      </div>
                     </div>
-                    
-                    <div className="room-actions">
-                      <button 
-                        className="btn btn-primary book-now-btn"
-                        onClick={() => handleBookRoom(room)}
-                        disabled={!checkInDate || !checkOutDate}
-                      >
-                        {!checkInDate || !checkOutDate ? 'Select Dates First' : 'Book Now'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })()}
@@ -412,7 +498,21 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
           <div className="success-modal">
             <div className="success-icon">✅</div>
             <h3>Booking Request Sent!</h3>
-            <p>Your booking request has been submitted successfully. We will contact you soon to confirm your reservation.</p>
+            <div style={{ textAlign: 'left', margin: '20px 0' }}>
+              <p><strong>To confirm your booking, please make a token payment of ₹500 to:</strong></p>
+              <div style={{ 
+                background: '#f8f9fa', 
+                padding: '15px', 
+                borderRadius: '8px', 
+                margin: '10px 0',
+                border: '1px solid #e9ecef'
+              }}>
+                <p style={{ margin: '5px 0', fontSize: '16px' }}>📱 <strong>Google Pay: 9731177065</strong></p>
+                <p style={{ margin: '5px 0', color: '#666', fontSize: '14px' }}>
+                  After payment, your booking will be confirmed and you'll receive a confirmation message.
+                </p>
+              </div>
+            </div>
             <button 
               className="btn btn-primary"
               onClick={() => setShowBookingSuccess(false)}
@@ -435,7 +535,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
             <form onSubmit={handleBookingSubmit} className="modal-body">
               <div className="booking-summary">
                 <h4>Booking Details</h4>
-                <p><strong>Room:</strong> {selectedRoom?.roomNumber} ({selectedRoom?.roomType})</p>
+                <p><strong>Room:</strong> {selectedRoom?.roomNumber}</p>
                 <p><strong>Check-in:</strong> {formatDate(bookingData.checkInDate)}</p>
                 <p><strong>Check-out:</strong> {formatDate(bookingData.checkOutDate)}</p>
                 <p><strong>Duration:</strong> {getDaysDifference()} day(s)</p>
