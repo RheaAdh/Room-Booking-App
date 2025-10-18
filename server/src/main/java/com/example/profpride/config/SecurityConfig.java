@@ -15,7 +15,7 @@ import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class  {
 
     @Autowired
     private CorsConfigurationSource corsConfigurationSource;
