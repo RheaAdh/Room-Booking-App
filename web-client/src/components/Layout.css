@@ -13,12 +13,41 @@
   height: 100vh;
   overflow-y: auto;
   z-index: 1000;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, width 0.3s ease;
+  left: 0;
+  top: 0;
+  transform: translateX(-100%);
+}
+
+.sidebar.open {
+  transform: translateX(0);
 }
 
 .sidebar-header {
   padding: 30px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.sidebar-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-title {
@@ -96,14 +125,16 @@
 /* Main Content */
 .main-content {
   flex: 1;
-  margin-left: 250px;
+  margin-left: 0;
   padding: 20px;
   background-color: #f8f9fa;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
 }
 
 /* Mobile Header */
 .mobile-header {
-  display: none;
+  display: flex;
   align-items: center;
   padding: 15px 0;
   margin-bottom: 20px;
@@ -111,12 +142,22 @@
 }
 
 .sidebar-toggle {
-  background: none;
+  background: #3498db;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   margin-right: 15px;
-  color: #2c3e50;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-toggle:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .page-title {
@@ -135,7 +176,7 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 999;
-  display: none;
+  display: block;
 }
 
 /* Navigation Icons */
@@ -148,29 +189,155 @@
 .content {
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
+}
+
+/* Large Desktop Styles */
+@media (min-width: 1440px) {
+  .sidebar {
+    width: 280px;
+  }
+  
+  .main-content {
+    margin-left: 280px;
+    padding: 24px;
+  }
+  
+  .content {
+    max-width: 1400px;
+  }
+  
+  .sidebar-header {
+    padding: 30px 24px;
+  }
+  
+  .sidebar-title {
+    font-size: 26px;
+  }
+  
+  .sidebar-nav a {
+    padding: 16px 24px;
+    font-size: 15px;
+  }
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .mobile-header {
-    display: flex;
-  }
-  
-  .sidebar-overlay {
-    display: block;
-  }
-  
+
+/* Tablet Styles */
+@media (max-width: 1024px) and (min-width: 769px) {
   .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-  
-  .sidebar.open {
-    transform: translateX(0);
+    width: 200px;
   }
   
   .main-content {
     margin-left: 0;
+    padding: 16px;
+  }
+  
+  .sidebar-header {
+    padding: 20px 15px;
+  }
+  
+  .sidebar-title {
+    font-size: 20px;
+  }
+  
+  .sidebar-nav a {
+    padding: 12px 15px;
+    font-size: 14px;
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 280px;
+  }
+  
+  .main-content {
     padding: 15px;
+  }
+  
+  .sidebar-header {
+    padding: 20px;
+  }
+  
+  .sidebar-title {
+    font-size: 22px;
+  }
+  
+  .sidebar-nav a {
+    padding: 16px 20px;
+    font-size: 15px;
+  }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+  .main-content {
+    padding: 10px;
+  }
+  
+  .sidebar {
+    width: 100%;
+  }
+  
+  .sidebar-header {
+    padding: 15px;
+  }
+  
+  .sidebar-title {
+    font-size: 20px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .content {
+    max-width: 100%;
+  }
+  
+  .sidebar-nav a {
+    padding: 14px 15px;
+    font-size: 14px;
+  }
+  
+  .mobile-header {
+    padding: 10px 0;
+  }
+  
+  .sidebar-toggle {
+    font-size: 20px;
+    margin-right: 10px;
+  }
+}
+
+/* Extra Small Mobile Styles */
+@media (max-width: 320px) {
+  .main-content {
+    padding: 8px;
+  }
+  
+  .sidebar-header {
+    padding: 12px;
+  }
+  
+  .sidebar-title {
+    font-size: 18px;
+  }
+  
+  .page-title {
+    font-size: 18px;
+  }
+  
+  .sidebar-nav a {
+    padding: 12px 12px;
+    font-size: 13px;
+  }
+  
+  .nav-icon {
+    margin-right: 8px;
+    font-size: 14px;
   }
 }

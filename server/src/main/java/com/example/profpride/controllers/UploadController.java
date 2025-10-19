@@ -1,5 +1,6 @@
 package com.example.profpride.controllers;
 
+import com.example.profpride.models.Customer;
 import com.example.profpride.services.CloudinaryService;
 import com.example.profpride.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,12 +54,19 @@ public class UploadController {
 
                   String photoIdUrl = cloudinaryService.uploadPhotoIdProof(file, phoneNumber);
             
-            // Update customer's ID proof submitted status
+            // Update customer's photo ID proof URL and submitted status
             try {
+                // Get existing customer to preserve existing data
+                var existingCustomer = customerService.getCustomerByPhoneNumber(phoneNumber);
+                if (existingCustomer.isPresent()) {
+                    Customer customer = existingCustomer.get();
+                    customer.setPhotoIdProofUrl(photoIdUrl);
+                    customerService.updateCustomer(phoneNumber, customer);
+                }
                 customerService.updateCustomerIdProofSubmitted(phoneNumber, true);
             } catch (Exception e) {
                 // Log the error but don't fail the upload
-                System.err.println("Failed to update customer ID proof status: " + e.getMessage());
+                System.err.println("Failed to update customer photo ID proof URL: " + e.getMessage());
             }
             
             response.put("success", true);
@@ -90,12 +98,28 @@ public class UploadController {
 
                   List<String> uploadedUrls = cloudinaryService.uploadMultipleFiles(files, phoneNumber);
             
-            // Update customer's ID proof submitted status
+            // Update customer's ID proof URLs and submitted status
             try {
+                // Get existing customer to preserve existing ID proof URLs
+                var existingCustomer = customerService.getCustomerByPhoneNumber(phoneNumber);
+                List<String> existingUrls = new java.util.ArrayList<>();
+                
+                if (existingCustomer.isPresent()) {
+                    Customer customer = existingCustomer.get();
+                    if (customer.getIdProofUrls() != null) {
+                        existingUrls.addAll(customer.getIdProofUrls());
+                    }
+                }
+                
+                // Add new URLs to existing ones
+                existingUrls.addAll(uploadedUrls);
+                
+                // Update customer with all ID proof URLs
+                customerService.updateCustomerIdProofUrls(phoneNumber, existingUrls);
                 customerService.updateCustomerIdProofSubmitted(phoneNumber, true);
             } catch (Exception e) {
                 // Log the error but don't fail the upload
-                System.err.println("Failed to update customer ID proof status: " + e.getMessage());
+                System.err.println("Failed to update customer ID proof URLs: " + e.getMessage());
             }
             
             response.put("success", true);

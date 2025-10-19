@@ -14,8 +14,13 @@ const CaretakerContactScreen = () => {
     phoneNumber: '',
     additionalPhoneNumber: '',
     photoIdProofUrl: '',
-    remarks: ''
+    remarks: '',
+    idProofUrls: []
   });
+  
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
+  const [selectedImageTitle, setSelectedImageTitle] = useState('');
 
   useEffect(() => {
     fetchCustomers();
@@ -49,7 +54,8 @@ const CaretakerContactScreen = () => {
       phoneNumber: customer.phoneNumber,
       additionalPhoneNumber: customer.additionalPhoneNumber || '',
       photoIdProofUrl: customer.photoIdProofUrl || '',
-      remarks: customer.remarks || ''
+      remarks: customer.remarks || '',
+      idProofUrls: customer.idProofUrls || []
     });
     setSelectedCustomer(customer);
     setIsEditing(true);
@@ -79,43 +85,66 @@ const CaretakerContactScreen = () => {
   };
 
   const handleIdProofUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
-      return;
+    // Validate each file
+    for (const file of files) {
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        alert(`File "${file.name}" is not a supported format. Please upload an image (JPEG, PNG, GIF) or PDF file.`);
+        return;
+      }
     }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Please upload a valid image (JPEG, PNG) or PDF file');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('files', file);
 
     try {
-      const response = await api.post(`/customer/${selectedCustomer.phoneNumber}/upload-id-proofs`, formData, {
+      // Create FormData for multiple file upload
+      const uploadFormData = new FormData();
+      files.forEach(file => {
+        uploadFormData.append('files', file);
+      });
+
+      // Upload to backend - we need a phone number for the upload
+      // For new customers, we'll use a temporary phone number
+      const phoneNumber = selectedCustomer?.phoneNumber || formData.phoneNumber || 'temp-' + Date.now();
+      
+      const response = await api.post(`/upload/multiple-id-proofs`, uploadFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        params: {
+          phoneNumber: phoneNumber
+        }
       });
 
       if (response.data.success) {
+        // Update form data with the uploaded URLs
         setFormData(prev => ({
           ...prev,
-          photoIdProofUrl: response.data.fileUrl
+          idProofUrls: [...(prev.idProofUrls || []), ...response.data.uploadedUrls]
         }));
-        alert('✅ ID Proof uploaded successfully!');
+
+        alert(`Successfully uploaded ${response.data.uploadedUrls.length} ID proof(s)!`);
+      } else {
+        alert('Error uploading ID proofs: ' + response.data.message);
       }
     } catch (error) {
-      console.error('Error uploading ID proof:', error);
-      alert('❌ Error uploading ID proof. Please try again.');
+      console.error('Error uploading ID proofs:', error);
+      alert('Error uploading ID proofs. Please try again.');
     }
+  };
+
+  const handleViewImage = (imageUrl, title) => {
+    setSelectedImageUrl(imageUrl);
+    setSelectedImageTitle(title);
+    setShowImageModal(true);
   };
 
   const handleUploadIdProof = (customer) => {
@@ -124,7 +153,8 @@ const CaretakerContactScreen = () => {
       phoneNumber: customer.phoneNumber,
       additionalPhoneNumber: customer.additionalPhoneNumber || '',
       photoIdProofUrl: customer.photoIdProofUrl || '',
-      remarks: customer.remarks || ''
+      remarks: customer.remarks || '',
+      idProofUrls: customer.idProofUrls || []
     });
     setSelectedCustomer(customer);
     setIsEditing(true);
@@ -132,7 +162,7 @@ const CaretakerContactScreen = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', phoneNumber: '', additionalPhoneNumber: '', photoIdProofUrl: '', remarks: '' });
+    setFormData({ name: '', phoneNumber: '', additionalPhoneNumber: '', photoIdProofUrl: '', remarks: '', idProofUrls: [] });
   };
 
   if (loading) {
@@ -309,30 +339,149 @@ const CaretakerContactScreen = () => {
               </div>
               
               <div className="form-group">
-                <label className="form-label">📄 ID Proof Document</label>
+                <label className="form-label">📄 ID Proof Documents</label>
                 <input
                   type="file"
                   className="form-control"
                   accept="image/*,.pdf"
                   onChange={handleIdProofUpload}
                   id="idProofFile"
+                  multiple
                 />
+                
+                {/* Legacy single ID proof */}
                 {formData.photoIdProofUrl && (
-                  <div className="upload-success">
-                    <small className="text-success">✅ ID Proof uploaded successfully</small>
-                    <br />
-                    <a 
-                      href={formData.photoIdProofUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="view-document-btn"
-                    >
-                      📄 View Uploaded Document
-                    </a>
+                  <div className="id-proof-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '8px' }}>
+                    <div style={{ flex: '0 0 auto' }}>
+                      <img 
+                        src={formData.photoIdProofUrl} 
+                        alt="ID Proof Preview" 
+                        style={{ 
+                          width: '60px', 
+                          height: '45px', 
+                          objectFit: 'cover', 
+                          border: '1px solid #ccc', 
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => handleViewImage(formData.photoIdProofUrl, 'ID Proof (Legacy)')}
+                        onError={(e) => {
+                          console.error('Legacy ID proof image failed to load:', formData.photoIdProofUrl);
+                          e.target.style.display = 'none';
+                        }}
+                        title="Click to view full size"
+                      />
+                    </div>
+                    <div style={{ flex: '1', minWidth: '0' }}>
+                      <div className="id-proof-info">
+                        <span className="id-proof-name" style={{ display: 'block', fontWeight: 'bold', fontSize: '12px' }}>📄 ID Proof Document</span>
+                        <span className="id-proof-type" style={{ display: 'block', fontSize: '10px', color: '#666' }}>Legacy Upload</span>
+                      </div>
+                    </div>
+                    <div style={{ flex: '0 0 auto', display: 'flex', gap: '4px' }}>
+                      <button 
+                        type="button"
+                        onClick={() => handleViewImage(formData.photoIdProofUrl, 'ID Proof (Legacy)')}
+                        style={{ 
+                          padding: '4px 8px', 
+                          fontSize: '10px', 
+                          backgroundColor: '#007bff', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        👁️ View
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setFormData({...formData, photoIdProofUrl: ''})}
+                        style={{ 
+                          padding: '4px 8px', 
+                          fontSize: '10px', 
+                          backgroundColor: '#dc3545', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 )}
+                
+                {/* Multiple ID proofs */}
+                {formData.idProofUrls && formData.idProofUrls.map((url, index) => (
+                  <div key={index} className="id-proof-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '8px' }}>
+                    <div style={{ flex: '0 0 auto' }}>
+                      <img 
+                        src={url} 
+                        alt={`ID Proof ${index + 1} Preview`} 
+                        style={{ 
+                          width: '60px', 
+                          height: '45px', 
+                          objectFit: 'cover', 
+                          border: '1px solid #ccc', 
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => handleViewImage(url, `ID Proof ${index + 1}`)}
+                        onError={(e) => {
+                          console.error('Multiple ID proof image failed to load:', url);
+                          e.target.style.display = 'none';
+                        }}
+                        title="Click to view full size"
+                      />
+                    </div>
+                    <div style={{ flex: '1', minWidth: '0' }}>
+                      <div className="id-proof-info">
+                        <span className="id-proof-name" style={{ display: 'block', fontWeight: 'bold', fontSize: '12px' }}>📄 ID Proof #{index + 1}</span>
+                        <span className="id-proof-type" style={{ display: 'block', fontSize: '10px', color: '#666' }}>Document</span>
+                      </div>
+                    </div>
+                    <div style={{ flex: '0 0 auto', display: 'flex', gap: '4px' }}>
+                      <button 
+                        type="button"
+                        onClick={() => handleViewImage(url, `ID Proof ${index + 1}`)}
+                        style={{ 
+                          padding: '4px 8px', 
+                          fontSize: '10px', 
+                          backgroundColor: '#007bff', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        👁️ View
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newIdProofUrls = formData.idProofUrls.filter((_, i) => i !== index);
+                          setFormData({...formData, idProofUrls: newIdProofUrls});
+                        }}
+                        style={{ 
+                          padding: '4px 8px', 
+                          fontSize: '10px', 
+                          backgroundColor: '#dc3545', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
                 <small className="form-text">
-                  Upload a photo or PDF of ID proof document (Max 10MB)
+                  Upload multiple photos or PDFs of ID proof documents (Max 10MB each)
                 </small>
               </div>
               
@@ -365,6 +514,61 @@ const CaretakerContactScreen = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {showImageModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal" style={{ backgroundColor: 'white', borderRadius: '8px', padding: '20px', maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 style={{ margin: 0 }}>{selectedImageTitle}</h4>
+              <button 
+                onClick={() => setShowImageModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}
+              >
+                ×
+              </button>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <img 
+                src={selectedImageUrl} 
+                alt={selectedImageTitle}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '70vh', 
+                  objectFit: 'contain',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px'
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+              <div style={{ display: 'none', padding: '20px', color: '#666' }}>
+                <p>❌ Failed to load image</p>
+                <p>URL: {selectedImageUrl}</p>
+              </div>
+            </div>
+            <div style={{ marginTop: '15px' }}>
+              <a 
+                href={selectedImageUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{ marginRight: '10px' }}
+              >
+                🔗 Open in New Tab
+              </a>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setShowImageModal(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

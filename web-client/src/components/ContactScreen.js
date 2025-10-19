@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../config/api';
+import './ContactScreen.css';
 
 const ContactScreen = () => {
   const [customers, setCustomers] = useState([]);
@@ -13,6 +14,7 @@ const ContactScreen = () => {
     phoneNumber: '',
     additionalPhoneNumber: '',
     photoIdProofUrl: '',
+    idProofUrls: [],
     remarks: ''
   });
   const [showImageModal, setShowImageModal] = useState(false);
@@ -101,7 +103,7 @@ const ContactScreen = () => {
       setShowModal(false);
       setIsEditing(false);
       setSelectedCustomer(null);
-      setFormData({ name: '', phoneNumber: '', additionalPhoneNumber: '', photoIdProofUrl: '', remarks: '' });
+      setFormData({ name: '', phoneNumber: '', additionalPhoneNumber: '', photoIdProofUrl: '', idProofUrls: [], remarks: '' });
       fetchCustomers();
     } catch (error) {
       console.error('Error adding/updating customer:', error);
@@ -244,7 +246,6 @@ const ContactScreen = () => {
       displayUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
     }
     
-    console.log('Viewing image:', displayUrl);
     setSelectedImageUrl(displayUrl);
     setSelectedImageTitle(title);
     setShowImageModal(true);
@@ -362,8 +363,6 @@ const ContactScreen = () => {
                     <th>Name</th>
                     <th>Phone</th>
                     <th>Additional Phone</th>
-                    <th>ID Proof 1</th>
-                    <th>ID Proof 2</th>
                     <th>Remarks</th>
                     <th>Actions</th>
                   </tr>
@@ -401,90 +400,6 @@ const ContactScreen = () => {
                         </td>
                       <td>{customer.phoneNumber}</td>
                       <td>{customer.additionalPhoneNumber || 'N/A'}</td>
-                      <td>
-                        {customer.idProofSubmitted && (customer.photoIdProofUrl || (customer.idProofUrls && customer.idProofUrls[0])) ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <img 
-                              src={customer.photoIdProofUrl || customer.idProofUrls[0]} 
-                              alt="ID Proof 1 Preview" 
-                              style={{ 
-                                width: '40px', 
-                                height: '30px', 
-                                objectFit: 'cover', 
-                                border: '1px solid #ccc', 
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                              }}
-                              onClick={() => handleViewImage(
-                                customer.photoIdProofUrl || customer.idProofUrls[0], 
-                                'ID Proof 1'
-                              )}
-                              onError={(e) => {
-                                console.error('Thumbnail image failed to load:', customer.photoIdProofUrl || customer.idProofUrls[0]);
-                                e.target.style.display = 'none';
-                              }}
-                              title="Click to view full size"
-                            />
-                            <button 
-                              className="btn btn-sm btn-outline-success"
-                              onClick={() => handleViewImage(
-                                customer.photoIdProofUrl || customer.idProofUrls[0], 
-                                'ID Proof 1'
-                              )}
-                              style={{ fontSize: '8px', padding: '1px 4px' }}
-                            >
-                              👁️
-                            </button>
-                          </div>
-                        ) : (
-                          <button 
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleEditCustomer(customer)}
-                            style={{ fontSize: '10px', padding: '2px 6px' }}
-                          >
-                            📤 Upload
-                          </button>
-                        )}
-                      </td>
-                      <td>
-                        {customer.idProofSubmitted && customer.idProofUrls && customer.idProofUrls[1] ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <img 
-                              src={customer.idProofUrls[1]} 
-                              alt="ID Proof 2 Preview" 
-                              style={{ 
-                                width: '40px', 
-                                height: '30px', 
-                                objectFit: 'cover', 
-                                border: '1px solid #ccc', 
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                              }}
-                              onClick={() => handleViewImage(customer.idProofUrls[1], 'ID Proof 2')}
-                              onError={(e) => {
-                                console.error('Thumbnail image failed to load:', customer.idProofUrls[1]);
-                                e.target.style.display = 'none';
-                              }}
-                              title="Click to view full size"
-                            />
-                            <button 
-                              className="btn btn-sm btn-outline-success"
-                              onClick={() => handleViewImage(customer.idProofUrls[1], 'ID Proof 2')}
-                              style={{ fontSize: '8px', padding: '1px 4px' }}
-                            >
-                              👁️
-                            </button>
-                          </div>
-                        ) : (
-                          <button 
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleEditCustomer(customer)}
-                            style={{ fontSize: '10px', padding: '2px 6px' }}
-                          >
-                            📤 Upload
-                          </button>
-                        )}
-                      </td>
                       <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {customer.remarks || 'N/A'}
                       </td>
@@ -634,6 +549,7 @@ const ContactScreen = () => {
                 setShowModal(false);
                 setIsEditing(false);
                 setSelectedCustomer(null);
+                setFormData({ name: '', phoneNumber: '', additionalPhoneNumber: '', photoIdProofUrl: '', idProofUrls: [], remarks: '' });
               }}>×</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-body">
@@ -712,23 +628,37 @@ const ContactScreen = () => {
                               <span className="id-proof-type" style={{ display: 'block', fontSize: '10px', color: '#666' }}>Legacy Upload</span>
                             </div>
                           </div>
-                          <div className="id-proof-actions" style={{ flex: '0 0 auto' }}>
+                          <div className="id-proof-actions" style={{ flex: '0 0 auto', display: 'flex', gap: '4px' }}>
                             <button 
+                              type="button"
                               onClick={() => handleViewImage(formData.photoIdProofUrl, 'ID Proof (Legacy)')}
-                              className="btn btn-sm btn-outline-success"
-                              style={{ marginRight: '5px', fontSize: '10px', padding: '2px 6px' }}
+                              style={{ 
+                                padding: '4px 8px', 
+                                fontSize: '10px', 
+                                backgroundColor: '#007bff', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '3px',
+                                cursor: 'pointer'
+                              }}
                             >
                               👁️ View
                             </button>
-                            <a 
-                              href={formData.photoIdProofUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="btn btn-sm btn-outline-primary"
-                              style={{ fontSize: '10px', padding: '2px 6px' }}
+                            <button 
+                              type="button"
+                              onClick={() => setFormData({...formData, photoIdProofUrl: ''})}
+                              style={{ 
+                                padding: '4px 8px', 
+                                fontSize: '10px', 
+                                backgroundColor: '#dc3545', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '3px',
+                                cursor: 'pointer'
+                              }}
                             >
-                              🔗 Open
-                            </a>
+                              Remove
+                            </button>
                           </div>
                         </div>
                       )}
@@ -762,23 +692,40 @@ const ContactScreen = () => {
                               <span className="id-proof-type" style={{ display: 'block', fontSize: '10px', color: '#666' }}>Document</span>
                             </div>
                           </div>
-                          <div className="id-proof-actions" style={{ flex: '0 0 auto' }}>
+                          <div className="id-proof-actions" style={{ flex: '0 0 auto', display: 'flex', gap: '4px' }}>
                             <button 
+                              type="button"
                               onClick={() => handleViewImage(url, `ID Proof ${index + 1}`)}
-                              className="btn btn-sm btn-outline-success"
-                              style={{ marginRight: '5px', fontSize: '10px', padding: '2px 6px' }}
+                              style={{ 
+                                padding: '4px 8px', 
+                                fontSize: '10px', 
+                                backgroundColor: '#007bff', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '3px',
+                                cursor: 'pointer'
+                              }}
                             >
                               👁️ View
                             </button>
-                            <a 
-                              href={url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="btn btn-sm btn-outline-primary"
-                              style={{ fontSize: '10px', padding: '2px 6px' }}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newIdProofUrls = formData.idProofUrls.filter((_, i) => i !== index);
+                                setFormData({...formData, idProofUrls: newIdProofUrls});
+                              }}
+                              style={{ 
+                                padding: '4px 8px', 
+                                fontSize: '10px', 
+                                backgroundColor: '#dc3545', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '3px',
+                                cursor: 'pointer'
+                              }}
                             >
-                              🔗 Open
-                            </a>
+                              Remove
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -789,6 +736,7 @@ const ContactScreen = () => {
                 <small className="form-text text-muted">
                   Upload photos or PDFs of ID proof documents (Max 10MB each). You can select multiple files.
                 </small>
+                
                 
                 {/* Add Additional ID Proof Button */}
                 {(formData.idProofUrls && formData.idProofUrls.length > 0) || formData.photoIdProofUrl ? (
@@ -822,6 +770,7 @@ const ContactScreen = () => {
                   setShowModal(false);
                   setIsEditing(false);
                   setSelectedCustomer(null);
+                  setFormData({ name: '', phoneNumber: '', additionalPhoneNumber: '', photoIdProofUrl: '', idProofUrls: [], remarks: '' });
                 }}>
                   Cancel
                 </button>
@@ -846,13 +795,7 @@ const ContactScreen = () => {
               <img 
                 src={selectedImageUrl} 
                 alt={selectedImageTitle}
-                style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: '70vh', 
-                  objectFit: 'contain',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px'
-                }}
+                className="image-preview"
                 onError={(e) => {
                   console.error('Image failed to load:', selectedImageUrl);
                   e.target.style.display = 'none';

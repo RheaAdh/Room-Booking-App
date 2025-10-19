@@ -70,11 +70,6 @@ const InfoScreen = () => {
     }
   };
 
-  const openDirections = () => {
-    // Open Google Maps with directions to the property
-    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${12.9785908},${77.7412655}&travelmode=driving`;
-    window.open(directionsUrl, '_blank');
-  };
 
   return (
     <div className="info-screen">

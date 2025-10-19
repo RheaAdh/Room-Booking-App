@@ -262,6 +262,7 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
 
   const [showBookingPreview, setShowBookingPreview] = useState(false);
   const [previewBooking, setPreviewBooking] = useState(null);
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
 
   const handleBookRoom = useCallback((room, config) => {
     if (!searchDates.checkIn || !searchDates.checkOut) {
@@ -291,11 +292,17 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
   }, [searchDates, searchFilters, customer, getDaysDifference]);
 
   const confirmBooking = useCallback(async () => {
-    if (!previewBooking) return;
+    if (!previewBooking || isSubmittingBooking) return;
 
+    setIsSubmittingBooking(true);
+    
     try {
+      console.log('Submitting booking request:', previewBooking);
+      
       // Use standard api instance for booking request submission
       const response = await api.post('/booking-requests', previewBooking);
+      
+      console.log('Booking request response:', response.data);
 
       if (response.data.success) {
         // Show payment confirmation message
@@ -316,13 +323,46 @@ Booking ID: ${response.data.id || 'N/A'}
         setShowBookingPreview(false);
         setPreviewBooking(null);
       } else {
-        alert('Failed to submit booking request: ' + response.data.message);
+        const errorMsg = response.data.message || 'Unknown error occurred';
+        console.error('Booking request failed:', errorMsg);
+        alert(`Failed to submit booking request: ${errorMsg}`);
       }
     } catch (error) {
       console.error('Error submitting booking request:', error);
-      alert('Error submitting booking request. Please try again.');
+      
+      let errorMessage = 'Error submitting booking request. Please try again.';
+      
+      if (error.response) {
+        // Server responded with error status
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        if (status === 401) {
+          errorMessage = 'Authentication failed. Please log in again.';
+        } else if (status === 403) {
+          errorMessage = 'Access denied. Please check your permissions.';
+        } else if (status === 404) {
+          errorMessage = 'Service not found. Please contact support.';
+        } else if (status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (data && data.message) {
+          errorMessage = data.message;
+        } else {
+          errorMessage = `Request failed with status ${status}`;
+        }
+      } else if (error.request) {
+        // Network error
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else {
+        // Other error
+        errorMessage = error.message || 'An unexpected error occurred.';
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsSubmittingBooking(false);
     }
-  }, [previewBooking, fetchCustomerData, handleClearSearch]);
+  }, [previewBooking, isSubmittingBooking, fetchCustomerData, handleClearSearch]);
 
 
   useEffect(() => {
@@ -1182,8 +1222,13 @@ Booking ID: ${response.data.id || 'N/A'}
               <button 
                 className="btn btn-primary"
                 onClick={confirmBooking}
+                disabled={isSubmittingBooking}
+                style={{ 
+                  opacity: isSubmittingBooking ? 0.7 : 1,
+                  cursor: isSubmittingBooking ? 'not-allowed' : 'pointer'
+                }}
               >
-                Send Request
+                {isSubmittingBooking ? 'Sending...' : 'Send Request'}
               </button>
             </div>
           </div>

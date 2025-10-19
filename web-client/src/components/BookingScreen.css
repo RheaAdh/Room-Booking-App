@@ -466,6 +466,36 @@
   .booking-id {
     font-size: 12px;
   }
+  
+  /* Compact design mobile styles */
+  .booking-header-compact {
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+  
+  .customer-info-compact {
+    gap: 8px;
+  }
+  
+  .avatar-small {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .customer-name-compact {
+    font-size: 13px;
+  }
+  
+  .booking-meta-compact {
+    font-size: 10px;
+    gap: 6px;
+  }
+  
+  .status-badge-compact {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
 }
 
 /* Preview Modal Styles */
@@ -597,8 +627,13 @@
 .customer-info-section {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex: 1;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .customer-avatar {
@@ -606,65 +641,162 @@
 }
 
 .avatar-circle {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 24px;
+  font-size: 16px;
   font-weight: bold;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
 
 .customer-details {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .customer-name {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: #2c3e50;
-  margin: 0 0 8px 0;
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .customer-id {
-  font-size: 12px;
+  font-size: 10px;
   color: #6c757d;
   background: #e9ecef;
-  padding: 2px 6px;
-  border-radius: 12px;
+  padding: 1px 4px;
+  border-radius: 8px;
   font-weight: 500;
 }
 
 .contact-info {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
 }
 
 .contact-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 4px;
+  font-size: 13px;
 }
 
 .contact-icon {
-  font-size: 16px;
-  width: 20px;
-  text-align: center;
+  font-size: 12px;
+  color: #6c757d;
 }
 
 .contact-value {
   color: #495057;
   font-weight: 500;
+}
+
+.phone-number {
+  color: #007bff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.phone-number:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Compact Customer Information Section */
+.booking-header-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  margin-bottom: 12px;
+}
+
+.customer-info-compact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.customer-details-compact {
+  flex: 1;
+  min-width: 0;
+}
+
+.customer-name-compact {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-meta-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #6c757d;
+}
+
+.booking-id-compact {
+  background: #e9ecef;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.booking-date-compact {
+  color: #6c757d;
+}
+
+.status-compact {
+  flex-shrink: 0;
+}
+
+.status-badge-compact {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Enhanced Booking Status Section */
@@ -730,13 +862,13 @@
 .booking-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .action-group {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -756,15 +888,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 16px;
+  gap: 2px;
+  padding: 8px 12px;
   border: none;
-  border-radius: 8px;
-  font-size: 12px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 80px;
+  min-width: 70px;
   text-align: center;
 }
 
@@ -772,8 +904,8 @@
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
   box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-  min-width: 120px;
-  padding: 16px 20px;
+  min-width: 70px;
+  padding: 8px 12px;
 }
 
 .action-btn.primary-action:hover {
@@ -841,6 +973,32 @@
   
   .customer-info-section {
     width: 100%;
+    padding: 6px 10px;
+  }
+  
+  .customer-details {
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .contact-info {
+    margin-top: 0;
+  }
+  
+  .contact-item {
+    font-size: 12px;
+  }
+  
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .customer-name {
+    font-size: 14px;
   }
   
   .booking-status-section {

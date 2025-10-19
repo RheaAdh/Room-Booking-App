@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 // import 'react-datepicker/dist/react-datepicker.css';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
-import { toLocalDateTimeString, fromLocalDateTimeString, formatDateForDisplay, toLocalDateString, getTodayDateString } from '../utils/dateUtils';
+import { toLocalDateTimeString, fromLocalDateTimeString, toLocalDateString, getTodayDateString } from '../utils/dateUtils';
 import './BookingScreen.css';
 
 const BookingScreen = () => {
@@ -48,7 +48,8 @@ const BookingScreen = () => {
     amount: '',
     mode: '',
     createdAt: new Date(),
-    paymentScreenshotUrl: ''
+    paymentScreenshotUrl: '',
+    paymentStatus: 'PENDING'
   });
 
   useEffect(() => {
@@ -317,6 +318,7 @@ const BookingScreen = () => {
         bookingId: selectedBooking.id,
         amount: parseFloat(paymentData.amount) || 0,
         paymentMethod: paymentData.mode, // This should match PaymentMode enum values
+        paymentStatus: paymentData.paymentStatus || 'PENDING', // Add payment status
         paymentScreenshotUrl: paymentData.paymentScreenshotUrl || '',
         paymentDate: toLocalDateTimeString(paymentDate) // Send as local datetime string, backend will parse it
       };
@@ -339,7 +341,7 @@ const BookingScreen = () => {
       setShowPaymentModal(false);
       setIsEditingPayment(false);
       setEditingPaymentId(null);
-      setPaymentData({ amount: '', mode: '', createdAt: new Date(), paymentScreenshotUrl: '' });
+      setPaymentData({ amount: '', mode: '', createdAt: new Date(), paymentScreenshotUrl: '', paymentStatus: 'PENDING' });
       fetchData(); // Refresh data
     } catch (error) {
       console.error('Error adding payment:', error);
@@ -602,183 +604,40 @@ const BookingScreen = () => {
           ) : (
             <div className="bookings-list">
               {filteredBookings.map((booking) => {
-                // Find customer and room data
+                // Find customer data
                 const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
-                const room = rooms.find(r => r.id === booking.roomId);
                 
                 return (
                 <div key={booking.id} className="booking-item">
-                  {/* Enhanced Customer Information Header */}
-                  <div className="booking-header">
-                    <div className="customer-info-section">
-                      <div className="customer-avatar">
-                        <div className="avatar-circle">
-                          {customer?.name ? customer.name.charAt(0).toUpperCase() : '?'}
-                        </div>
+                  {/* Compact Customer Information Header */}
+                  <div className="booking-header-compact">
+                    <div className="customer-info-compact">
+                      <div className="avatar-small">
+                        {customer?.name ? customer.name.charAt(0).toUpperCase() : '?'}
                       </div>
-                      <div className="customer-details">
-                        <h3 className="customer-name">
-                          {customer?.name || 'Unknown Customer'}
-                          <span className="customer-id">#{booking.id}</span>
-                        </h3>
-                        <div className="contact-info">
-                          <div className="contact-item">
-                            <span className="contact-icon">📞</span>
-                            <span className="contact-value">{booking.customerPhoneNumber}</span>
-                          </div>
-                          {customer?.email && (
-                            <div className="contact-item">
-                              <span className="contact-icon">✉️</span>
-                              <span className="contact-value">{customer.email}</span>
-                            </div>
-                          )}
+                      <div className="customer-details-compact">
+                        <div className="customer-name-compact">
+                          {customer?.name || 'Unknown Customer'} • {booking.customerPhoneNumber || 'No phone'}
+                        </div>
+                        <div className="booking-meta-compact">
+                          <span className="booking-id-compact">#{booking.id}</span>
+                          <span className="booking-date-compact">
+                            {new Date(booking.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <div className="booking-status-section">
-                      <div className="status-badge-container">
-                        <span 
-                          className="status-badge"
-                          style={{ backgroundColor: getStatusColor(booking.bookingStatus) }}
-                        >
-                          {booking.bookingStatus}
-                        </span>
-                        <div className="status-indicator"></div>
-                      </div>
-                      <div className="booking-meta">
-                        <span className="booking-id">Booking #{booking.id}</span>
-                        <span className="booking-date">
-                          Created: {new Date(booking.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
+                    <div className="status-compact">
+                      <span 
+                        className="status-badge-compact"
+                        style={{ backgroundColor: getStatusColor(booking.bookingStatus) }}
+                      >
+                        {booking.bookingStatus}
+                      </span>
                     </div>
                   </div>
                   
-                  <div className="booking-details">
-                    {/* Room Information */}
-                    <div className="detail-row">
-                      <span className="detail-label">Room:</span>
-                      <span className="detail-value">
-                        {room?.roomNumber || `Room ${booking.roomId}`} ({room?.roomType || 'N/A'})
-                      </span>
-                    </div>
-                    
-                    {/* Booking Dates */}
-                    <div className="detail-row">
-                      <span className="detail-label">Check-in:</span>
-                      <span className="detail-value">
-                        {formatDateForDisplay(booking.checkInDate)}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Check-out:</span>
-                      <span className="detail-value">
-                        {formatDateForDisplay(booking.checkOutDate)}
-                      </span>
-                    </div>
-                    
-                    {/* Duration and Type */}
-                    <div className="detail-row">
-                      <span className="detail-label">Duration:</span>
-                      <span className="detail-value">
-                        {Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24))} days
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Booking Type:</span>
-                      <span className="detail-value">
-                        {booking.bookingDurationType || 'N/A'}
-                      </span>
-                    </div>
-                    
-                    {/* Number of People */}
-                    <div className="detail-row">
-                      <span className="detail-label">Guests:</span>
-                      <span className="detail-value">
-                        {booking.numberOfPeople || 'N/A'} people
-                      </span>
-                    </div>
-                    
-                    {/* Financial Information */}
-                    <div className="detail-row">
-                      <span className="detail-label">Daily Rate:</span>
-                      <span className="detail-value">
-                        ₹{booking.dailyCost || '0'}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Monthly Rate:</span>
-                      <span className="detail-value">
-                        ₹{booking.monthlyCost || '0'}
-                      </span>
-                    </div>
-                    {booking.earlyCheckinCost > 0 && (
-                      <div className="detail-row">
-                        <span className="detail-label">Early Check-in:</span>
-                        <span className="detail-value">
-                          ₹{booking.earlyCheckinCost}
-                        </span>
-                      </div>
-                    )}
-                    {booking.lateCheckoutCost > 0 && (
-                      <div className="detail-row">
-                        <span className="detail-label">Late Check-out:</span>
-                        <span className="detail-value">
-                          ₹{booking.lateCheckoutCost}
-                        </span>
-                      </div>
-                    )}
-                    <div className="detail-row">
-                      <span className="detail-label">Total Amount:</span>
-                      <span className="detail-value" style={{ fontWeight: 'bold', color: '#2c3e50' }}>
-                        ₹{booking.totalAmount || '0'}
-                      </span>
-                    </div>
-                    
-                    {/* Payment Status */}
-                    {(() => {
-                      const breakdown = calculatePaymentBreakdown(booking);
-                      return (
-                        <div className="detail-row">
-                          <span className="detail-label">Due Amount:</span>
-                          <span className="detail-value" style={{ 
-                            color: breakdown.dueAmount > 0 ? '#dc3545' : '#28a745',
-                            fontWeight: 'bold'
-                          }}>
-                            ₹{breakdown.dueAmount.toFixed(2)}
-                          </span>
-                        </div>
-                      );
-                    })()}
-                    
-                    {/* Booking ID and Timestamps */}
-                    <div className="detail-row">
-                      <span className="detail-label">Booking ID:</span>
-                      <span className="detail-value">
-                        #{booking.id}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Created:</span>
-                      <span className="detail-value">
-                        {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-IN', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        }) : 'N/A'}
-                      </span>
-                    </div>
-                    {booking.remarks && (
-                      <div className="detail-row">
-                        <span className="detail-label">Remarks:</span>
-                        <span className="detail-value">
-                          {booking.remarks}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                
 
                   {/* Action Buttons */}
                   <div className="booking-actions">
@@ -1209,7 +1068,7 @@ const BookingScreen = () => {
                   setShowPaymentModal(false);
                   setIsEditingPayment(false);
                   setEditingPaymentId(null);
-                  setPaymentData({ amount: '', mode: '', createdAt: new Date(), paymentScreenshotUrl: '' });
+                  setPaymentData({ amount: '', mode: '', createdAt: new Date(), paymentScreenshotUrl: '', paymentStatus: 'PENDING' });
                 }}
               >
                 ×
@@ -1241,6 +1100,21 @@ const BookingScreen = () => {
                   <option value="CASH">Cash</option>
                   <option value="ONLINE">Online</option>
                   <option value="CARETAKER">Caretaker</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Payment Status</label>
+                <select
+                  className="form-control"
+                  value={paymentData.paymentStatus}
+                  onChange={(e) => handlePaymentInputChange('paymentStatus', e.target.value)}
+                  required
+                >
+                  <option value="PENDING">Pending</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="FAILED">Failed</option>
+                  <option value="REFUNDED">Refunded</option>
                 </select>
               </div>
 
@@ -1320,7 +1194,7 @@ const BookingScreen = () => {
                   setShowPaymentModal(false);
                   setIsEditingPayment(false);
                   setEditingPaymentId(null);
-                  setPaymentData({ amount: '', mode: '', createdAt: new Date(), paymentScreenshotUrl: '' });
+                  setPaymentData({ amount: '', mode: '', createdAt: new Date(), paymentScreenshotUrl: '', paymentStatus: 'PENDING' });
                 }}>
                   Cancel
                 </button>

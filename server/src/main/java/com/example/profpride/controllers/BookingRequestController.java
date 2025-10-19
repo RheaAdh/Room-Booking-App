@@ -18,9 +18,25 @@ public class BookingRequestController {
     private BookingRequestService bookingRequestService;
 
     @PostMapping
-    public ResponseEntity<BookingRequest> createBookingRequest(@RequestBody BookingRequest bookingRequest) {
-        BookingRequest savedRequest = bookingRequestService.createBookingRequest(bookingRequest);
-        return new ResponseEntity<>(savedRequest, HttpStatus.CREATED);
+    public ResponseEntity<?> createBookingRequest(@RequestBody BookingRequest bookingRequest) {
+        try {
+            BookingRequest savedRequest = bookingRequestService.createBookingRequest(bookingRequest);
+            
+            // Return response in format expected by frontend
+            java.util.Map<String, Object> response = new java.util.HashMap<>();
+            response.put("success", true);
+            response.put("id", savedRequest.getId());
+            response.put("message", "Booking request created successfully");
+            response.put("data", savedRequest);
+            
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            java.util.Map<String, Object> errorResponse = new java.util.HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping

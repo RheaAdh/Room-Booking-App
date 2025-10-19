@@ -30,7 +30,12 @@ const Layout = ({ children }) => {
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <h1 className="sidebar-title">Room Booking</h1>
+          <div className="sidebar-header-top">
+            <h1 className="sidebar-title">Room Booking</h1>
+            <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
+              ✕
+            </button>
+          </div>
           <p className="sidebar-subtitle">Management System</p>
           <div className="user-info">
             <span className="user-name">{user?.name}</span>
@@ -63,7 +68,7 @@ const Layout = ({ children }) => {
         {/* Mobile Header */}
         <div className="mobile-header">
           <button className="sidebar-toggle" onClick={toggleSidebar}>
-            ☰
+            {sidebarOpen ? '✕' : '☰'}
           </button>
           <h2 className="page-title">
             {menuItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}

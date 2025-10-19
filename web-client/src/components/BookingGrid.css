@@ -184,11 +184,10 @@
   position: sticky;
   left: 0;
   z-index: 5;
-  width: 100px;
-  min-width: 100px;
+  width: 110px;
+  min-width: 110px;
   font-size: 10px;
-  overflow: hidden;
-  white-space: nowrap;
+  padding: 4px 6px;
 }
 
 .data-cell {
@@ -242,16 +241,24 @@
 .room-number {
   font-weight: 700;
   color: #1e293b;
-  font-size: 10px;
+  font-size: 9px;
   display: block;
   letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .room-type {
-  font-size: 8px;
+  font-size: 7px;
   color: #64748b;
   font-weight: 500;
   margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Clean Occupied Cells */
