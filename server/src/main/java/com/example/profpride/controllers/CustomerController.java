@@ -101,6 +101,8 @@ public class CustomerController {
                 return ResponseEntity.badRequest().build();
             }
 
+            // Handle both formats: customer_token_phoneNumber and customer_token_phoneNumber_timestamp
+            // Extract phone number from token (phone number is always at index 2)
             String phoneNumber = tokenParts[2];
             
             // Find customer
@@ -146,6 +148,7 @@ public class CustomerController {
                 return ResponseEntity.badRequest().body(response);
             }
 
+            // Extract phone number from token (phone number is always at index 2)
             String phoneNumber = tokenParts[2];
             
             // Find customer
@@ -204,6 +207,7 @@ public class CustomerController {
                 return ResponseEntity.badRequest().body(response);
             }
 
+            // Extract phone number from token (phone number is always at index 2)
             String phoneNumber = tokenParts[2];
             
             // Find customer

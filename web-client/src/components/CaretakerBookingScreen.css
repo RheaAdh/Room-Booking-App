@@ -121,12 +121,91 @@
   transition: all 0.3s ease;
 }
 
-/* Mobile compact version */
+/* Mobile Responsive Design */
 @media (max-width: 768px) {
-  .booking-card {
-    padding: 0.5rem;
+  .caretaker-booking {
+    padding: 0.25rem;
+    background: #f5f5f5;
+  }
+
+  .booking-header {
+    padding: 0.75rem;
     margin-bottom: 0.5rem;
     border-radius: 6px;
+  }
+
+  .booking-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .booking-header p {
+    font-size: 0.75rem;
+  }
+
+  .tab-navigation {
+    padding: 0.125rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+  }
+
+  .tab-btn {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .bookings-list {
+    padding: 0.25rem;
+  }
+
+  .booking-card {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+  }
+
+  .booking-header-card {
+    margin-bottom: 0.5rem;
+  }
+
+  .booking-details {
+    margin-bottom: 0.5rem;
+  }
+
+  .booking-actions {
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+
+  /* Modal adjustments for mobile */
+  .modal-overlay {
+    padding: 1rem 0.5rem;
+    padding-bottom: 100px;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+
+  .modal {
+    max-height: calc(100vh - 150px);
+    margin-bottom: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .modal .form-actions {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem;
+    margin: 0 -1rem -1rem -1rem;
+    border-top: 1px solid #e9ecef;
+    border-radius: 0 0 12px 12px;
   }
 }
 

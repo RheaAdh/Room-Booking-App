@@ -51,6 +51,59 @@ code {
     monospace;
 }
 
+/* Global Mobile Responsive Styles */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  /* Prevent horizontal scrolling */
+  html, body {
+    overflow-x: hidden;
+  }
+  
+  /* Touch-friendly buttons */
+  button, .btn, .action-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better form inputs for mobile */
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Improved modal positioning */
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+  
+  .modal {
+    max-height: calc(100vh - 4rem);
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+  
+  .modal-overlay {
+    padding: 4px;
+    padding-top: 1rem;
+  }
+  
+  .modal {
+    max-height: calc(100vh - 2rem);
+  }
+}
+
 /* ID Proofs List Styles (for ContactScreen and other components) */
 .id-proofs-list {
   margin: 20px 0;

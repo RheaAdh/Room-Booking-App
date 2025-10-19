@@ -173,6 +173,7 @@ public class CustomerAuthController {
                 return ResponseEntity.badRequest().body(response);
             }
 
+            // Extract phone number from token (phone number is always at index 2)
             String phoneNumber = tokenParts[2];
             
             // Find customer

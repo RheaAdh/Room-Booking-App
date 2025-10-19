@@ -18,7 +18,7 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
     guests: ''
   });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('about');
+  const [activeTab, setActiveTab] = useState('rooms');
   const [error, setError] = useState(null);
 
   const openMapLocation = (locationName) => {
