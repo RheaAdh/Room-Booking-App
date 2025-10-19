@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
+import notificationService from './services/notificationService';
 
 // Import components
 import LoginScreen from './components/LoginScreen';
@@ -16,6 +17,7 @@ import ExpenseScreen from './components/ExpenseScreen';
 import ContactScreen from './components/ContactScreen';
 import CaretakerContactScreen from './components/CaretakerContactScreen';
 import BookingRequestsScreen from './components/BookingRequestsScreen';
+import NotificationTest from './components/NotificationTest';
 import Layout from './components/Layout';
 import CaretakerLayout from './components/CaretakerLayout';
 import PublicApp from './components/PublicApp';
@@ -54,6 +56,7 @@ const OwnerRoutes = () => {
         <Route path="/expenses" element={<ExpenseScreen />} />
         <Route path="/contacts" element={<ContactScreen />} />
         <Route path="/booking-requests" element={<BookingRequestsScreen />} />
+        <Route path="/notification-test" element={<NotificationTest />} />
       </Routes>
     </Layout>
   );
@@ -107,6 +110,29 @@ const AppRoutes = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // Initialize notifications when app loads
+    const initializeNotifications = async () => {
+      try {
+        // Register service worker
+        await notificationService.registerServiceWorker();
+        
+        // Request notification permission
+        const hasPermission = await notificationService.requestPermission();
+        
+        if (hasPermission) {
+          console.log('✅ Notifications enabled! You will receive booking request alerts.');
+        } else {
+          console.log('❌ Notifications disabled. Enable them in your browser settings for booking alerts.');
+        }
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+      }
+    };
+
+    initializeNotifications();
+  }, []);
+
   return (
     <AuthProvider>
       <Router>

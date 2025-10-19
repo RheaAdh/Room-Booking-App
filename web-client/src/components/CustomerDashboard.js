@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../config/api';
+import notificationService from '../services/notificationService';
 import './CustomerDashboard.css';
 
 
@@ -318,6 +319,21 @@ Booking ID: ${response.data.id || 'N/A'}
         `;
         
         alert(paymentMessage);
+        
+        // Trigger notification for admin/owner
+        try {
+          await notificationService.showBookingRequestNotification({
+            id: response.data.id,
+            customerName: customer.name,
+            phoneNumber: customer.phoneNumber,
+            roomNumber: previewBooking.roomNumber,
+            checkInDate: previewBooking.checkInDate,
+            checkOutDate: previewBooking.checkOutDate
+          });
+        } catch (notificationError) {
+          console.warn('Failed to send notification:', notificationError);
+        }
+        
         fetchCustomerData(); // Refresh data
         handleClearSearch(); // Clear search
         setShowBookingPreview(false);
@@ -343,6 +359,10 @@ Booking ID: ${response.data.id || 'N/A'}
           errorMessage = 'Access denied. Please check your permissions.';
         } else if (status === 404) {
           errorMessage = 'Service not found. Please contact support.';
+        } else if (status === 409) {
+          errorMessage = error.response?.headers?.['x-error-message'] || 
+                        (data && data.message) || 
+                        'Room is already booked for the selected dates. Please choose different dates or room.';
         } else if (status === 500) {
           errorMessage = 'Server error. Please try again later.';
         } else if (data && data.message) {

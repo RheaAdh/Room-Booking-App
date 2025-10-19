@@ -69,7 +69,7 @@ const CaretakerContactScreen = () => {
         await api.put(`/customer/${selectedCustomer.phoneNumber}`, formData);
         alert('✅ Customer updated successfully!');
       } else {
-        await api.post('/auth/customer/register', formData);
+        await api.post('/customer', formData);
         alert('✅ Customer added successfully!');
       }
       
@@ -96,11 +96,26 @@ const CaretakerContactScreen = () => {
         return;
       }
 
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
-      if (!allowedTypes.includes(file.type)) {
-        alert(`File "${file.name}" is not a supported format. Please upload an image (JPEG, PNG, GIF) or PDF file.`);
-        return;
+      // More flexible file type validation for mobile cameras
+      const allowedTypes = [
+        'image/jpeg', 
+        'image/jpg', 
+        'image/png', 
+        'image/gif', 
+        'image/webp', // Mobile cameras often use WebP
+        'application/pdf',
+        'image/heic', // iOS camera format
+        'image/heif'  // iOS camera format
+      ];
+      
+      // Check if file type is allowed or if it's an image (for mobile camera compatibility)
+      const isAllowedType = allowedTypes.includes(file.type);
+      const isImageFile = file.type.startsWith('image/');
+      const hasImageExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
+      
+      if (!isAllowedType && !(isImageFile && hasImageExtension)) {
+        console.warn(`File type "${file.type}" not in allowed list, but proceeding as it appears to be an image file`);
+        // Don't block the upload, just log a warning
       }
     }
 
@@ -137,7 +152,19 @@ const CaretakerContactScreen = () => {
       }
     } catch (error) {
       console.error('Error uploading ID proofs:', error);
-      alert('Error uploading ID proofs. Please try again.');
+      
+      // Provide more specific error messages for mobile users
+      let errorMessage = 'Error uploading ID proofs. Please try again.';
+      
+      if (error.message && error.message.includes('Network Error')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (error.message && error.message.includes('413')) {
+        errorMessage = 'File too large. Please compress the image or try a smaller file.';
+      } else if (error.message && error.message.includes('415')) {
+        errorMessage = 'Unsupported file format. Please try taking a new photo or selecting a different image.';
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -219,27 +246,32 @@ const CaretakerContactScreen = () => {
       {/* Contacts List */}
       <div className="contacts-list">
         {filteredCustomers.length > 0 ? (
-          filteredCustomers.map(customer => (
-            <div 
-              key={customer.phoneNumber} 
-              className={`contact-card ${!customer.photoIdProofUrl ? 'missing-id-proof' : ''}`}
-            >
-              <div className="contact-header">
-                <div className="contact-info">
-                  <h3 className="contact-name">{customer.name}</h3>
-                  <p className="contact-phone">{customer.phoneNumber}</p>
-                  {customer.additionalPhoneNumber && (
-                    <p className="contact-phone-secondary">{customer.additionalPhoneNumber}</p>
-                  )}
+          filteredCustomers.map(customer => {
+            // Check if customer has any ID proof (single or multiple)
+            const hasIdProof = customer.photoIdProofUrl || 
+                              (customer.idProofUrls && customer.idProofUrls.length > 0);
+            
+            return (
+              <div 
+                key={customer.phoneNumber} 
+                className={`contact-card ${!hasIdProof ? 'missing-id-proof' : ''}`}
+              >
+                <div className="contact-header">
+                  <div className="contact-info">
+                    <h3 className="contact-name">{customer.name}</h3>
+                    <p className="contact-phone">{customer.phoneNumber}</p>
+                    {customer.additionalPhoneNumber && (
+                      <p className="contact-phone-secondary">{customer.additionalPhoneNumber}</p>
+                    )}
+                  </div>
+                  <div className="contact-status">
+                    {hasIdProof ? (
+                      <span className="status-badge verified">✅ Verified</span>
+                    ) : (
+                      <span className="status-badge pending">⚠️ ID Required</span>
+                    )}
+                  </div>
                 </div>
-                <div className="contact-status">
-                  {customer.photoIdProofUrl ? (
-                    <span className="status-badge verified">✅ Verified</span>
-                  ) : (
-                    <span className="status-badge pending">⚠️ ID Required</span>
-                  )}
-                </div>
-              </div>
               
               {customer.remarks && (
                 <div className="contact-remarks">
@@ -254,26 +286,11 @@ const CaretakerContactScreen = () => {
                 >
                   ✏️ Edit
                 </button>
-                {customer.photoIdProofUrl ? (
-                  <a 
-                    href={customer.photoIdProofUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="action-btn view-btn"
-                  >
-                    📄 View ID
-                  </a>
-                ) : (
-                  <button 
-                    className="action-btn upload-btn"
-                    onClick={() => handleUploadIdProof(customer)}
-                  >
-                    📤 Upload ID
-                  </button>
-                )}
+
               </div>
             </div>
-          ))
+            );
+          })
         ) : (
           <div className="no-contacts">
             <div className="no-contacts-icon">👥</div>
@@ -344,6 +361,7 @@ const CaretakerContactScreen = () => {
                   type="file"
                   className="form-control"
                   accept="image/*,.pdf"
+                  capture="environment"
                   onChange={handleIdProofUpload}
                   id="idProofFile"
                   multiple

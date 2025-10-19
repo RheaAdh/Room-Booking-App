@@ -74,170 +74,175 @@ const SummaryScreen = () => {
   }
 
   return (
-    <div className="summary-screen">
-      <div className="page-header">
-        <h1>📋 Daily Summary</h1>
-        <div className="header-actions">
-          <button className="btn btn-primary" onClick={fetchSummaryData}>
-            🔄 Refresh
-          </button>
+    <div className="summary-screen-mobile">
+
+
+      {/* Quick Stats */}
+      <div className="quick-stats">
+        <div className="stat-card checkins">
+          <div className="stat-number">{todaySummary.checkIns?.length || 0}</div>
+          <div className="stat-label">Check-ins</div>
+        </div>
+        <div className="stat-card checkouts">
+          <div className="stat-number">{todaySummary.checkOuts?.length || 0}</div>
+          <div className="stat-label">Check-outs</div>
+        </div>
+        <div className="stat-card dues">
+          <div className="stat-number">{todaySummary.pendingDues?.length || 0}</div>
+          <div className="stat-label">Pending Dues</div>
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Daily Summary - {new Date(selectedDate).toLocaleDateString('en-IN', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}</h3>
+      {/* Check-ins Section */}
+      <div className="summary-section-mobile">
+        <div className="section-header">
+          <h3>📥 Check-ins</h3>
+          <span className="count-badge">{todaySummary.checkIns?.length || 0}</span>
         </div>
-        <div className="card-body">
-          <div className="summary-content">
-            <div className="summary-section">
-              <h4>📥 Check-ins ({todaySummary.checkIns?.length || 0})</h4>
-              {todaySummary.checkIns && todaySummary.checkIns.length > 0 ? (
-                <div className="table-container">
-                  <table className="pending-dues-table">
-                    <thead>
-                      <tr>
-                        <th>Customer Name</th>
-                        <th>Room</th>
-                        <th>Phone</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {todaySummary.checkIns.map((booking, index) => (
-                        <tr key={index}>
-                          <td className="customer-name">{booking.customerName}</td>
-                          <td className="room-number">{booking.roomNumber}</td>
-                          <td className="phone-number">{booking.phoneNumber}</td>
-                          <td className="status">
-                            <span className={`status-badge ${booking.bookingStatus?.toLowerCase()}`}>
-                              {booking.bookingStatus}
-                            </span>
-                          </td>
-                          <td className="actions">
-                            {booking.bookingStatus === 'CONFIRMED' && (
-                              <button 
-                                className="btn btn-sm btn-primary"
-                                onClick={() => handleCheckIn(booking.bookingId)}
-                              >
-                                ✅ Check-in
-                              </button>
-                            )}
-                            {booking.bookingStatus === 'CHECKEDIN' && (
-                              <button 
-                                className="btn btn-sm btn-warning"
-                                onClick={() => handleCheckOut(booking.bookingId)}
-                              >
-                                🚪 Check-out
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="no-data">No check-ins for this date</p>
-              )}
-            </div>
-
-            <div className="summary-section">
-              <h4>📤 Check-outs ({todaySummary.checkOuts?.length || 0})</h4>
-              {todaySummary.checkOuts && todaySummary.checkOuts.length > 0 ? (
-                <div className="table-container">
-                  <table className="pending-dues-table">
-                    <thead>
-                      <tr>
-                        <th>Customer Name</th>
-                        <th>Room</th>
-                        <th>Phone</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {todaySummary.checkOuts.map((booking, index) => (
-                        <tr key={index}>
-                          <td className="customer-name">{booking.customerName}</td>
-                          <td className="room-number">{booking.roomNumber}</td>
-                          <td className="phone-number">{booking.phoneNumber}</td>
-                          <td className="status">
-                            <span className={`status-badge ${booking.bookingStatus?.toLowerCase()}`}>
-                              {booking.bookingStatus}
-                            </span>
-                          </td>
-                          <td className="actions">
-                            {booking.bookingStatus === 'CONFIRMED' && (
-                              <button 
-                                className="btn btn-sm btn-primary"
-                                onClick={() => handleCheckIn(booking.bookingId)}
-                              >
-                                ✅ Check-in
-                              </button>
-                            )}
-                            {booking.bookingStatus === 'CHECKEDIN' && (
-                              <button 
-                                className="btn btn-sm btn-warning"
-                                onClick={() => handleCheckOut(booking.bookingId)}
-                              >
-                                🚪 Check-out
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="no-data">No check-outs for this date</p>
-              )}
-            </div>
-
-            <div className="summary-section">
-              <h4>💳 Pending Dues ({todaySummary.pendingDues?.length || 0})</h4>
-              {todaySummary.pendingDues && todaySummary.pendingDues.length > 0 ? (
-                <div className="summary-list">
-                  <div className="table-container">
-                    <table className="pending-dues-table">
-                      <thead>
-                        <tr>
-                          <th>Customer Name</th>
-                          <th>Due Amount</th>
-                          <th>Phone Number</th>
-                          <th>Room No.</th>
-                          <th>Check-in Date</th>
-                          <th>Check-out Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {todaySummary.pendingDues.map((due, index) => (
-                          <tr key={index}>
-                            <td className="customer-name">{due.customerName}</td>
-                            <td className="due-amount">₹{due.dueAmount}</td>
-                            <td className="phone-number">{due.phoneNumber}</td>
-                            <td className="room-number">{due.roomNumber}</td>
-                            <td className="checkin-date">{due.checkInDate}</td>
-                            <td className="checkout-date">{due.checkOutDate}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+        {todaySummary.checkIns && todaySummary.checkIns.length > 0 ? (
+          <div className="booking-cards">
+            {todaySummary.checkIns.map((booking, index) => (
+              <div key={index} className="booking-card">
+                <div className="booking-header">
+                  <div className="customer-info">
+                    <div className="customer-name">{booking.customerName}</div>
+                    <div className="room-info">Room {booking.roomNumber}</div>
+                  </div>
+                  <div className="booking-status">
+                    <span className={`status-badge ${booking.bookingStatus?.toLowerCase()}`}>
+                      {booking.bookingStatus}
+                    </span>
                   </div>
                 </div>
-              ) : (
-                <p className="no-data">No pending dues</p>
-              )}
-            </div>
+                <div className="booking-details">
+                  <div className="detail-item">
+                    <span className="detail-icon">📞</span>
+                    <span className="detail-text">{booking.phoneNumber}</span>
+                  </div>
+                </div>
+                <div className="booking-actions">
+                  {booking.bookingStatus === 'CONFIRMED' && (
+                    <button 
+                      className="action-btn checkin-btn"
+                      onClick={() => handleCheckIn(booking.bookingId)}
+                    >
+                      ✅ Check-in
+                    </button>
+                  )}
+                  {booking.bookingStatus === 'CHECKEDIN' && (
+                    <button 
+                      className="action-btn checkout-btn"
+                      onClick={() => handleCheckOut(booking.bookingId)}
+                    >
+                      🚪 Check-out
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">📭</div>
+            <div className="empty-text">No check-ins today</div>
+          </div>
+        )}
+      </div>
+
+      {/* Check-outs Section */}
+      <div className="summary-section-mobile">
+        <div className="section-header">
+          <h3>📤 Check-outs</h3>
+          <span className="count-badge">{todaySummary.checkOuts?.length || 0}</span>
         </div>
+        {todaySummary.checkOuts && todaySummary.checkOuts.length > 0 ? (
+          <div className="booking-cards">
+            {todaySummary.checkOuts.map((booking, index) => (
+              <div key={index} className="booking-card">
+                <div className="booking-header">
+                  <div className="customer-info">
+                    <div className="customer-name">{booking.customerName}</div>
+                    <div className="room-info">Room {booking.roomNumber}</div>
+                  </div>
+                  <div className="booking-status">
+                    <span className={`status-badge ${booking.bookingStatus?.toLowerCase()}`}>
+                      {booking.bookingStatus}
+                    </span>
+                  </div>
+                </div>
+                <div className="booking-details">
+                  <div className="detail-item">
+                    <span className="detail-icon">📞</span>
+                    <span className="detail-text">{booking.phoneNumber}</span>
+                  </div>
+                </div>
+                <div className="booking-actions">
+                  {booking.bookingStatus === 'CONFIRMED' && (
+                    <button 
+                      className="action-btn checkin-btn"
+                      onClick={() => handleCheckIn(booking.bookingId)}
+                    >
+                      ✅ Check-in
+                    </button>
+                  )}
+                  {booking.bookingStatus === 'CHECKEDIN' && (
+                    <button 
+                      className="action-btn checkout-btn"
+                      onClick={() => handleCheckOut(booking.bookingId)}
+                    >
+                      🚪 Check-out
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">📭</div>
+            <div className="empty-text">No check-outs today</div>
+          </div>
+        )}
+      </div>
+
+      {/* Pending Dues Section */}
+      <div className="summary-section-mobile">
+        <div className="section-header">
+          <h3>💳 Pending Dues</h3>
+          <span className="count-badge">{todaySummary.pendingDues?.length || 0}</span>
+        </div>
+        {todaySummary.pendingDues && todaySummary.pendingDues.length > 0 ? (
+          <div className="dues-cards">
+            {todaySummary.pendingDues.map((due, index) => (
+              <div key={index} className="due-card">
+                <div className="due-header">
+                  <div className="customer-info">
+                    <div className="customer-name">{due.customerName}</div>
+                    <div className="room-info">Room {due.roomNumber}</div>
+                  </div>
+                  <div className="due-amount">₹{due.dueAmount}</div>
+                </div>
+                <div className="due-details">
+                  <div className="detail-item">
+                    <span className="detail-icon">📞</span>
+                    <span className="detail-text">{due.phoneNumber}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-icon">📅</span>
+                    <span className="detail-text">
+                      {due.checkInDate} - {due.checkOutDate}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">💰</div>
+            <div className="empty-text">No pending dues</div>
+          </div>
+        )}
       </div>
     </div>
   );

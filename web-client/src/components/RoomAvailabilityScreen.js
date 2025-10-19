@@ -58,14 +58,9 @@ const RoomAvailabilityScreen = () => {
 
   return (
     <div className="room-availability-screen">
-      <div className="page-header">
-        <h1>🏠 Room Availability Checker</h1>
-      </div>
 
       <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Check Room Availability</h3>
-        </div>
+
         <div className="card-body">
           <div className="availability-form">
             <div className="form-group">

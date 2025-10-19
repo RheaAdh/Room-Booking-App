@@ -3,7 +3,6 @@ package com.example.profpride.controllers;
 import com.example.profpride.models.Booking;
 import com.example.profpride.models.Customer;
 import com.example.profpride.models.Room;
-import com.example.profpride.models.Payment;
 import com.example.profpride.repositories.BookingRepository;
 import com.example.profpride.repositories.CustomerRepository;
 import com.example.profpride.repositories.RoomRepository;
@@ -81,8 +80,8 @@ public class BookingController {
             
             // Check room availability for the requested dates
             List<Booking> existingBookings = bookingRepository.findByRoom(room);
-            boolean isRoomAvailable = existingBookings.stream()
-                .noneMatch(existingBooking -> {
+            Optional<Booking> conflictingBooking = existingBookings.stream()
+                .filter(existingBooking -> {
                     // Only check confirmed bookings
                     if (existingBooking.getBookingStatus() == null || 
                         !existingBooking.getBookingStatus().toString().equals("CONFIRMED")) {
@@ -92,11 +91,21 @@ public class BookingController {
                     // Check for date overlap
                     return (booking.getCheckInDate().isBefore(existingBooking.getCheckOutDate()) &&
                            booking.getCheckOutDate().isAfter(existingBooking.getCheckInDate()));
-                });
+                })
+                .findFirst();
             
-            if (!isRoomAvailable) {
+            if (conflictingBooking.isPresent()) {
+                Booking conflict = conflictingBooking.get();
+                String errorMessage = String.format(
+                    "Room %s is already booked from %s to %s. Please choose different dates or room.",
+                    room.getRoomNumber(),
+                    conflict.getCheckInDate().toLocalDate(),
+                    conflict.getCheckOutDate().toLocalDate()
+                );
+                
                 return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(null); // Room is already booked for these dates
+                    .header("X-Error-Message", errorMessage)
+                    .body(null);
             }
             
             // Costs should be provided from frontend based on room configuration
@@ -144,8 +153,8 @@ public class BookingController {
                     updatedBooking.getCheckOutDate() : booking.getCheckOutDate();
                 
                 List<Booking> existingBookings = bookingRepository.findByRoom(booking.getRoom());
-                boolean isRoomAvailable = existingBookings.stream()
-                    .noneMatch(existingBookingItem -> {
+                Optional<Booking> conflictingBooking = existingBookings.stream()
+                    .filter(existingBookingItem -> {
                         // Skip the current booking being updated
                         if (existingBookingItem.getId().equals(booking.getId())) {
                             return false;
@@ -160,11 +169,21 @@ public class BookingController {
                         // Check for date overlap
                         return (checkInDate.isBefore(existingBookingItem.getCheckOutDate()) &&
                                checkOutDate.isAfter(existingBookingItem.getCheckInDate()));
-                    });
+                    })
+                    .findFirst();
                 
-                if (!isRoomAvailable) {
+                if (conflictingBooking.isPresent()) {
+                    Booking conflict = conflictingBooking.get();
+                    String errorMessage = String.format(
+                        "Room %s is already booked from %s to %s. Please choose different dates or room.",
+                        booking.getRoom().getRoomNumber(),
+                        conflict.getCheckInDate().toLocalDate(),
+                        conflict.getCheckOutDate().toLocalDate()
+                    );
+                    
                     return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(null); // Room is already booked for these dates
+                        .header("X-Error-Message", errorMessage)
+                        .body(null);
                 }
             }
             

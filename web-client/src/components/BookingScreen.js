@@ -220,7 +220,10 @@ const BookingScreen = () => {
     } catch (error) {
       console.error('Error creating/updating booking:', error);
       if (error.response?.status === 409) {
-        setConflictMessage('Room is already booked for the selected dates. Please choose different dates or room.');
+        const conflictMessage = error.response?.headers?.['x-error-message'] || 
+                               error.response?.data?.message || 
+                               'Room is already booked for the selected dates. Please choose different dates or room.';
+        setConflictMessage(conflictMessage);
         setShowConflictModal(true);
       } else {
         alert('Error creating/updating booking. Please try again.');

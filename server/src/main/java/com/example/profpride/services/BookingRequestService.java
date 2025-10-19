@@ -1,8 +1,10 @@
 package com.example.profpride.services;
 
 import com.example.profpride.models.BookingRequest;
+import com.example.profpride.models.Booking;
 import com.example.profpride.models.Room;
 import com.example.profpride.repositories.BookingRequestRepository;
+import com.example.profpride.repositories.BookingRepository;
 import com.example.profpride.repositories.RoomRepository;
 import com.example.profpride.enums.BookingRequestStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +24,43 @@ public class BookingRequestService {
     @Autowired
     private RoomRepository roomRepository;
 
+    @Autowired
+    private BookingRepository bookingRepository;
+
     public BookingRequest createBookingRequest(BookingRequest bookingRequest) {
         // Verify room exists
         Optional<Room> roomOpt = roomRepository.findById(bookingRequest.getRoomId());
         if (!roomOpt.isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not found");
+        }
+
+        Room room = roomOpt.get();
+        
+        // Check for existing confirmed bookings that conflict with this request
+        List<Booking> existingBookings = bookingRepository.findByRoom(room);
+        Optional<Booking> conflictingBooking = existingBookings.stream()
+            .filter(existingBooking -> {
+                // Only check confirmed bookings
+                if (existingBooking.getBookingStatus() == null || 
+                    !existingBooking.getBookingStatus().toString().equals("CONFIRMED")) {
+                    return false;
+                }
+                
+                // Check for date overlap
+                return (bookingRequest.getCheckInDate().isBefore(existingBooking.getCheckOutDate()) &&
+                       bookingRequest.getCheckOutDate().isAfter(existingBooking.getCheckInDate()));
+            })
+            .findFirst();
+        
+        if (conflictingBooking.isPresent()) {
+            Booking conflict = conflictingBooking.get();
+            String errorMessage = String.format(
+                "Room %s is already booked from %s to %s. Please choose different dates or room.",
+                room.getRoomNumber(),
+                conflict.getCheckInDate().toLocalDate(),
+                conflict.getCheckOutDate().toLocalDate()
+            );
+            throw new ResponseStatusException(HttpStatus.CONFLICT, errorMessage);
         }
 
         bookingRequest.setStatus(BookingRequestStatus.PENDING);

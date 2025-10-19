@@ -933,6 +933,11 @@
   color: white;
 }
 
+.action-btn.download-btn {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  color: white;
+}
+
 .action-btn.edit-btn {
   background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
   color: #212529;

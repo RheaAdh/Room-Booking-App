@@ -327,6 +327,16 @@
   transform: translateY(-1px);
 }
 
+.download-btn {
+  background: #28a745;
+  color: white;
+}
+
+.download-btn:hover {
+  background: #1e7e34;
+  transform: translateY(-1px);
+}
+
 /* No Bookings State */
 .no-bookings {
   text-align: center;

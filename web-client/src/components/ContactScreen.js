@@ -96,7 +96,7 @@ const ContactScreen = () => {
         await api.put(`/customer/${selectedCustomer.phoneNumber}`, formData);
         alert('Customer updated successfully!');
       } else {
-        await api.post('/auth/customer/register', formData);
+        await api.post('/customer', formData);
         alert('Customer added successfully!');
       }
       
@@ -136,11 +136,26 @@ const ContactScreen = () => {
         return;
       }
 
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
-      if (!allowedTypes.includes(file.type)) {
-        alert(`File "${file.name}" is not a supported format. Please upload an image (JPEG, PNG, GIF) or PDF file.`);
-        return;
+      // More flexible file type validation for mobile cameras
+      const allowedTypes = [
+        'image/jpeg', 
+        'image/jpg', 
+        'image/png', 
+        'image/gif', 
+        'image/webp', // Mobile cameras often use WebP
+        'application/pdf',
+        'image/heic', // iOS camera format
+        'image/heif'  // iOS camera format
+      ];
+      
+      // Check if file type is allowed or if it's an image (for mobile camera compatibility)
+      const isAllowedType = allowedTypes.includes(file.type);
+      const isImageFile = file.type.startsWith('image/');
+      const hasImageExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
+      
+      if (!isAllowedType && !(isImageFile && hasImageExtension)) {
+        console.warn(`File type "${file.type}" not in allowed list, but proceeding as it appears to be an image file`);
+        // Don't block the upload, just log a warning
       }
     }
 
@@ -177,7 +192,19 @@ const ContactScreen = () => {
       }
     } catch (error) {
       console.error('Error uploading ID proofs:', error);
-      alert('Error uploading ID proofs. Please try again.');
+      
+      // Provide more specific error messages for mobile users
+      let errorMessage = 'Error uploading ID proofs. Please try again.';
+      
+      if (error.message && error.message.includes('Network Error')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (error.message && error.message.includes('413')) {
+        errorMessage = 'File too large. Please compress the image or try a smaller file.';
+      } else if (error.message && error.message.includes('415')) {
+        errorMessage = 'Unsupported file format. Please try taking a new photo or selecting a different image.';
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -363,19 +390,25 @@ const ContactScreen = () => {
                     <th>Name</th>
                     <th>Phone</th>
                     <th>Additional Phone</th>
+                    <th>ID Proof Status</th>
                     <th>Remarks</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCustomers.map(customer => (
-                    <React.Fragment key={customer.phoneNumber}>
-                      <tr 
-                        style={{ 
-                          backgroundColor: !customer.idProofSubmitted ? '#ffe6e6' : 'transparent',
-                          opacity: !customer.idProofSubmitted ? 0.9 : 1
-                        }}
-                      >
+                  {filteredCustomers.map(customer => {
+                    // Check if customer has any ID proof (single or multiple)
+                    const hasIdProof = customer.photoIdProofUrl || 
+                                      (customer.idProofUrls && customer.idProofUrls.length > 0);
+                    
+                    return (
+                      <React.Fragment key={customer.phoneNumber}>
+                        <tr 
+                          style={{ 
+                            backgroundColor: !hasIdProof ? '#ffe6e6' : 'transparent',
+                            opacity: !hasIdProof ? 0.9 : 1
+                          }}
+                        >
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <button
@@ -400,6 +433,25 @@ const ContactScreen = () => {
                         </td>
                       <td>{customer.phoneNumber}</td>
                       <td>{customer.additionalPhoneNumber || 'N/A'}</td>
+                      <td>
+                        {hasIdProof ? (
+                          <span style={{ 
+                            color: '#28a745', 
+                            fontWeight: 'bold',
+                            fontSize: '12px'
+                          }}>
+                            ✅ Verified
+                          </span>
+                        ) : (
+                          <span style={{ 
+                            color: '#dc3545', 
+                            fontWeight: 'bold',
+                            fontSize: '12px'
+                          }}>
+                            ⚠️ Required
+                          </span>
+                        )}
+                      </td>
                       <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {customer.remarks || 'N/A'}
                       </td>
@@ -531,7 +583,8 @@ const ContactScreen = () => {
                       </tr>
                     )}
                     </React.Fragment>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -590,6 +643,7 @@ const ContactScreen = () => {
                   className="form-control"
                   accept="image/*,.pdf"
                   multiple
+                  capture="environment"
                   onChange={handleIdProofUpload}
                   id="idProofFile"
                 />

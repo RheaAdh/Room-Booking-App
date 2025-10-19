@@ -18,3 +18,6 @@ ON CONFLICT (userid) DO NOTHING;
 INSERT INTO users (userid, password, role, name) 
 VALUES ('caretaker', 'caretaker123', 'CARETAKER', 'Property Caretaker')
 ON CONFLICT (userid) DO NOTHING;
+
+-- Make password column nullable in customer table
+ALTER TABLE customer ALTER COLUMN password DROP NOT NULL;

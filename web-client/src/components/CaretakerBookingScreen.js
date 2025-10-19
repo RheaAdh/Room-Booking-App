@@ -181,7 +181,10 @@ const CaretakerBookingScreen = () => {
     } catch (error) {
       console.error('Error creating/updating booking:', error);
       if (error.response?.status === 409) {
-        setConflictMessage('Room is already booked for the selected dates. Please choose different dates or room.');
+        const conflictMessage = error.response?.headers?.['x-error-message'] || 
+                               error.response?.data?.message || 
+                               'Room is already booked for the selected dates. Please choose different dates or room.';
+        setConflictMessage(conflictMessage);
         setShowConflictModal(true);
       } else {
         alert('❌ Error creating/updating booking. Please try again.');
@@ -318,6 +321,47 @@ const CaretakerBookingScreen = () => {
     setSelectedImageUrl(imageUrl);
     setSelectedImageTitle(title);
     setShowImageModal(true);
+  };
+
+  const downloadInvoicePdf = async (bookingId) => {
+    try {
+      console.log('Downloading invoice for booking:', bookingId);
+      
+      // Get the HTML preview content and download it as HTML
+      const response = await api.get(`/invoices/${bookingId}/preview`);
+      
+      console.log('Invoice preview response:', {
+        status: response.status,
+        dataType: typeof response.data,
+        dataLength: response.data?.length || 'unknown'
+      });
+      
+      if (response.data) {
+        // Create a blob with the HTML content
+        const blob = new Blob([response.data], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `booking_${bookingId}_invoice.html`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        console.log('Invoice download completed successfully');
+      } else {
+        console.error('Empty preview response');
+        alert('Invoice content is empty. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
+      alert('❌ Error downloading invoice. Please try again.');
+    }
   };
 
   const resetForm = () => {
@@ -466,22 +510,6 @@ const CaretakerBookingScreen = () => {
                     </div>
                   </div>
                   
-                  <div className="booking-details">
-                    <div className="detail-row">
-                      <span className="detail-label">🏠 Room:</span>
-                      <span className="detail-value">{room?.roomNumber || `Room ${booking.roomId}`}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">📅 Dates:</span>
-                      <span className="detail-value">
-                        {new Date(booking.checkInDate).toLocaleDateString('en-IN')} - {new Date(booking.checkOutDate).toLocaleDateString('en-IN')}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">💸 Due:</span>
-                      <span className="detail-value">₹{booking.dueAmount}</span>
-                    </div>
-                  </div>
 
                   {/* Payments Section */}
                   {booking.payments && booking.payments.length > 0 && (
@@ -533,6 +561,12 @@ const CaretakerBookingScreen = () => {
                       }}
                     >
                       📄 Preview
+                    </button>
+                    <button 
+                      className="action-btn download-btn"
+                      onClick={() => downloadInvoicePdf(booking.id)}
+                    >
+                      📥 Download Invoice
                     </button>
                     {booking.bookingStatus === 'CONFIRMED' && (
                       <button 

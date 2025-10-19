@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import notificationService from '../services/notificationService';
 import './Layout.css';
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    // Check notification status
+    setNotificationEnabled(notificationService.isEnabled());
+  }, []);
 
   const menuItems = [
     { path: '/adminpvt/summary', label: 'Summary', icon: '📋' },
@@ -19,10 +26,28 @@ const Layout = ({ children }) => {
     { path: '/adminpvt/transactions', label: 'Transactions', icon: '💳' },
     { path: '/adminpvt/stats', label: 'Stats', icon: '📊' },
     { path: '/adminpvt/room-availability', label: 'Room Availability', icon: '🏠' },
+    { path: '/adminpvt/notification-test', label: 'Notification Test', icon: '🔔' },
   ];
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleNotificationToggle = async () => {
+    if (notificationEnabled) {
+      // Notifications are enabled, we can't disable them programmatically
+      alert('To disable notifications, please go to your browser settings and block notifications for this site.');
+    } else {
+      // Request permission to enable notifications
+      const hasPermission = await notificationService.requestPermission();
+      setNotificationEnabled(hasPermission);
+      
+      if (hasPermission) {
+        alert('✅ Notifications enabled! You will now receive booking request alerts.');
+      } else {
+        alert('❌ Notifications blocked. Please enable them in your browser settings to receive booking alerts.');
+      }
+    }
   };
 
   return (
@@ -73,6 +98,13 @@ const Layout = ({ children }) => {
           <h2 className="page-title">
             {menuItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
           </h2>
+          <button 
+            className={`notification-toggle ${notificationEnabled ? 'enabled' : 'disabled'}`}
+            onClick={handleNotificationToggle}
+            title={notificationEnabled ? 'Notifications enabled' : 'Click to enable notifications'}
+          >
+            {notificationEnabled ? '🔔' : '🔕'}
+          </button>
         </div>
 
         {/* Page Content */}

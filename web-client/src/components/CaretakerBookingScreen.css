@@ -453,6 +453,16 @@
   transform: translateY(-1px);
 }
 
+.download-btn {
+  background: #28a745;
+  color: white;
+}
+
+.download-btn:hover {
+  background: #1e7e34;
+  transform: translateY(-1px);
+}
+
 /* Add Booking Form */
 .add-booking-form {
   padding: 1.5rem;
@@ -505,6 +515,22 @@
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
+  padding-bottom: 20px; /* Extra padding for mobile */
+  position: sticky;
+  bottom: 0;
+  background: white;
+  z-index: 10;
+}
+
+/* Form actions within modals */
+.modal .form-actions {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 1rem;
+  margin: 0 -1rem -1rem -1rem; /* Extend to modal edges */
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 12px 12px; /* Match modal border radius */
 }
 
 .mobile-btn {
@@ -605,6 +631,9 @@
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 0.5rem;
+    padding-bottom: 100px; /* Space for bottom navigation */
+    align-items: flex-start; /* Align to top instead of center */
+    padding-top: 2rem; /* Add top padding */
   }
 }
 
@@ -620,9 +649,10 @@
 
 @media (max-width: 768px) {
   .modal {
-    max-height: 95vh;
+    max-height: calc(100vh - 150px); /* More space for bottom navigation */
     margin: 0.5rem;
     max-width: calc(100% - 1rem);
+    margin-bottom: 0; /* Remove extra margin since overlay handles spacing */
   }
 }
 

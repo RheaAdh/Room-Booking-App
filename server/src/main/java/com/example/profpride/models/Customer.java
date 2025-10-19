@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customer")
@@ -25,7 +26,7 @@ public class Customer extends BaseEntityWithCustomId {
     @Column(name = "email")
     private String email;
     
-    @Column(name = "password")
+    @Column(name = "password", nullable = true)
     private String password;
     
     @Column(name = "additional_phone_number", length = 20)
@@ -58,5 +59,27 @@ public class Customer extends BaseEntityWithCustomId {
     
     public void setIdProofSubmitted(Boolean idProofSubmitted) {
         this.idProofSubmitted = idProofSubmitted;
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        // Password can be null for walk-in customers
+        // Only set default password if explicitly provided but empty
+        if (password != null && password.trim().isEmpty()) {
+            password = null;
+        }
+        
+        // Set default values for timestamps if not set
+        if (getCreatedAt() == null) {
+            setCreatedAt(LocalDateTime.now());
+        }
+        if (getUpdatedAt() == null) {
+            setUpdatedAt(LocalDateTime.now());
+        }
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        setUpdatedAt(LocalDateTime.now());
     }
 }

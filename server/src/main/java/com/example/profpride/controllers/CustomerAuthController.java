@@ -25,8 +25,40 @@ public class CustomerAuthController {
         try {
             // Check if customer already exists
             if (customerService.customerExists(customer.getPhoneNumber())) {
+                // Customer exists, check if they have a password (already registered)
+                Optional<Customer> existingCustomer = customerService.getCustomerByPhoneNumber(customer.getPhoneNumber());
+                if (existingCustomer.isPresent() && existingCustomer.get().getPassword() != null) {
+                    response.put("success", false);
+                    response.put("message", "Customer with this phone number is already registered");
+                    return ResponseEntity.badRequest().body(response);
+                }
+                
+                // Customer exists but no password (walk-in customer), update with password
+                if (customer.getPassword() == null || customer.getPassword().trim().isEmpty()) {
+                    response.put("success", false);
+                    response.put("message", "Password is required for registration");
+                    return ResponseEntity.badRequest().body(response);
+                }
+                
+                Customer existing = existingCustomer.get();
+                existing.setPassword(customer.getPassword());
+                existing.setEmail(customer.getEmail());
+                Customer savedCustomer = customerService.updateCustomer(existing.getPhoneNumber(), existing);
+                
+                response.put("success", true);
+                response.put("message", "Customer account created successfully");
+                response.put("customer", Map.of(
+                    "phoneNumber", savedCustomer.getPhoneNumber(),
+                    "name", savedCustomer.getName()
+                ));
+                
+                return ResponseEntity.ok(response);
+            }
+
+            // New customer - password is required for registration
+            if (customer.getPassword() == null || customer.getPassword().trim().isEmpty()) {
                 response.put("success", false);
-                response.put("message", "Customer with this phone number already exists");
+                response.put("message", "Password is required for registration");
                 return ResponseEntity.badRequest().body(response);
             }
 

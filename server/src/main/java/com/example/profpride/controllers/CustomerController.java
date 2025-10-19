@@ -5,6 +5,7 @@ import com.example.profpride.models.Customer;
 import com.example.profpride.services.CustomerService;
 import com.example.profpride.services.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,6 +48,37 @@ public class CustomerController {
             }
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createCustomer(@RequestBody Customer customer) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Check if customer already exists
+            if (customerService.customerExists(customer.getPhoneNumber())) {
+                response.put("success", false);
+                response.put("message", "Customer with this phone number already exists");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Create new customer (password can be null for walk-in customers)
+            Customer savedCustomer = customerService.createCustomer(customer);
+            
+            response.put("success", true);
+            response.put("message", "Customer created successfully");
+            response.put("customer", Map.of(
+                "phoneNumber", savedCustomer.getPhoneNumber(),
+                "name", savedCustomer.getName()
+            ));
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Customer creation failed: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
         }
     }
 

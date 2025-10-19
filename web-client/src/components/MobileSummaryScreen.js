@@ -105,23 +105,6 @@ const MobileSummaryScreen = () => {
 
   return (
     <div className="mobile-summary">
-      {/* Header */}
-      <div className="summary-header">
-        <h1>📋 Daily Summary</h1>
-        <p className="summary-date">{formatDate(selectedDate)}</p>
-      </div>
-
-      {/* Date Picker */}
-      <div className="date-section">
-        <label htmlFor="date-picker" className="date-label">📅 Select Date</label>
-        <input
-          id="date-picker"
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="date-input"
-        />
-      </div>
 
       {/* Action Buttons */}
       <div className="action-buttons">
