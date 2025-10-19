@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../config/api';
 import './Dashboard.css';
 
@@ -7,28 +7,7 @@ const StatsScreen = () => {
   const [additionalStats, setAdditionalStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStatsData();
-  }, []);
-
-  const fetchStatsData = async () => {
-    setLoading(true);
-    try {
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0];
-      const response = await api.get(`/dashboard/today-summary?date=${today}`);
-      setDashboardSummary(response.data);
-      
-      // Fetch additional statistics
-      await fetchAdditionalStats();
-    } catch (error) {
-      console.error('Error fetching stats data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAdditionalStats = async () => {
+  const fetchAdditionalStats = useCallback(async () => {
     try {
       // Fetch bookings, payments, and expenses for comprehensive stats
       const [bookingsRes, paymentsRes, expensesRes, customersRes] = await Promise.all([
@@ -49,25 +28,46 @@ const StatsScreen = () => {
     } catch (error) {
       console.error('Error fetching additional stats:', error);
     }
-  };
+  }, []);
+
+  const fetchStatsData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      const response = await api.get(`/dashboard/today-summary?date=${today}`);
+      setDashboardSummary(response.data);
+      
+      // Fetch additional statistics
+      await fetchAdditionalStats();
+    } catch (error) {
+      console.error('Error fetching stats data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchAdditionalStats]);
+
+  useEffect(() => {
+    fetchStatsData();
+  }, [fetchStatsData]);
 
   const calculateComprehensiveStats = (bookings, payments, expenses, customers) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    // const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
     // Filter data by date ranges
-    const todayBookings = bookings.filter(b => {
-      const bookingDate = new Date(b.createdAt);
-      return bookingDate >= today;
-    });
+    // const todayBookings = bookings.filter(b => {
+    //   const bookingDate = new Date(b.createdAt);
+    //   return bookingDate >= today;
+    // });
 
-    const thisMonthBookings = bookings.filter(b => {
-      const bookingDate = new Date(b.createdAt);
-      return bookingDate >= thisMonth && bookingDate <= thisMonthEnd;
-    });
+    // const thisMonthBookings = bookings.filter(b => {
+    //   const bookingDate = new Date(b.createdAt);
+    //   return bookingDate >= thisMonth && bookingDate <= thisMonthEnd;
+    // });
 
     const todayPayments = payments.filter(p => {
       const paymentDate = new Date(p.paymentDate || p.createdAt);

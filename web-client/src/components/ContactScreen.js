@@ -179,6 +179,7 @@ const ContactScreen = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleUploadIdProof = async (customer) => {
     // Create a file input element
     const input = document.createElement('input');
@@ -231,7 +232,20 @@ const ContactScreen = () => {
 
 
   const handleViewImage = (imageUrl, title) => {
-    setSelectedImageUrl(imageUrl);
+    if (!imageUrl) {
+      alert('No image URL available');
+      return;
+    }
+    
+    // Ensure the URL is properly formatted
+    let displayUrl = imageUrl;
+    if (!imageUrl.startsWith('http')) {
+      // If it's a relative path, construct the full URL
+      displayUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+    }
+    
+    console.log('Viewing image:', displayUrl);
+    setSelectedImageUrl(displayUrl);
     setSelectedImageTitle(title);
     setShowImageModal(true);
   };
@@ -405,6 +419,10 @@ const ContactScreen = () => {
                                 customer.photoIdProofUrl || customer.idProofUrls[0], 
                                 'ID Proof 1'
                               )}
+                              onError={(e) => {
+                                console.error('Thumbnail image failed to load:', customer.photoIdProofUrl || customer.idProofUrls[0]);
+                                e.target.style.display = 'none';
+                              }}
                               title="Click to view full size"
                             />
                             <button 
@@ -443,6 +461,10 @@ const ContactScreen = () => {
                                 cursor: 'pointer'
                               }}
                               onClick={() => handleViewImage(customer.idProofUrls[1], 'ID Proof 2')}
+                              onError={(e) => {
+                                console.error('Thumbnail image failed to load:', customer.idProofUrls[1]);
+                                e.target.style.display = 'none';
+                              }}
                               title="Click to view full size"
                             />
                             <button 
@@ -677,6 +699,10 @@ const ContactScreen = () => {
                                 cursor: 'pointer'
                               }}
                               onClick={() => handleViewImage(formData.photoIdProofUrl, 'ID Proof (Legacy)')}
+                              onError={(e) => {
+                                console.error('Legacy ID proof image failed to load:', formData.photoIdProofUrl);
+                                e.target.style.display = 'none';
+                              }}
                               title="Click to view full size"
                             />
                           </div>
@@ -723,6 +749,10 @@ const ContactScreen = () => {
                                 cursor: 'pointer'
                               }}
                               onClick={() => handleViewImage(url, `ID Proof ${index + 1}`)}
+                              onError={(e) => {
+                                console.error('Multiple ID proof image failed to load:', url);
+                                e.target.style.display = 'none';
+                              }}
                               title="Click to view full size"
                             />
                           </div>
@@ -823,7 +853,29 @@ const ContactScreen = () => {
                   border: '1px solid #ddd',
                   borderRadius: '8px'
                 }}
+                onError={(e) => {
+                  console.error('Image failed to load:', selectedImageUrl);
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
               />
+              <div 
+                style={{ 
+                  display: 'none', 
+                  padding: '20px', 
+                  backgroundColor: '#f8f9fa', 
+                  border: '1px solid #dee2e6', 
+                  borderRadius: '8px',
+                  margin: '20px 0'
+                }}
+              >
+                <p style={{ color: '#6c757d', margin: '0' }}>
+                  ❌ Image could not be loaded
+                </p>
+                <p style={{ color: '#6c757d', fontSize: '12px', margin: '5px 0 0 0' }}>
+                  URL: {selectedImageUrl}
+                </p>
+              </div>
               <div style={{ marginTop: '15px' }}>
                 <a 
                   href={selectedImageUrl} 

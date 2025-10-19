@@ -1,19 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 import api from '../config/api';
 import './CustomerDashboard.css';
 
-// Create customer-specific API instance
-const createCustomerApi = () => {
-  return axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8082/api/v1',
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('customerToken')}`
-    }
-  });
-};
 
 const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) => {
   const [bookings, setBookings] = useState([]);
@@ -31,6 +19,69 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('about');
   const [error, setError] = useState(null);
+
+  const openMapLocation = (locationName) => {
+    // Coordinates for the locations
+    const locations = {
+      'Kadugodi Tree Park Metro Station': {
+        lat: 12.9852582,
+        lng: 77.7467606,
+        address: 'Kadugodi Tree Park Metro Station, Whitefield, Bangalore'
+      },
+      'Pattandur Agrahara Metro Station': {
+        lat: 12.987622,
+        lng: 77.737737,
+        address: 'Pattandur Agrahara Metro Station, Whitefield, Bangalore'
+      },
+      'Kadugodi Tree Park': {
+        lat: 12.9865938,
+        lng: 77.744809,
+        address: 'Kadugodi Tree Park, Whitefield, Bangalore'
+      },
+      'Vydehi Hospital': {
+        lat: 12.9757752,
+        lng: 77.7294426,
+        address: 'Vydehi Hospital, Whitefield, Bangalore'
+      },
+      'Sri Sathya Sai Hospital': {
+        lat: 12.9827616,
+        lng: 77.7295026,
+        address: 'Sri Sathya Sai Super Speciality Hospital, Whitefield, Bangalore'
+      },
+      'ITPL Back Gate': {
+        lat: 12.9848843,
+        lng: 77.7337851,
+        address: 'ITPL Back Gate, Pattandur Agrahara, Whitefield, Bangalore'
+      },
+      'Nexus Shantiniketan': {
+        lat: 12.989536,
+        lng: 77.7281015,
+        address: 'Nexus Shantiniketan, Whitefield, Bangalore'
+      },
+      'Manipal Hospital': {
+        lat: 12.9880554,
+        lng: 77.7287744,
+        address: 'Manipal Hospital Whitefield, Bangalore'
+      },
+      'Whitefield Railway Station': {
+        lat: 12.9967809,
+        lng: 77.7614399,
+        address: 'Whitefield Railway Station, Bangalore'
+      },
+      'Kempegowda International Airport': {
+        lat: 13.198909,
+        lng: 77.7068926,
+        address: 'Kempegowda International Airport, Bangalore'
+      }
+    };
+
+    const location = locations[locationName];
+    if (location) {
+      // Open Google Maps with the location
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+      window.open(mapsUrl, '_blank');
+    }
+  };
 
   // Fetch rooms and configurations
   const fetchRoomsData = useCallback(async () => {
@@ -72,34 +123,14 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
       console.log('Current token:', localStorage.getItem('customerToken'));
       console.log('Customer data:', customer);
       
-      // Fetch bookings - try direct fetch first
-      console.log('Trying direct fetch request...');
-      const directResponse = await fetch('http://localhost:8082/api/v1/customer/bookings', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Direct fetch response status:', directResponse.status);
-      console.log('Direct fetch response headers:', directResponse.headers);
-      
-      if (directResponse.ok) {
-        const directData = await directResponse.json();
-        console.log('Direct fetch data:', directData);
-        setBookings(directData || []);
-      } else {
-        console.log('Direct fetch failed, trying axios...');
-        const customerApi = createCustomerApi();
-        const bookingsResponse = await customerApi.get('/customer/bookings');
-        console.log('Bookings fetched:', bookingsResponse.data);
-        setBookings(bookingsResponse.data || []);
-      }
+      // Fetch bookings using the standard api instance
+      console.log('Fetching customer bookings...');
+      const bookingsResponse = await api.get('/customer/bookings');
+      console.log('Bookings fetched:', bookingsResponse.data);
+      setBookings(bookingsResponse.data || []);
 
-      // Fetch booking requests
-      const customerApi = createCustomerApi();
-      const requestsResponse = await customerApi.get(`/booking-requests/customer/${customer.phoneNumber}`);
+      // Fetch booking requests using the standard api instance
+      const requestsResponse = await api.get(`/booking-requests/customer/${customer.phoneNumber}`);
       console.log('Booking requests fetched:', requestsResponse.data);
       setBookingRequests(requestsResponse.data || []);
       
@@ -193,16 +224,8 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
       const checkInDateTime = new Date(checkIn + 'T10:00:00').toISOString();
       const checkOutDateTime = new Date(checkOut + 'T10:00:00').toISOString();
       
-      // Use public API for room availability check
-      const publicApi = axios.create({
-        baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8082/api/v1',
-        timeout: 10000,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const response = await publicApi.get('/rooms/check-availability', {
+      // Use standard api instance for room availability check
+      const response = await api.get('/rooms/check-availability', {
         params: {
           checkInDate: checkInDateTime,
           checkOutDate: checkOutDateTime
@@ -271,16 +294,8 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
     if (!previewBooking) return;
 
     try {
-      // Create API instance without authentication for public endpoint
-      const publicApi = axios.create({
-        baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8082/api/v1',
-        timeout: 10000,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const response = await publicApi.post('/booking-requests', previewBooking);
+      // Use standard api instance for booking request submission
+      const response = await api.post('/booking-requests', previewBooking);
 
       if (response.data.success) {
         // Show payment confirmation message
@@ -328,8 +343,7 @@ Booking ID: ${response.data.id || 'N/A'}
       console.log('Previewing invoice for booking:', bookingId);
       console.log('Current token:', localStorage.getItem('customerToken'));
       
-      const customerApi = createCustomerApi();
-      const response = await customerApi.get(`/invoices/${bookingId}/preview`);
+      const response = await api.get(`/invoices/${bookingId}/preview`);
       
       console.log('Invoice preview response:', {
         status: response.status,
@@ -365,8 +379,7 @@ Booking ID: ${response.data.id || 'N/A'}
       console.log('Current token:', localStorage.getItem('customerToken'));
       
       // Get the HTML preview content and download it as HTML
-      const customerApi = createCustomerApi();
-      const response = await customerApi.get(`/invoices/${bookingId}/preview`);
+      const response = await api.get(`/invoices/${bookingId}/preview`);
       
       console.log('Invoice preview response:', {
         status: response.status,
@@ -857,17 +870,71 @@ Booking ID: ${response.data.id || 'N/A'}
                   
                   <div className="highlight-category">
                     <h3>🕐 Check-in/Check-out</h3>
-                    <div className="checkin-info">
-                      <div className="time-info">
-                        <span className="time-label">Check-in:</span>
-                        <span className="time-value">10:00 - 23:30</span>
+                    <div className="checkin-info-enhanced">
+                      <div className="checkin-times">
+                        <div className="time-card checkin-card">
+                          <div className="time-header">
+                            <span className="time-icon">🏨</span>
+                            <span className="time-label">Check-in</span>
+                          </div>
+                          <div className="time-value">10:00 - 23:30</div>
+                          <div className="time-note">Early check-in available</div>
+                        </div>
+                        <div className="time-card checkout-card">
+                          <div className="time-header">
+                            <span className="time-icon">🚪</span>
+                            <span className="time-label">Check-out</span>
+                          </div>
+                          <div className="time-value">01:00 - 10:00</div>
+                          <div className="time-note">Late check-out with charges</div>
+                        </div>
                       </div>
-                      <div className="time-info">
-                        <span className="time-label">Check-out:</span>
-                        <span className="time-value">01:00 - 10:00</span>
+                      
+                      <div className="checkin-requirements">
+                        <h4>📋 Requirements</h4>
+                        <div className="requirements-list">
+                          <div className="requirement-item">
+                            <span className="req-icon">🆔</span>
+                            <span>Valid Photo ID</span>
+                          </div>
+                          <div className="requirement-item">
+                            <span className="req-icon">💰</span>
+                            <span>Payment confirmation</span>
+                          </div>
+                          <div className="requirement-item">
+                            <span className="req-icon">📱</span>
+                            <span>Contact verification</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="time-note">
-                        <small>Photo ID and credit card required at check-in</small>
+
+                      <div className="checkin-process">
+                        <h4>🔄 Process</h4>
+                        <div className="process-steps">
+                          <div className="step">
+                            <span className="step-number">1</span>
+                            <span className="step-text">Arrival & ID verification</span>
+                          </div>
+                          <div className="step">
+                            <span className="step-number">2</span>
+                            <span className="step-text">Complete documentation</span>
+                          </div>
+                          <div className="step">
+                            <span className="step-number">3</span>
+                            <span className="step-text">Room keys & orientation</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="checkin-notes">
+                        <div className="note-item">
+                          <span className="note-icon">⚠️</span>
+                          <span>No check-in after 11:30 PM without prior notice</span>
+                        </div>
+                        <div className="note-item">
+                          <span className="note-icon">📞</span>
+                          <span>24/7 reception support available</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -875,21 +942,105 @@ Booking ID: ${response.data.id || 'N/A'}
                   <div className="highlight-category">
                     <h3>📍 What's Nearby</h3>
                     <div className="nearby-places">
-                      <div className="nearby-item">
-                        <span className="place-name">Reserved Forest Mixed Plantation</span>
-                        <span className="place-distance">500m</span>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Kadugodi Tree Park Metro Station')}>
+                        <div className="place-info">
+                          <span className="place-icon">🚇</span>
+                          <span className="place-name">Kadugodi Tree Park Metro Station</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">2.3km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
                       </div>
-                      <div className="nearby-item">
-                        <span className="place-name">Children Play Park</span>
-                        <span className="place-distance">1.1km</span>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Pattandur Agrahara Metro Station')}>
+                        <div className="place-info">
+                          <span className="place-icon">🚇</span>
+                          <span className="place-name">Pattandur Agrahara Metro Station</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">3.1km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
                       </div>
-                      <div className="nearby-item">
-                        <span className="place-name">Whitefield Railway Station</span>
-                        <span className="place-distance">4.1km</span>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Kadugodi Tree Park')}>
+                        <div className="place-info">
+                          <span className="place-icon">🌳</span>
+                          <span className="place-name">Kadugodi Tree Park</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">1.2km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
                       </div>
-                      <div className="nearby-item">
-                        <span className="place-name">Kempegowda International Airport</span>
-                        <span className="place-distance">38km</span>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Vydehi Hospital')}>
+                        <div className="place-info">
+                          <span className="place-icon">🏥</span>
+                          <span className="place-name">Vydehi Hospital</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">1.5km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
+                      </div>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Sri Sathya Sai Hospital')}>
+                        <div className="place-info">
+                          <span className="place-icon">🏥</span>
+                          <span className="place-name">Sri Sathya Sai Hospital</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">1.8km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
+                      </div>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('ITPL Back Gate')}>
+                        <div className="place-info">
+                          <span className="place-icon">🏢</span>
+                          <span className="place-name">ITPL Back Gate</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">2.1km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
+                      </div>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Nexus Shantiniketan')}>
+                        <div className="place-info">
+                          <span className="place-icon">🛍️</span>
+                          <span className="place-name">Nexus Shantiniketan</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">2.3km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
+                      </div>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Manipal Hospital')}>
+                        <div className="place-info">
+                          <span className="place-icon">🏥</span>
+                          <span className="place-name">Manipal Hospital</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">2.5km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
+                      </div>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Whitefield Railway Station')}>
+                        <div className="place-info">
+                          <span className="place-icon">🚂</span>
+                          <span className="place-name">Whitefield Railway Station</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">4.1km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
+                      </div>
+                      <div className="nearby-item metro-station" onClick={() => openMapLocation('Kempegowda International Airport')}>
+                        <div className="place-info">
+                          <span className="place-icon">✈️</span>
+                          <span className="place-name">Kempegowda International Airport</span>
+                        </div>
+                        <div className="place-details">
+                          <span className="place-distance">38km</span>
+                          <span className="map-link">📍 View Map</span>
+                        </div>
                       </div>
                     </div>
                   </div>

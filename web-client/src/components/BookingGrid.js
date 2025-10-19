@@ -153,14 +153,10 @@ const BookingGrid = () => {
     const { name, bookingStatus, customer } = cellData;
     
     if (!name) {
-      return (
-        <div className="cell-content">
-          <div className="excel-cell-empty"></div>
-        </div>
-      );
+      return <div className="excel-cell-empty"></div>;
     }
 
-    const displayName = name.length > 10 ? name.substring(0, 10) + '...' : name;
+    const displayName = name.length > 12 ? name.substring(0, 12) + '...' : name;
     
     return (
       <div 
@@ -169,12 +165,10 @@ const BookingGrid = () => {
         title={`${name} - ${getStatusText(bookingStatus)} (${customer?.phoneNumber || 'No phone'}) - Click for details`}
         onClick={() => handleCellClick(cellData)}
       >
-        <div className="cell-content">
-          <div className="customer-name">{displayName}</div>
-          {bookingStatus && (
-            <div className="booking-status">{getStatusText(bookingStatus)}</div>
-          )}
-        </div>
+        <div className="customer-name">{displayName}</div>
+        {bookingStatus && (
+          <div className="booking-status">{getStatusText(bookingStatus)}</div>
+        )}
       </div>
     );
   };
@@ -221,40 +215,38 @@ const BookingGrid = () => {
             <p>Create some rooms first to see the booking grid!</p>
           </div>
         ) : (
-          <div className="excel-grid">
+          <table className="excel-grid">
             {/* Excel-style header */}
-            <div className="excel-header">
-              <div className="excel-cell room-header-cell">
-                <div className="cell-content">
+            <thead className="excel-header">
+              <tr>
+                <th className="excel-cell room-header-cell">
                   <span className="header-text">Room</span>
-                </div>
-              </div>
-              {dates.map((date, index) => (
-                <div key={index} className="excel-cell date-header-cell">
-                  <div className="cell-content">
+                </th>
+                {dates.map((date, index) => (
+                  <th key={index} className="excel-cell date-header-cell">
                     <span className="date-text">{formatDate(date)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
             {/* Excel-style data rows */}
-            {rooms.map((room, roomIndex) => (
-              <div key={room.id} className="excel-row">
-                <div className="excel-cell room-cell">
-                  <div className="cell-content">
+            <tbody>
+              {rooms.map((room, roomIndex) => (
+                <tr key={room.id} className="excel-row">
+                  <td className="excel-cell room-cell">
                     <span className="room-number">{room.roomNumber}</span>
                     <span className="room-type">({room.roomType})</span>
-                  </div>
-                </div>
-                {dates.map((date, dateIndex) => (
-                  <div key={dateIndex} className="excel-cell data-cell">
-                    {renderCell(gridData[roomIndex]?.[dateIndex], roomIndex, dateIndex)}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+                  </td>
+                  {dates.map((date, dateIndex) => (
+                    <td key={dateIndex} className="excel-cell data-cell">
+                      {renderCell(gridData[roomIndex]?.[dateIndex], roomIndex, dateIndex)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 

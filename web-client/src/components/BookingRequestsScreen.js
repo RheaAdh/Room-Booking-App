@@ -48,6 +48,7 @@ const BookingRequestsScreen = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleViewDetails = (request) => {
     setSelectedRequest(request);
     setShowDetailsModal(true);

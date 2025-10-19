@@ -64,7 +64,7 @@ export const fromLocalDateTimeString = (dateTimeString) => {
   if (dateTimeString.includes('T')) {
     const [datePart, timePart] = dateTimeString.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
-    const [time, timezone] = timePart.split(/[+-Z]/);
+    const [time] = timePart.split(/[+-Z]/);
     const [hours, minutes, seconds] = time.split(':').map(Number);
     
     return new Date(year, month - 1, day, hours, minutes, seconds || 0);

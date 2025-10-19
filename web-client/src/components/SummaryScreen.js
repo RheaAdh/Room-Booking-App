@@ -5,7 +5,7 @@ import './Dashboard.css';
 const SummaryScreen = () => {
   const [todaySummary, setTodaySummary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const fetchSummaryData = useCallback(async () => {
     setLoading(true);

@@ -1252,3 +1252,236 @@
     flex-direction: column;
   }
 }
+
+/* Metro Station Styles */
+.nearby-item.metro-station {
+  cursor: pointer;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  border: 2px solid #2196f3;
+  transition: all 0.3s ease;
+  padding: 16px;
+}
+
+.nearby-item.metro-station:hover {
+  background: linear-gradient(135deg, #bbdefb 0%, #e1bee7 100%);
+  border-color: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.place-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.place-icon {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.place-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.map-link {
+  font-size: 11px;
+  color: #1976d2;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.map-link:hover {
+  color: #0d47a1;
+}
+
+/* Enhanced Check-in/Check-out Styles for Customer Dashboard */
+.checkin-info-enhanced {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.checkin-times {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.time-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 2px solid #e9ecef;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.time-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.checkin-card {
+  border-color: #28a745;
+}
+
+.checkout-card {
+  border-color: #fd7e14;
+}
+
+.time-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.time-icon {
+  font-size: 18px;
+}
+
+.time-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.time-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.time-note {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+}
+
+.checkin-requirements h4,
+.checkin-process h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.requirements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #555;
+}
+
+.req-icon {
+  font-size: 14px;
+  width: 16px;
+  text-align: center;
+}
+
+.process-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.step-number {
+  width: 20px;
+  height: 20px;
+  background: #2196f3;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.step-text {
+  color: #555;
+  font-weight: 500;
+}
+
+.checkin-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.note-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.note-item:first-child {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.note-item:last-child {
+  background: #d1ecf1;
+  border: 1px solid #bee5eb;
+  color: #0c5460;
+}
+
+.note-icon {
+  font-size: 12px;
+  width: 14px;
+  text-align: center;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .checkin-times {
+    grid-template-columns: 1fr;
+  }
+  
+  .time-card {
+    padding: 12px;
+  }
+  
+  .time-value {
+    font-size: 16px;
+  }
+}

@@ -293,6 +293,19 @@ const BookingScreen = () => {
     }
   };
 
+  const handleDeleteBooking = async (bookingId) => {
+    if (window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) {
+      try {
+        await api.delete(`/bookings/${bookingId}`);
+        fetchData(); // Refresh data
+        alert('Booking deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting booking:', error);
+        alert('Error deleting booking. Please try again.');
+      }
+    }
+  };
+
   const handleAddPayment = async (e) => {
     e.preventDefault();
     try {
@@ -483,6 +496,7 @@ const BookingScreen = () => {
     });
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getStatusBadge = (status) => {
     const statusConfig = {
       'NEW': { class: 'badge-info', text: 'New' },
@@ -594,20 +608,49 @@ const BookingScreen = () => {
                 
                 return (
                 <div key={booking.id} className="booking-item">
-                  {/* Customer Information Header */}
+                  {/* Enhanced Customer Information Header */}
                   <div className="booking-header">
-                    <div className="customer-info">
-                      <h3 className="customer-name">{customer?.name || 'Unknown Customer'}</h3>
-                      <p className="customer-phone">{booking.customerPhoneNumber}</p>
-                      {customer?.email && <p className="customer-email">{customer.email}</p>}
+                    <div className="customer-info-section">
+                      <div className="customer-avatar">
+                        <div className="avatar-circle">
+                          {customer?.name ? customer.name.charAt(0).toUpperCase() : '?'}
+                        </div>
+                      </div>
+                      <div className="customer-details">
+                        <h3 className="customer-name">
+                          {customer?.name || 'Unknown Customer'}
+                          <span className="customer-id">#{booking.id}</span>
+                        </h3>
+                        <div className="contact-info">
+                          <div className="contact-item">
+                            <span className="contact-icon">📞</span>
+                            <span className="contact-value">{booking.customerPhoneNumber}</span>
+                          </div>
+                          {customer?.email && (
+                            <div className="contact-item">
+                              <span className="contact-icon">✉️</span>
+                              <span className="contact-value">{customer.email}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="booking-status">
-                      <span 
-                        className="status-badge"
-                        style={{ backgroundColor: getStatusColor(booking.bookingStatus) }}
-                      >
-                        {booking.bookingStatus}
-                      </span>
+                    <div className="booking-status-section">
+                      <div className="status-badge-container">
+                        <span 
+                          className="status-badge"
+                          style={{ backgroundColor: getStatusColor(booking.bookingStatus) }}
+                        >
+                          {booking.bookingStatus}
+                        </span>
+                        <div className="status-indicator"></div>
+                      </div>
+                      <div className="booking-meta">
+                        <span className="booking-id">Booking #{booking.id}</span>
+                        <span className="booking-date">
+                          Created: {new Date(booking.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   
@@ -739,46 +782,68 @@ const BookingScreen = () => {
 
                   {/* Action Buttons */}
                   <div className="booking-actions">
-                    <button 
-                      className="action-btn edit-btn"
-                      onClick={() => handleEditBooking(booking)}
-                    >
-                      ✏️ Edit Booking
-                    </button>
-                    <button 
-                      className="action-btn payment-btn"
-                      onClick={() => {
-                        setSelectedBooking(booking);
-                        setShowPaymentModal(true);
-                      }}
-                    >
-                      💳 Add Payment
-                    </button>
-                    <button 
-                      className="action-btn preview-btn"
-                      onClick={() => {
-                        setSelectedBooking(booking);
-                        setShowPreviewModal(true);
-                      }}
-                    >
-                      📄 Preview
-                    </button>
-                    {booking.bookingStatus === 'CONFIRMED' && (
+                    <div className="action-group primary-actions">
+                      {booking.bookingStatus === 'CONFIRMED' && (
+                        <button 
+                          className="action-btn checkin-btn primary-action"
+                          onClick={() => handleCheckIn(booking.id)}
+                        >
+                          <span className="btn-icon">🏨</span>
+                          <span className="btn-text">Check-in Guest</span>
+                          <span className="btn-subtitle">Start stay</span>
+                        </button>
+                      )}
+                      {booking.bookingStatus === 'CHECKEDIN' && (
+                        <button 
+                          className="action-btn checkout-btn primary-action"
+                          onClick={() => handleCheckOut(booking.id)}
+                        >
+                          <span className="btn-icon">🚪</span>
+                          <span className="btn-text">Check-out Guest</span>
+                          <span className="btn-subtitle">End stay</span>
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="action-group secondary-actions">
                       <button 
-                        className="action-btn checkin-btn"
-                        onClick={() => handleCheckIn(booking.id)}
+                        className="action-btn payment-btn"
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setShowPaymentModal(true);
+                        }}
                       >
-                        ✅ Check-in
+                        <span className="btn-icon">💳</span>
+                        <span className="btn-text">Payment</span>
                       </button>
-                    )}
-                    {booking.bookingStatus === 'CHECKEDIN' && (
                       <button 
-                        className="action-btn checkout-btn"
-                        onClick={() => handleCheckOut(booking.id)}
+                        className="action-btn preview-btn"
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setShowPreviewModal(true);
+                        }}
                       >
-                        🚪 Check-out
+                        <span className="btn-icon">📄</span>
+                        <span className="btn-text">Preview</span>
                       </button>
-                    )}
+                    </div>
+                    
+                    <div className="action-group utility-actions">
+                      <button 
+                        className="action-btn edit-btn"
+                        onClick={() => handleEditBooking(booking)}
+                      >
+                        <span className="btn-icon">✏️</span>
+                        <span className="btn-text">Edit</span>
+                      </button>
+                      <button 
+                        className="action-btn delete-btn"
+                        onClick={() => handleDeleteBooking(booking.id)}
+                      >
+                        <span className="btn-icon">🗑️</span>
+                        <span className="btn-text">Delete</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Payments */}
