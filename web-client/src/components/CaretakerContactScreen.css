@@ -596,3 +596,142 @@ textarea.form-control {
     border-radius: 0 0 12px 12px;
   }
 }
+
+/* New button styles for booking and history */
+.booking-btn {
+  background: #28a745;
+  color: white;
+}
+
+.booking-btn:hover {
+  background: #218838;
+}
+
+.history-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.history-btn:hover {
+  background: #138496;
+}
+
+/* Customer bookings section */
+.customer-bookings {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.customer-bookings h4 {
+  margin: 0 0 0.75rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.booking-item {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.booking-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.booking-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.booking-room {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.booking-dates {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.booking-amount {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.booking-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.booking-status.confirmed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.booking-status.checkedin {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.booking-status.checkedout {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.booking-status.cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.booking-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.download-invoice-btn {
+  padding: 0.4rem 0.6rem;
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.download-invoice-btn:hover {
+  background: #138496;
+}
+
+.loading-bookings {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 1rem;
+}
+
+.no-bookings {
+  text-align: center;
+  color: #6c757d;
+  padding: 1rem;
+  font-style: italic;
+}

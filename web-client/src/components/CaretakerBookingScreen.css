@@ -178,9 +178,9 @@
   }
 
   .action-btn {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-    min-width: 70px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    min-width: 60px;
   }
 
   /* Modal adjustments for mobile */
@@ -502,10 +502,10 @@
 
 .action-btn {
   flex: 1;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -800,8 +800,8 @@
   }
   
   .action-btn {
-    padding: 1rem;
-    font-size: 1rem;
+    padding: 0.6rem;
+    font-size: 0.85rem;
   }
   
   .payment-info {
@@ -955,4 +955,919 @@
   background: #229954;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+}
+
+/* Search and Filter Section */
+.search-filter-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.filter-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 120px;
+}
+
+.filter-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: white;
+}
+
+.search-results-info {
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-align: center;
+}
+
+/* Due amount styling */
+.due-amount {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* Customer bookings styling */
+.customer-bookings {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.customer-bookings h4 {
+  margin: 0 0 0.75rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.booking-item {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.booking-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.booking-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.booking-room {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.booking-dates {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.booking-amount {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.booking-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.booking-status.confirmed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.booking-status.checkedin {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.booking-status.checkedout {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.booking-status.cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.booking-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.download-invoice-btn {
+  padding: 0.4rem 0.6rem;
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.download-invoice-btn:hover {
+  background: #138496;
+}
+
+.loading-bookings {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 1rem;
+}
+
+.no-bookings {
+  text-align: center;
+  color: #6c757d;
+  padding: 1rem;
+  font-style: italic;
+}
+
+/* Search Filter Bar */
+.search-filter-bar {
+  background: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 8px 12px;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-icon {
+  color: #6c757d;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  flex: 1;
+  font-size: 14px;
+  color: #212529;
+}
+
+.search-input::placeholder {
+  color: #6c757d;
+}
+
+.search-results-info {
+  color: #6c757d;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Floating Action Button */
+.fab-create-booking {
+  position: fixed;
+  bottom: 80px; /* Position above bottom navigation */
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.fab-create-booking:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+}
+
+.fab-create-booking:active {
+  transform: translateY(0);
+}
+
+.fab-icon {
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* Mobile responsive for search and FAB */
+@media (max-width: 768px) {
+  .search-filter-bar {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .search-box {
+    max-width: none;
+  }
+  
+  .search-results-info {
+    text-align: center;
+    font-size: 11px;
+  }
+  
+  .fab-create-booking {
+    bottom: 70px; /* Position above bottom navigation on mobile */
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+  
+  .fab-icon {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-filter-bar {
+    padding: 6px 8px;
+    margin-bottom: 8px;
+  }
+  
+  .search-box {
+    padding: 6px 8px;
+  }
+  
+  .search-input {
+    font-size: 13px;
+  }
+  
+  .fab-create-booking {
+    bottom: 65px; /* Position above bottom navigation on small mobile */
+    right: 12px;
+    width: 44px;
+    height: 44px;
+  }
+  
+  .fab-icon {
+    font-size: 18px;
+  }
+}
+
+/* Customer search styles */
+.customer-search-container {
+  position: relative;
+}
+
+.customer-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.customer-search-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s;
+}
+
+.customer-search-item:hover {
+  background-color: #f8f9fa;
+}
+
+.customer-search-item:last-child {
+  border-bottom: none;
+}
+
+.customer-search-item .customer-name {
+  font-weight: 600;
+  color: #212529;
+  font-size: 14px;
+}
+
+.customer-search-item .customer-phone {
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.no-customers-found {
+  padding: 16px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.no-customers-found .btn {
+  margin-top: 8px;
+}
+
+.selected-customer {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-customer span {
+  font-size: 14px;
+  color: #0066cc;
+  font-weight: 500;
+}
+
+.selected-customer .btn {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+/* Optimize action buttons layout - all in one line */
+.booking-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.action-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 70px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Compact booking card styles */
+.compact-booking-card {
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.compact-booking-content {
+  margin-bottom: 8px;
+}
+
+.compact-booking-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.compact-booking-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.compact-customer-name {
+  font-weight: 600;
+  color: #212529;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.compact-phone {
+  color: #6c757d;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.compact-room {
+  color: #6c757d;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.compact-due {
+  color: #dc3545;
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.compact-booking-status {
+  flex-shrink: 0;
+}
+
+.compact-status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: white;
+  margin-right: 4px;
+}
+
+.compact-payment-status-badge {
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.compact-booking-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.compact-action-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  min-height: 28px;
+}
+
+.compact-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.compact-action-btn.edit-btn {
+  background: #ffc107;
+  color: #212529;
+}
+
+.compact-action-btn.payment-btn {
+  background: #28a745;
+  color: white;
+}
+
+.compact-action-btn.download-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.compact-action-btn.checkin-btn {
+  background: #007bff;
+  color: white;
+}
+
+.compact-action-btn.checkout-btn {
+  background: #6f42c1;
+  color: white;
+}
+
+.compact-action-btn.payments-toggle-btn {
+  background: #fd7e14;
+  color: white;
+}
+
+/* Payments dropdown styles */
+.payments-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.payments-dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 250px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.payment-dropdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s;
+}
+
+.payment-dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.payment-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.payment-dropdown-item .payment-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.payment-dropdown-item .payment-amount {
+  font-weight: 600;
+  color: #28a745;
+  font-size: 12px;
+}
+
+.payment-dropdown-item .payment-mode {
+  color: #6c757d;
+  font-size: 11px;
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.payment-dropdown-item .payment-date {
+  color: #6c757d;
+  font-size: 10px;
+}
+
+.edit-payment-btn-small {
+  padding: 4px 6px;
+  background: #ffc107;
+  color: #212529;
+  border: none;
+  border-radius: 3px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-payment-btn-small:hover {
+  background: #e0a800;
+}
+
+.no-payments-message {
+  padding: 16px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* Payments section in booking modal */
+.payments-section-modal {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.payments-section-title {
+  margin: 0 0 12px 0;
+  color: #212529;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.payments-list-modal {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.payment-item-modal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: background-color 0.2s;
+}
+
+.payment-item-modal:hover {
+  background: #f8f9fa;
+}
+
+.payment-item-modal:last-child {
+  margin-bottom: 0;
+}
+
+.payment-info-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payment-amount-modal {
+  font-weight: 600;
+  color: #28a745;
+  font-size: 14px;
+}
+
+.payment-details-modal {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.payment-mode-modal {
+  background: #e9ecef;
+  color: #6c757d;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.payment-date-modal {
+  color: #6c757d;
+  font-size: 11px;
+}
+
+.payment-actions-modal {
+  display: flex;
+  gap: 4px;
+}
+
+.edit-payment-btn-modal {
+  padding: 4px 8px;
+  background: #ffc107;
+  color: #212529;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-payment-btn-modal:hover {
+  background: #e0a800;
+}
+
+.no-payments-modal {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 16px;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+}
+
+.add-payment-section-modal {
+  text-align: center;
+}
+
+.add-payment-btn-modal {
+  padding: 8px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-payment-btn-modal:hover {
+  background: #218838;
+}
+
+/* Create customer section */
+.create-customer-section {
+  margin-top: 12px;
+  text-align: center;
+  padding: 8px;
+  border-top: 1px solid #e9ecef;
+}
+
+.create-customer-section .btn {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+/* Mobile responsive action buttons */
+@media (max-width: 768px) {
+  .compact-booking-main {
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  
+  .compact-booking-info {
+    gap: 8px;
+  }
+  
+  .compact-customer-name {
+    font-size: 13px;
+    max-width: 80px;
+  }
+  
+  .compact-phone,
+  .compact-room,
+  .compact-due {
+    font-size: 11px;
+  }
+  
+  .compact-action-btn {
+    padding: 4px 6px;
+    font-size: 10px;
+    min-height: 24px;
+  }
+  
+  .compact-booking-actions {
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  
+  .payments-dropdown-content {
+    min-width: 200px;
+    max-height: 150px;
+  }
+  
+  .payment-dropdown-item {
+    padding: 6px 8px;
+  }
+  
+  .payment-dropdown-item .payment-info {
+    gap: 6px;
+  }
+  
+  .payment-dropdown-item .payment-amount {
+    font-size: 11px;
+  }
+  
+  .payment-dropdown-item .payment-mode {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  
+  .payment-dropdown-item .payment-date {
+    font-size: 9px;
+  }
+  
+  .edit-payment-btn-small {
+    padding: 3px 5px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .compact-booking-card {
+    padding: 6px 8px;
+  }
+  
+  .compact-booking-main {
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  
+  .compact-booking-info {
+    gap: 6px;
+  }
+  
+  .compact-customer-name {
+    font-size: 12px;
+    max-width: 60px;
+  }
+  
+  .compact-phone,
+  .compact-room,
+  .compact-due {
+    font-size: 10px;
+  }
+  
+  .compact-action-btn {
+    padding: 3px 5px;
+    font-size: 9px;
+    min-height: 22px;
+  }
+  
+  .compact-booking-actions {
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  
+  .payments-dropdown-content {
+    min-width: 180px;
+    max-height: 120px;
+  }
+  
+  .payment-dropdown-item {
+    padding: 4px 6px;
+  }
+  
+  .payment-dropdown-item .payment-info {
+    gap: 4px;
+  }
+  
+  .payment-dropdown-item .payment-amount {
+    font-size: 10px;
+  }
+  
+  .payment-dropdown-item .payment-mode {
+    font-size: 9px;
+    padding: 1px 3px;
+  }
+  
+  .payment-dropdown-item .payment-date {
+    font-size: 8px;
+  }
+  
+  .edit-payment-btn-small {
+    padding: 2px 4px;
+    font-size: 8px;
+  }
 }

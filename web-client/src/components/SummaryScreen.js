@@ -1,21 +1,40 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
 import './Dashboard.css';
 
 const SummaryScreen = () => {
+  const navigate = useNavigate();
   const [todaySummary, setTodaySummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [cashAmount, setCashAmount] = useState(0);
+  const [allPayments, setAllPayments] = useState([]);
+  const [cashFilterStartDate, setCashFilterStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [cashFilterEndDate, setCashFilterEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showCashFilter, setShowCashFilter] = useState(false);
 
   const fetchSummaryData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get('/dashboard/today-summary', {
-        params: {
-          date: selectedDate
-        }
-      });
-      setTodaySummary(response.data);
+      const [summaryResponse, paymentsResponse] = await Promise.all([
+        api.get('/dashboard/today-summary', {
+          params: {
+            date: selectedDate
+          }
+        }),
+        api.get('/payments')
+      ]);
+      
+      setTodaySummary(summaryResponse.data);
+      setAllPayments(paymentsResponse.data || []);
+      
+      // Calculate total cash collected from payments with paymentMode = 'CARETAKER'
+      const totalCashCollected = paymentsResponse.data
+        ?.filter(payment => payment.paymentMode === 'CARETAKER')
+        ?.reduce((total, payment) => total + (payment.amount || 0), 0) || 0;
+      
+      setCashAmount(totalCashCollected);
     } catch (error) {
       console.error('Error fetching summary data:', error);
     } finally {
@@ -49,9 +68,73 @@ const SummaryScreen = () => {
     }
   };
 
+  const handleBookingClick = (bookingId) => {
+    navigate(`/adminpvt/bookings?bookingId=${bookingId}`);
+  };
+
+  const handleCashFilterUpdate = async () => {
+    try {
+      const response = await api.get(`/payments/cash-filter`, {
+        params: {
+          startDate: cashFilterStartDate,
+          endDate: cashFilterEndDate,
+          paymentMode: 'CARETAKER'
+        }
+      });
+      
+      if (response.data.success) {
+        setCashAmount(response.data.amountInHand);
+        setShowCashFilter(false);
+      } else {
+        console.error('Error fetching cash filter:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching cash filter:', error);
+    }
+  };
+
+  const handleCashFilterReset = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setCashFilterStartDate(today);
+    setCashFilterEndDate(today);
+    setShowCashFilter(false);
+    // Recalculate with today's date
+    setTimeout(() => {
+      const newCashAmount = calculateCashFromPayments();
+      setCashAmount(newCashAmount);
+    }, 100);
+  };
+
+
+  const calculateCashFromPayments = () => {
+    const startDate = new Date(cashFilterStartDate);
+    const endDate = new Date(cashFilterEndDate);
+    endDate.setHours(23, 59, 59, 999); // Include the entire end date
+    
+    return allPayments
+      ?.filter(payment => {
+        if (payment.paymentMode !== 'CARETAKER') {
+          return false;
+        }
+        
+        // Check if payment date is within the filter range
+        const paymentDate = new Date(payment.paymentDate || payment.createdAt);
+        return paymentDate >= startDate && paymentDate <= endDate;
+      })
+      ?.reduce((total, payment) => total + (payment.amount || 0), 0) || 0;
+  };
+
   useEffect(() => {
     fetchSummaryData();
   }, [selectedDate, fetchSummaryData]);
+
+  // Update cash amount when payments change
+  useEffect(() => {
+    if (allPayments.length > 0) {
+      const cashFromPayments = calculateCashFromPayments();
+      setCashAmount(cashFromPayments);
+    }
+  }, [allPayments]);
 
 
 
@@ -91,10 +174,80 @@ const SummaryScreen = () => {
           <div className="stat-number">{todaySummary.pendingDues?.length || 0}</div>
           <div className="stat-label">Pending Dues</div>
         </div>
+        <div className="stat-card cash">
+          <div className="stat-number">₹{cashAmount.toLocaleString()}</div>
+          <div className="stat-label">Cash to Return</div>
+          <div className="stat-filter" onClick={() => setShowCashFilter(!showCashFilter)}>
+            📅 Filter
+          </div>
+        </div>
       </div>
 
+      {/* Cash Filter Modal */}
+      {showCashFilter && (
+        <div className="cash-filter-modal">
+          <div className="cash-filter-content">
+            <div className="cash-filter-header">
+              <h3>💰 Filter Cash to Return</h3>
+              <button 
+                className="close-btn"
+                onClick={() => setShowCashFilter(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="cash-filter-body">
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Start Date</label>
+                  <input
+                    type="date"
+                    value={cashFilterStartDate}
+                    onChange={(e) => setCashFilterStartDate(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">End Date</label>
+                  <input
+                    type="date"
+                    value={cashFilterEndDate}
+                    onChange={(e) => setCashFilterEndDate(e.target.value)}
+                    className="form-control"
+                    min={cashFilterStartDate}
+                  />
+                </div>
+              </div>
+              <div className="cash-filter-preview">
+                <div className="preview-item">
+                  <span>Filtered Amount:</span>
+                  <span className="preview-amount">₹{calculateCashFromPayments().toLocaleString()}</span>
+                </div>
+                <div className="preview-note">
+                  Showing CARETAKER payments between {cashFilterStartDate} and {cashFilterEndDate}
+                </div>
+              </div>
+            </div>
+            <div className="cash-filter-footer">
+              <button 
+                className="btn btn-secondary"
+                onClick={handleCashFilterReset}
+              >
+                Reset to Today
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={handleCashFilterUpdate}
+              >
+                Apply Filter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Check-ins Section */}
-      <div className="summary-section-mobile">
+      <div className={`summary-section-mobile ${(!todaySummary.checkIns || todaySummary.checkIns.length === 0) ? 'compact-section' : ''}`}>
         <div className="section-header">
           <h3>📥 Check-ins</h3>
           <span className="count-badge">{todaySummary.checkIns?.length || 0}</span>
@@ -102,55 +255,54 @@ const SummaryScreen = () => {
         {todaySummary.checkIns && todaySummary.checkIns.length > 0 ? (
           <div className="booking-cards">
             {todaySummary.checkIns.map((booking, index) => (
-              <div key={index} className="booking-card">
-                <div className="booking-header">
-                  <div className="customer-info">
-                    <div className="customer-name">{booking.customerName}</div>
-                    <div className="room-info">Room {booking.roomNumber}</div>
+              <div 
+                key={index} 
+                className="booking-card clickable-booking-card one-liner-card"
+                onClick={() => handleBookingClick(booking.bookingId)}
+              >
+                <div className="one-liner-content">
+                  <div className="one-liner-main">
+                    <span className="customer-name">{booking.customerName}</span>
+                    <span className="room-info">Room {booking.roomNumber}</span>
+                    <span className="phone-info">📞 {booking.phoneNumber}</span>
+                    {booking.dueAmount && booking.dueAmount > 0 && (
+                      <span className="due-amount">💰 ₹{booking.dueAmount}</span>
+                    )}
                   </div>
-                  <div className="booking-status">
+                  <div className="one-liner-actions" onClick={(e) => e.stopPropagation()}>
                     <span className={`status-badge ${booking.bookingStatus?.toLowerCase()}`}>
                       {booking.bookingStatus}
                     </span>
+                    {booking.bookingStatus === 'CONFIRMED' && (
+                      <button 
+                        className="action-btn checkin-btn"
+                        onClick={() => handleCheckIn(booking.bookingId)}
+                      >
+                        ✅
+                      </button>
+                    )}
+                    {booking.bookingStatus === 'CHECKEDIN' && (
+                      <button 
+                        className="action-btn checkout-btn"
+                        onClick={() => handleCheckOut(booking.bookingId)}
+                      >
+                        🚪
+                      </button>
+                    )}
                   </div>
-                </div>
-                <div className="booking-details">
-                  <div className="detail-item">
-                    <span className="detail-icon">📞</span>
-                    <span className="detail-text">{booking.phoneNumber}</span>
-                  </div>
-                </div>
-                <div className="booking-actions">
-                  {booking.bookingStatus === 'CONFIRMED' && (
-                    <button 
-                      className="action-btn checkin-btn"
-                      onClick={() => handleCheckIn(booking.bookingId)}
-                    >
-                      ✅ Check-in
-                    </button>
-                  )}
-                  {booking.bookingStatus === 'CHECKEDIN' && (
-                    <button 
-                      className="action-btn checkout-btn"
-                      onClick={() => handleCheckOut(booking.bookingId)}
-                    >
-                      🚪 Check-out
-                    </button>
-                  )}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="empty-state">
-            <div className="empty-icon">📭</div>
+          <div className="empty-state compact-empty">
             <div className="empty-text">No check-ins today</div>
           </div>
         )}
       </div>
 
       {/* Check-outs Section */}
-      <div className="summary-section-mobile">
+      <div className={`summary-section-mobile ${(!todaySummary.checkOuts || todaySummary.checkOuts.length === 0) ? 'compact-section' : ''}`}>
         <div className="section-header">
           <h3>📤 Check-outs</h3>
           <span className="count-badge">{todaySummary.checkOuts?.length || 0}</span>
@@ -158,92 +310,86 @@ const SummaryScreen = () => {
         {todaySummary.checkOuts && todaySummary.checkOuts.length > 0 ? (
           <div className="booking-cards">
             {todaySummary.checkOuts.map((booking, index) => (
-              <div key={index} className="booking-card">
-                <div className="booking-header">
-                  <div className="customer-info">
-                    <div className="customer-name">{booking.customerName}</div>
-                    <div className="room-info">Room {booking.roomNumber}</div>
+              <div 
+                key={index} 
+                className="booking-card clickable-booking-card one-liner-card"
+                onClick={() => handleBookingClick(booking.bookingId)}
+              >
+                <div className="one-liner-content">
+                  <div className="one-liner-main">
+                    <span className="customer-name">{booking.customerName}</span>
+                    <span className="room-info">Room {booking.roomNumber}</span>
+                    <span className="phone-info">📞 {booking.phoneNumber}</span>
+                    {booking.dueAmount && booking.dueAmount > 0 && (
+                      <span className="due-amount">💰 ₹{booking.dueAmount}</span>
+                    )}
                   </div>
-                  <div className="booking-status">
+                  <div className="one-liner-actions" onClick={(e) => e.stopPropagation()}>
                     <span className={`status-badge ${booking.bookingStatus?.toLowerCase()}`}>
                       {booking.bookingStatus}
                     </span>
+                    {booking.bookingStatus === 'CONFIRMED' && (
+                      <button 
+                        className="action-btn checkin-btn"
+                        onClick={() => handleCheckIn(booking.bookingId)}
+                      >
+                        ✅
+                      </button>
+                    )}
+                    {booking.bookingStatus === 'CHECKEDIN' && (
+                      <button 
+                        className="action-btn checkout-btn"
+                        onClick={() => handleCheckOut(booking.bookingId)}
+                      >
+                        🚪
+                      </button>
+                    )}
                   </div>
-                </div>
-                <div className="booking-details">
-                  <div className="detail-item">
-                    <span className="detail-icon">📞</span>
-                    <span className="detail-text">{booking.phoneNumber}</span>
-                  </div>
-                </div>
-                <div className="booking-actions">
-                  {booking.bookingStatus === 'CONFIRMED' && (
-                    <button 
-                      className="action-btn checkin-btn"
-                      onClick={() => handleCheckIn(booking.bookingId)}
-                    >
-                      ✅ Check-in
-                    </button>
-                  )}
-                  {booking.bookingStatus === 'CHECKEDIN' && (
-                    <button 
-                      className="action-btn checkout-btn"
-                      onClick={() => handleCheckOut(booking.bookingId)}
-                    >
-                      🚪 Check-out
-                    </button>
-                  )}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="empty-state">
-            <div className="empty-icon">📭</div>
+          <div className="empty-state compact-empty">
             <div className="empty-text">No check-outs today</div>
           </div>
         )}
       </div>
 
       {/* Pending Dues Section */}
-      <div className="summary-section-mobile">
+      <div className={`summary-section-mobile ${(!todaySummary.pendingDues || todaySummary.pendingDues.length === 0) ? 'compact-section' : ''}`}>
         <div className="section-header">
           <h3>💳 Pending Dues</h3>
           <span className="count-badge">{todaySummary.pendingDues?.length || 0}</span>
         </div>
         {todaySummary.pendingDues && todaySummary.pendingDues.length > 0 ? (
-          <div className="dues-cards">
+          <div className="booking-cards">
             {todaySummary.pendingDues.map((due, index) => (
-              <div key={index} className="due-card">
-                <div className="due-header">
-                  <div className="customer-info">
-                    <div className="customer-name">{due.customerName}</div>
-                    <div className="room-info">Room {due.roomNumber}</div>
+              <div 
+                key={index} 
+                className="booking-card clickable-booking-card one-liner-card"
+                onClick={() => handleBookingClick(due.bookingId)}
+              >
+                <div className="one-liner-content">
+                  <div className="one-liner-main">
+                    <span className="customer-name">{due.customerName}</span>
+                    <span className="room-info">Room {due.roomNumber}</span>
+                    <span className="phone-info">📞 {due.phoneNumber}</span>
                   </div>
-                  <div className="due-amount">₹{due.dueAmount}</div>
-                </div>
-                <div className="due-details">
-                  <div className="detail-item">
-                    <span className="detail-icon">📞</span>
-                    <span className="detail-text">{due.phoneNumber}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-icon">📅</span>
-                    <span className="detail-text">
-                      {due.checkInDate} - {due.checkOutDate}
-                    </span>
+                  <div className="one-liner-actions">
+                    <span className="due-amount">₹{due.dueAmount}</span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="empty-state">
-            <div className="empty-icon">💰</div>
+          <div className="empty-state compact-empty">
             <div className="empty-text">No pending dues</div>
           </div>
         )}
       </div>
+
     </div>
   );
 };

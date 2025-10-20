@@ -24,9 +24,7 @@ const Layout = ({ children }) => {
     { path: '/adminpvt/booking-requests', label: 'Booking Requests', icon: '📨' },
     { path: '/adminpvt/expenses', label: 'Expenses', icon: '💸' },
     { path: '/adminpvt/transactions', label: 'Transactions', icon: '💳' },
-    { path: '/adminpvt/stats', label: 'Stats', icon: '📊' },
-    { path: '/adminpvt/room-availability', label: 'Room Availability', icon: '🏠' },
-    { path: '/adminpvt/notification-test', label: 'Notification Test', icon: '🔔' },
+    { path: '/adminpvt/stats', label: 'Stats', icon: '📊' }
   ];
 
   const toggleSidebar = () => {

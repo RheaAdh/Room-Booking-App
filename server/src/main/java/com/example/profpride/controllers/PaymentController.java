@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,6 +130,43 @@ public class PaymentController {
             response.put("success", false);
             response.put("message", "Failed to upload payment screenshot: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @GetMapping("/cash-filter")
+    public ResponseEntity<Map<String, Object>> getCashFilter(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "paymentMode", defaultValue = "CARETAKER") String paymentMode) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Parse dates
+            LocalDateTime start = LocalDateTime.parse(startDate + "T00:00:00");
+            LocalDateTime end = LocalDateTime.parse(endDate + "T23:59:59");
+            
+            // Get filtered payments
+            List<Payment> filteredPayments = paymentService.getPaymentsByDateRangeAndMode(start, end, paymentMode);
+            
+            // Calculate total amount (all payments are considered valid)
+            BigDecimal totalAmount = filteredPayments.stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            response.put("success", true);
+            response.put("amountInHand", totalAmount);
+            response.put("paymentCount", filteredPayments.size());
+            response.put("startDate", startDate);
+            response.put("endDate", endDate);
+            response.put("paymentMode", paymentMode);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error calculating cash filter: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }

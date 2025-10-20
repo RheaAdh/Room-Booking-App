@@ -193,9 +193,14 @@ const MobileBookingScreen = () => {
     const checkInDate = fromLocalDateTimeString(booking.checkInDate) || new Date();
     const checkOutDate = fromLocalDateTimeString(booking.checkOutDate) || new Date(Date.now() + 24 * 60 * 60 * 1000);
     
+    // Find the customer name from the phone number
+    const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
+    const customerName = customer ? customer.name : '';
+    
     setFormData({
-      customerPhoneNumber: booking.customer?.phoneNumber || '',
-      roomId: booking.room?.id || '',
+      customerPhoneNumber: booking.customerPhoneNumber || '',
+      roomId: booking.roomId || '',
+      numberOfPeople: booking.numberOfPeople || 1,
       checkInDate: checkInDate,
       checkOutDate: checkOutDate,
       bookingStatus: booking.bookingStatus,
@@ -205,6 +210,10 @@ const MobileBookingScreen = () => {
       earlyCheckinCost: booking.earlyCheckinCost || '',
       lateCheckoutCost: booking.lateCheckoutCost || ''
     });
+    
+    // Set the customer search term to show the selected customer's name
+    setCustomerSearchTerm(customerName);
+    
     setSelectedBooking(booking);
     setIsEditing(true);
     setShowBookingModal(true);
@@ -348,31 +357,11 @@ const MobileBookingScreen = () => {
     try {
       console.log('Downloading invoice for booking:', bookingId);
       
-      // Get the HTML preview content and download it as HTML
-      const response = await api.get(`/invoices/${bookingId}/preview`);
+      // Open the invoice URL directly in a new tab
+      const invoiceUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:8082'}/api/v1/invoices/${bookingId}/download`;
+      window.open(invoiceUrl, '_blank');
       
-      console.log('Invoice preview response:', {
-        status: response.status,
-        dataType: typeof response.data,
-        dataLength: response.data?.length || 'unknown'
-      });
-      
-      if (response.data) {
-        // Create a blob with the HTML content
-        const blob = new Blob([response.data], { type: 'text/html' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `booking_${bookingId}_invoice.html`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-        console.log('Invoice download completed successfully');
-      } else {
-        console.error('Empty preview response');
-        alert('Invoice content is empty. Please try again.');
-      }
+      console.log('Invoice opened in new window successfully');
     } catch (error) {
       console.error('Error downloading invoice:', error);
       console.error('Error details:', {
@@ -503,21 +492,6 @@ const MobileBookingScreen = () => {
                   </div>
                   
                   <div className="booking-actions">
-                    <button 
-                      className="action-btn edit-btn"
-                      onClick={() => handleEditBooking(booking)}
-                    >
-                      ✏️ Edit Payment
-                    </button>
-                    <button 
-                      className="action-btn payment-btn"
-                      onClick={() => {
-                        setSelectedBooking(booking);
-                        setShowPaymentModal(true);
-                      }}
-                    >
-                      💳 Add Payment
-                    </button>
                     <button 
                       className="action-btn preview-btn"
                       onClick={() => {

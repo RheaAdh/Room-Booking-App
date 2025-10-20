@@ -133,12 +133,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 8px;
+  padding: 10px 6px;
   text-decoration: none;
   color: #6c757d;
   transition: all 0.2s ease;
   font-size: 12px;
   font-weight: 500;
+  min-width: 0;
 }
 
 .bottom-nav-item:hover {
@@ -152,24 +153,66 @@
 }
 
 .bottom-nav-icon {
-  font-size: 20px;
-  margin-bottom: 4px;
+  font-size: 18px;
+  margin-bottom: 3px;
 }
 
 .bottom-nav-label {
-  font-size: 11px;
+  font-size: 10px;
   text-align: center;
   line-height: 1.2;
 }
 
+/* Logout button in bottom nav */
+.logout-nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.logout-nav-btn:hover {
+  background-color: #f8f9fa;
+  color: #dc3545;
+}
+
+.logout-nav-btn:active {
+  background-color: #e9ecef;
+  color: #c82333;
+}
+
 /* Mobile Styles */
 @media (max-width: 767px) {
+  /* Hide header on mobile */
+  .caretaker-header {
+    display: none;
+  }
+  
   .caretaker-main {
     padding-bottom: 120px; /* Ensure space for bottom navigation on mobile */
+    padding-top: 8px; /* Add small top padding since header is hidden */
   }
   
   .bottom-nav {
     display: flex; /* Keep bottom nav visible on mobile */
+  }
+  
+  /* Adjust for 4-button layout on mobile */
+  .bottom-nav-item {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+  
+  .bottom-nav-icon {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+  
+  .bottom-nav-label {
+    font-size: 9px;
   }
   
   /* Ensure modals don't get hidden behind bottom navigation */
@@ -268,6 +311,19 @@
     width: 24px;
     height: 3px;
   }
+  
+  /* Extra small screens - make bottom nav even more compact */
+  .bottom-nav-item {
+    padding: 6px 2px;
+  }
+  
+  .bottom-nav-icon {
+    font-size: 14px;
+  }
+  
+  .bottom-nav-label {
+    font-size: 8px;
+  }
 }
 
 /* High contrast mode support */
@@ -339,24 +395,7 @@
     line-height: 1.4;
   }
 
-  .caretaker-header {
-    padding: 12px 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    min-height: 56px;
-  }
-
-  .header-title h1 {
-    font-size: 16px;
-    margin: 0 0 2px 0;
-    line-height: 1.2;
-  }
-
-  .header-title p {
-    font-size: 12px;
-    margin: 0;
-    opacity: 0.9;
-    line-height: 1.2;
-  }
+  /* Header is hidden on mobile - no styles needed */
 
   .caretaker-main {
     padding: 8px;

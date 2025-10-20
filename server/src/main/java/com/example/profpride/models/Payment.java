@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import com.example.profpride.enums.PaymentMode;
-import com.example.profpride.enums.PaymentStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -28,9 +27,6 @@ public class Payment extends BaseEntity {
     @Column(name = "payment_method", nullable = false)
     private PaymentMode paymentMethod;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_status", nullable = false)
-    private PaymentStatus paymentStatus;
 
     @Column(name = "payment_screenshot_url", length = 500)
     private String paymentScreenshotUrl;
@@ -46,9 +42,6 @@ public class Payment extends BaseEntity {
         super.onCreate();
         if (paymentDate == null) {
             paymentDate = LocalDateTime.now();
-        }
-        if (paymentStatus == null) {
-            paymentStatus = PaymentStatus.PENDING;
         }
     }
 }

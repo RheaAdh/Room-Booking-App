@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../config/api';
+import { toLocalDateTimeString, toLocalDateString } from '../utils/dateUtils';
 import './CaretakerContactScreen.css';
 
 const CaretakerContactScreen = () => {
@@ -21,10 +22,44 @@ const CaretakerContactScreen = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState('');
   const [selectedImageTitle, setSelectedImageTitle] = useState('');
+  
+  // Booking creation states
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [rooms, setRooms] = useState([]);
+  const [roomConfigurations, setRoomConfigurations] = useState([]);
+  const [bookingFormData, setBookingFormData] = useState({
+    customerPhoneNumber: '',
+    roomId: '',
+    numberOfPeople: 1,
+    checkInDate: new Date(),
+    checkOutDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    bookingStatus: 'CONFIRMED',
+    bookingDurationType: 'DAILY',
+    dailyCost: '',
+    monthlyCost: '',
+    earlyCheckinCost: '',
+    lateCheckoutCost: ''
+  });
+  const [customerBookings, setCustomerBookings] = useState({});
+  const [loadingBookings, setLoadingBookings] = useState({});
 
   useEffect(() => {
     fetchCustomers();
+    fetchBookingData();
   }, []);
+
+  const fetchBookingData = async () => {
+    try {
+      const [roomsRes, roomConfigsRes] = await Promise.all([
+        api.get('/rooms'),
+        api.get('/room-configurations')
+      ]);
+      setRooms(roomsRes.data);
+      setRoomConfigurations(roomConfigsRes.data);
+    } catch (error) {
+      console.error('Error fetching booking data:', error);
+    }
+  };
 
   const fetchCustomers = async () => {
     try {
@@ -192,6 +227,146 @@ const CaretakerContactScreen = () => {
     setFormData({ name: '', phoneNumber: '', additionalPhoneNumber: '', photoIdProofUrl: '', remarks: '', idProofUrls: [] });
   };
 
+  const fetchCustomerBookings = async (phoneNumber) => {
+    if (customerBookings[phoneNumber]) return; // Already fetched
+    
+    setLoadingBookings(prev => ({ ...prev, [phoneNumber]: true }));
+    try {
+      const response = await api.get(`/bookings/customer/${phoneNumber}`);
+      setCustomerBookings(prev => ({ ...prev, [phoneNumber]: response.data }));
+    } catch (error) {
+      console.error('Error fetching customer bookings:', error);
+      setCustomerBookings(prev => ({ ...prev, [phoneNumber]: [] }));
+    } finally {
+      setLoadingBookings(prev => ({ ...prev, [phoneNumber]: false }));
+    }
+  };
+
+  const handleCreateBooking = (customer) => {
+    setBookingFormData({
+      customerPhoneNumber: customer.phoneNumber,
+      roomId: '',
+      numberOfPeople: 1,
+      checkInDate: new Date(),
+      checkOutDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      bookingStatus: 'CONFIRMED',
+      bookingDurationType: 'DAILY',
+      dailyCost: '',
+      monthlyCost: '',
+      earlyCheckinCost: '',
+      lateCheckoutCost: ''
+    });
+    setShowBookingModal(true);
+  };
+
+  const handleBookingInputChange = (field, value) => {
+    setBookingFormData(prev => {
+      const newFormData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Auto-populate costs when room or number of people changes
+      if (field === 'roomId' || field === 'numberOfPeople') {
+        const roomConfig = getRoomConfiguration(newFormData.roomId, newFormData.numberOfPeople);
+        if (roomConfig) {
+          newFormData.dailyCost = roomConfig.dailyCost;
+          newFormData.monthlyCost = roomConfig.monthlyCost;
+        }
+      }
+      
+      return newFormData;
+    });
+  };
+
+  const getRoomConfiguration = (roomId, numberOfPeople) => {
+    return roomConfigurations.find(config => 
+      config.roomId === parseInt(roomId) && config.personCount === parseInt(numberOfPeople)
+    );
+  };
+
+  const calculateTotalCost = (formData) => {
+    const checkInDate = new Date(formData.checkInDate);
+    const checkOutDate = new Date(formData.checkOutDate);
+    const earlyCheckinCost = parseFloat(formData.earlyCheckinCost) || 0;
+    
+    let totalCost = 0;
+    
+    if (formData.bookingDurationType === 'DAILY') {
+      const dailyCost = parseFloat(formData.dailyCost) || 0;
+      const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+      const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      totalCost = (dailyCost * daysDiff) + earlyCheckinCost;
+    } else if (formData.bookingDurationType === 'MONTHLY') {
+      const monthlyCost = parseFloat(formData.monthlyCost) || 0;
+      const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+      const monthsDiff = Math.ceil(timeDiff / (1000 * 3600 * 24 * 30));
+      totalCost = (monthlyCost * monthsDiff) + earlyCheckinCost;
+    }
+    
+    return totalCost;
+  };
+
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const totalCost = calculateTotalCost(bookingFormData);
+      
+      const bookingPayload = {
+        ...bookingFormData,
+        roomId: parseInt(bookingFormData.roomId),
+        checkInDate: toLocalDateTimeString(bookingFormData.checkInDate),
+        checkOutDate: toLocalDateTimeString(bookingFormData.checkOutDate),
+        dailyCost: parseFloat(bookingFormData.dailyCost) || 0,
+        monthlyCost: parseFloat(bookingFormData.monthlyCost) || 0,
+        earlyCheckinCost: parseFloat(bookingFormData.earlyCheckinCost) || 0,
+        totalAmount: totalCost
+      };
+      
+      await api.post('/bookings', bookingPayload);
+      alert(`✅ Booking created successfully! Total Amount: ₹${totalCost.toFixed(2)}`);
+      
+      setShowBookingModal(false);
+      resetBookingForm();
+      // Refresh customer bookings
+      if (bookingFormData.customerPhoneNumber) {
+        setCustomerBookings(prev => ({ ...prev, [bookingFormData.customerPhoneNumber]: undefined }));
+        fetchCustomerBookings(bookingFormData.customerPhoneNumber);
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      alert('❌ Error creating booking. Please try again.');
+    }
+  };
+
+  const resetBookingForm = () => {
+    setBookingFormData({
+      customerPhoneNumber: '',
+      roomId: '',
+      numberOfPeople: 1,
+      checkInDate: new Date(),
+      checkOutDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      bookingStatus: 'CONFIRMED',
+      bookingDurationType: 'DAILY',
+      dailyCost: '',
+      monthlyCost: '',
+      earlyCheckinCost: '',
+      lateCheckoutCost: ''
+    });
+  };
+
+  const downloadInvoicePdf = async (bookingId) => {
+    try {
+      // Open the invoice URL directly in a new tab
+      const invoiceUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:8082'}/api/v1/invoices/${bookingId}/download`;
+      window.open(invoiceUrl, '_blank');
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      alert('❌ Error downloading invoice. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="caretaker-loading">
@@ -203,11 +378,6 @@ const CaretakerContactScreen = () => {
 
   return (
     <div className="caretaker-contacts">
-      {/* Header */}
-      <div className="contacts-header">
-        <h1>👥 Contacts</h1>
-        <p>Manage customer information</p>
-      </div>
 
       {/* Search Bar */}
       <div className="search-section">
@@ -286,8 +456,61 @@ const CaretakerContactScreen = () => {
                 >
                   ✏️ Edit
                 </button>
-
+                <button 
+                  className="action-btn booking-btn"
+                  onClick={() => handleCreateBooking(customer)}
+                >
+                  📅 Create Booking
+                </button>
+                <button 
+                  className="action-btn history-btn"
+                  onClick={() => fetchCustomerBookings(customer.phoneNumber)}
+                >
+                  📋 View Bookings
+                </button>
               </div>
+
+              {/* Customer Bookings Section */}
+              {customerBookings[customer.phoneNumber] !== undefined && (
+                <div className="customer-bookings">
+                  <h4>📋 Booking History</h4>
+                  {loadingBookings[customer.phoneNumber] ? (
+                    <div className="loading-bookings">Loading bookings...</div>
+                  ) : customerBookings[customer.phoneNumber] && customerBookings[customer.phoneNumber].length > 0 ? (
+                    <div className="bookings-list">
+                      {customerBookings[customer.phoneNumber].map((booking) => {
+                        const room = rooms.find(r => r.id === booking.roomId);
+                        return (
+                          <div key={booking.id} className="booking-item">
+                            <div className="booking-info">
+                              <div className="booking-details">
+                                <span className="booking-room">Room {room?.roomNumber || booking.roomId}</span>
+                                <span className="booking-dates">
+                                  {new Date(booking.checkInDate).toLocaleDateString()} - {new Date(booking.checkOutDate).toLocaleDateString()}
+                                </span>
+                                <span className="booking-amount">₹{booking.totalAmount}</span>
+                                <span className={`booking-status ${booking.bookingStatus?.toLowerCase()}`}>
+                                  {booking.bookingStatus}
+                                </span>
+                              </div>
+                              <div className="booking-actions">
+                                <button 
+                                  className="download-invoice-btn"
+                                  onClick={() => downloadInvoicePdf(booking.id)}
+                                >
+                                  📥 Download Invoice
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="no-bookings">No bookings found for this customer.</div>
+                  )}
+                </div>
+              )}
             </div>
             );
           })
@@ -587,6 +810,231 @@ const CaretakerContactScreen = () => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Modal */}
+      {showBookingModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Create New Booking</h3>
+              <button 
+                className="close-btn"
+                onClick={() => {
+                  setShowBookingModal(false);
+                  resetBookingForm();
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleBookingSubmit} className="modal-body">
+              <div className="form-group">
+                <label className="form-label">👤 Customer</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={customers.find(c => c.phoneNumber === bookingFormData.customerPhoneNumber)?.name || ''}
+                  disabled
+                />
+                <small className="form-text">Customer: {bookingFormData.customerPhoneNumber}</small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">🏠 Room</label>
+                <select
+                  className="form-control"
+                  value={bookingFormData.roomId}
+                  onChange={(e) => handleBookingInputChange('roomId', e.target.value)}
+                  required
+                >
+                  <option value="">Select Room</option>
+                  {rooms.map(room => (
+                    <option key={room.id} value={room.id}>
+                      {room.roomNumber} - {room.bathroomType}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">👥 Number of People</label>
+                <select
+                  className="form-control"
+                  value={bookingFormData.numberOfPeople}
+                  onChange={(e) => handleBookingInputChange('numberOfPeople', parseInt(e.target.value))}
+                  required
+                  disabled={!bookingFormData.roomId}
+                >
+                  <option value="">{bookingFormData.roomId ? 'Select Number of People' : 'Select Room First'}</option>
+                  {bookingFormData.roomId ? 
+                    (() => {
+                      const configs = roomConfigurations.filter(config => config.roomId === parseInt(bookingFormData.roomId));
+                      return configs
+                        .map(config => config.personCount)
+                        .sort((a, b) => a - b)
+                        .map(num => (
+                          <option key={num} value={num}>
+                            {num} {num === 1 ? 'Person' : 'People'}
+                          </option>
+                        ));
+                    })() : 
+                    [1, 2, 3, 4, 5].map(num => (
+                      <option key={num} value={num}>
+                        {num} {num === 1 ? 'Person' : 'People'}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">📅 Check-in Date</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={toLocalDateString(bookingFormData.checkInDate)}
+                  onChange={(e) => handleBookingInputChange('checkInDate', new Date(e.target.value))}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">📅 Check-out Date</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={toLocalDateString(bookingFormData.checkOutDate)}
+                  onChange={(e) => handleBookingInputChange('checkOutDate', new Date(e.target.value))}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">📊 Booking Status</label>
+                <select
+                  className="form-control"
+                  value={bookingFormData.bookingStatus}
+                  onChange={(e) => handleBookingInputChange('bookingStatus', e.target.value)}
+                  required
+                >
+                  <option value="PENDING">Pending</option>
+                  <option value="CONFIRMED">Confirmed</option>
+                  <option value="CHECKEDIN">Checked In</option>
+                  <option value="CHECKEDOUT">Checked Out</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="NO_SHOW">No Show</option>
+                  <option value="COMPLETED">Completed</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">⏱️ Booking Duration Type</label>
+                <select
+                  className="form-control"
+                  value={bookingFormData.bookingDurationType}
+                  onChange={(e) => handleBookingInputChange('bookingDurationType', e.target.value)}
+                  required
+                >
+                  <option value="DAILY">Daily</option>
+                  <option value="MONTHLY">Monthly</option>
+                </select>
+              </div>
+
+              {bookingFormData.bookingDurationType === 'DAILY' && (
+                <div className="form-group">
+                  <label className="form-label">
+                    💰 Daily Cost (₹)
+                    <small style={{ color: '#6c757d', marginLeft: '8px' }}>
+                      (Auto-populated, editable for bargaining)
+                    </small>
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={bookingFormData.dailyCost}
+                    onChange={(e) => handleBookingInputChange('dailyCost', e.target.value)}
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter daily cost"
+                    required
+                    style={{ 
+                      backgroundColor: bookingFormData.dailyCost ? '#f8f9fa' : 'white',
+                      border: bookingFormData.dailyCost ? '1px solid #28a745' : '1px solid #ced4da'
+                    }}
+                  />
+                </div>
+              )}
+
+              {bookingFormData.bookingDurationType === 'MONTHLY' && (
+                <div className="form-group">
+                  <label className="form-label">
+                    💰 Monthly Cost (₹)
+                    <small style={{ color: '#6c757d', marginLeft: '8px' }}>
+                      (Auto-populated, editable for bargaining)
+                    </small>
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={bookingFormData.monthlyCost}
+                    onChange={(e) => handleBookingInputChange('monthlyCost', e.target.value)}
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter monthly cost"
+                    required
+                    style={{ 
+                      backgroundColor: bookingFormData.monthlyCost ? '#f8f9fa' : 'white',
+                      border: bookingFormData.monthlyCost ? '1px solid #28a745' : '1px solid #ced4da'
+                    }}
+                  />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="form-label">⏰ Early Check-in Cost (₹)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bookingFormData.earlyCheckinCost}
+                  onChange={(e) => handleBookingInputChange('earlyCheckinCost', e.target.value)}
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter early check-in cost"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">🕐 Late Check-out Cost (₹)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bookingFormData.lateCheckoutCost}
+                  onChange={(e) => handleBookingInputChange('lateCheckoutCost', e.target.value)}
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter late check-out cost"
+                />
+              </div>
+
+              <div className="form-actions">
+                <button 
+                  type="button" 
+                  className="mobile-btn mobile-btn-secondary" 
+                  onClick={() => {
+                    setShowBookingModal(false);
+                    resetBookingForm();
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="mobile-btn mobile-btn-primary">
+                  ✅ Create Booking
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -118,7 +118,7 @@ const StatsScreen = () => {
 
     // Calculate payment collection rate
     const totalPayments = payments.length;
-    const completedPayments = payments.filter(p => p.paymentStatus === 'COMPLETED').length;
+    const completedPayments = payments.length; // All payments are considered completed
     const paymentCollectionRate = totalPayments > 0 ? (completedPayments / totalPayments) * 100 : 0;
 
     // Calculate customer metrics

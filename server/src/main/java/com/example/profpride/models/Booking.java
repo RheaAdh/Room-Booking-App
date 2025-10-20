@@ -8,7 +8,7 @@ import lombok.Setter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.example.profpride.enums.BookingDurationType;
 import com.example.profpride.enums.BookingStatus;
-import com.example.profpride.enums.PaymentStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -48,9 +48,6 @@ public class Booking extends BaseEntity {
     @Column(name = "booking_status", nullable = false)
     private BookingStatus bookingStatus = BookingStatus.CONFIRMED;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_status", nullable = false)
-    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
     
     @Column(name = "daily_cost", precision = 10, scale = 2)
     private BigDecimal dailyCost = BigDecimal.ZERO;

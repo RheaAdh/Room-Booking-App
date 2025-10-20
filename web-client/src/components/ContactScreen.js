@@ -299,6 +299,17 @@ const ContactScreen = () => {
     });
   };
 
+  const downloadInvoicePdf = async (bookingId) => {
+    try {
+      // Open the invoice URL directly in a new tab
+      const invoiceUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:8082'}/api/v1/invoices/${bookingId}/download`;
+      window.open(invoiceUrl, '_blank');
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      alert('Error downloading invoice. Please try again.');
+    }
+  };
+
   const getStatusColor = (status) => {
     const statusColors = {
       'PENDING': '#ffc107',
@@ -555,6 +566,15 @@ const ContactScreen = () => {
                                         )}
                                         <div>
                                           <strong>Created:</strong> {formatDate(booking.createdAt)}
+                                        </div>
+                                        <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                                          <button
+                                            className="btn btn-sm btn-primary"
+                                            onClick={() => downloadInvoicePdf(booking.id)}
+                                            style={{ marginRight: '10px' }}
+                                          >
+                                            📥 Download Invoice
+                                          </button>
                                         </div>
                                         {booking.remarks && (
                                           <div style={{ gridColumn: '1 / -1' }}>

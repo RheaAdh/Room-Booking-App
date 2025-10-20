@@ -8,7 +8,6 @@ import LoginScreen from './components/LoginScreen';
 import StatsScreen from './components/StatsScreen';
 import SummaryScreen from './components/SummaryScreen';
 import TransactionsScreen from './components/TransactionsScreen';
-import RoomAvailabilityScreen from './components/RoomAvailabilityScreen';
 import BookingScreen from './components/BookingScreen';
 import CaretakerBookingScreen from './components/CaretakerBookingScreen';
 import BookingGrid from './components/BookingGrid';
@@ -17,7 +16,6 @@ import ExpenseScreen from './components/ExpenseScreen';
 import ContactScreen from './components/ContactScreen';
 import CaretakerContactScreen from './components/CaretakerContactScreen';
 import BookingRequestsScreen from './components/BookingRequestsScreen';
-import NotificationTest from './components/NotificationTest';
 import Layout from './components/Layout';
 import CaretakerLayout from './components/CaretakerLayout';
 import PublicApp from './components/PublicApp';
@@ -49,14 +47,12 @@ const OwnerRoutes = () => {
         <Route path="/stats" element={<StatsScreen />} />
         <Route path="/summary" element={<SummaryScreen />} />
         <Route path="/transactions" element={<TransactionsScreen />} />
-        <Route path="/room-availability" element={<RoomAvailabilityScreen />} />
         <Route path="/bookings" element={<BookingScreen />} />
         <Route path="/booking-grid" element={<BookingGrid />} />
         <Route path="/rooms" element={<RoomScreen />} />
         <Route path="/expenses" element={<ExpenseScreen />} />
         <Route path="/contacts" element={<ContactScreen />} />
         <Route path="/booking-requests" element={<BookingRequestsScreen />} />
-        <Route path="/notification-test" element={<NotificationTest />} />
       </Routes>
     </Layout>
   );
@@ -69,9 +65,7 @@ const CaretakerRoutes = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/adminpvt/summary" replace />} />
         <Route path="/summary" element={<SummaryScreen />} />
-        <Route path="/room-availability" element={<RoomAvailabilityScreen />} />
         <Route path="/bookings" element={<CaretakerBookingScreen />} />
-        <Route path="/contacts" element={<CaretakerContactScreen />} />
       </Routes>
     </CaretakerLayout>
   );

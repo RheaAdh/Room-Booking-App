@@ -3,10 +3,11 @@ package com.example.profpride.controllers;
 import com.example.profpride.models.Booking;
 import com.example.profpride.models.Customer;
 import com.example.profpride.models.Room;
+import com.example.profpride.models.Payment;
 import com.example.profpride.repositories.BookingRepository;
 import com.example.profpride.repositories.CustomerRepository;
 import com.example.profpride.repositories.RoomRepository;
-import com.example.profpride.enums.PaymentStatus;
+import com.example.profpride.repositories.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,9 @@ public class DashboardController {
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     @GetMapping("/today-summary")
     public ResponseEntity<Map<String, Object>> getTodaySummary(@RequestParam String date) {
@@ -66,6 +70,7 @@ public class DashboardController {
                     detail.put("phoneNumber", booking.getCustomerPhoneNumber());
                     detail.put("bookingId", booking.getId());
                     detail.put("bookingStatus", booking.getBookingStatus());
+                    detail.put("dueAmount", booking.getTotalAmount());
                     return detail;
                 })
                 .collect(java.util.stream.Collectors.toList());
@@ -78,12 +83,33 @@ public class DashboardController {
                     detail.put("phoneNumber", booking.getCustomerPhoneNumber());
                     detail.put("bookingId", booking.getId());
                     detail.put("bookingStatus", booking.getBookingStatus());
+                    detail.put("dueAmount", booking.getTotalAmount());
                     return detail;
                 })
                 .collect(java.util.stream.Collectors.toList());
 
-            // Get pending dues (bookings with pending payment status)
-            List<Booking> pendingDues = bookingRepository.findByPaymentStatus(PaymentStatus.PENDING);
+            // Get pending dues (only for CHECKEDIN or CHECKEDOUT bookings with dues > 0)
+            // This excludes CONFIRMED bookings that haven't checked in yet
+            List<Booking> allCheckedInOrOutBookings = bookingRepository.findByBookingStatusIn(
+                List.of(com.example.profpride.enums.BookingStatus.CHECKEDIN, com.example.profpride.enums.BookingStatus.CHECKEDOUT)
+            );
+            
+            // Filter bookings that have pending dues (total amount > paid amount)
+            List<Booking> pendingDues = allCheckedInOrOutBookings.stream()
+                .filter(booking -> {
+                    // Fetch payments for this booking
+                    List<Payment> payments = paymentRepository.findByBookingId(booking.getId());
+                    
+                    // Calculate total paid amount for this booking
+                    double totalPaid = payments.stream()
+                        .mapToDouble(payment -> payment.getAmount().doubleValue())
+                        .sum();
+                    
+                    // Check if there are pending dues
+                    double totalAmount = booking.getTotalAmount() != null ? booking.getTotalAmount().doubleValue() : 0.0;
+                    return totalAmount > totalPaid;
+                })
+                .collect(java.util.stream.Collectors.toList());
             List<Map<String, Object>> pendingDuesDetails = pendingDues.stream()
                 .map(booking -> {
                     Map<String, Object> detail = new HashMap<>();

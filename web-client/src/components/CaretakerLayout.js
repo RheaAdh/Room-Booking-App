@@ -9,9 +9,7 @@ const CaretakerLayout = ({ children }) => {
 
   const menuItems = [
     { path: '/adminpvt/summary', label: 'Today\'s Summary', icon: '📋', shortLabel: 'Summary' },
-    { path: '/adminpvt/room-availability', label: 'Room Availability', icon: '🏠', shortLabel: 'Rooms' },
     { path: '/adminpvt/bookings', label: 'Bookings', icon: '📝', shortLabel: 'Bookings' },
-    { path: '/adminpvt/contacts', label: 'Contacts', icon: '👥', shortLabel: 'Contacts' },
   ];
 
   const handleLogout = () => {
@@ -20,20 +18,7 @@ const CaretakerLayout = ({ children }) => {
 
   return (
     <div className="caretaker-app">
-      {/* Header */}
-      <header className="caretaker-header">
-        <div className="header-title">
-          <h1>Caretaker Portal</h1>
-          <p>Welcome, {user?.name}</p>
-        </div>
 
-        <div className="header-actions">
-          <button className="logout-btn" onClick={handleLogout} title="Logout">
-            <span className="logout-icon">🚪</span>
-            <span className="logout-text">Logout</span>
-          </button>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="caretaker-main">
@@ -54,6 +39,14 @@ const CaretakerLayout = ({ children }) => {
             <span className="bottom-nav-label">{item.shortLabel}</span>
           </Link>
         ))}
+        <button 
+          className="bottom-nav-item logout-nav-btn" 
+          onClick={handleLogout} 
+          title="Logout"
+        >
+          <span className="bottom-nav-icon">🚪</span>
+          <span className="bottom-nav-label">Logout</span>
+        </button>
       </nav>
     </div>
   );

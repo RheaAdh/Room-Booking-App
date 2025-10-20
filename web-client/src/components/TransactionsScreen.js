@@ -98,8 +98,8 @@ const TransactionsScreen = () => {
                             </span>
                           </td>
                           <td>
-                            <span className={`payment-status ${payment.paymentStatus?.toLowerCase()}`}>
-                              {payment.paymentStatus}
+                            <span className="payment-status completed">
+                              COMPLETED
                             </span>
                           </td>
                           <td>{payment.transactionId || '-'}</td>
@@ -124,15 +124,15 @@ const TransactionsScreen = () => {
                   </p>
                 </div>
                 <div className="summary-card">
-                  <h5>Completed Payments</h5>
+                  <h5>Total Payments</h5>
                   <p className="amount positive">
-                    {formatAmount(transactions?.filter(p => p.paymentStatus === 'COMPLETED').reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0)}
+                    {formatAmount(transactions?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0)}
                   </p>
                 </div>
                 <div className="summary-card">
-                  <h5>Pending Payments</h5>
-                  <p className="amount negative">
-                    {formatAmount(transactions?.filter(p => p.paymentStatus === 'PENDING').reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0)}
+                  <h5>Payment Count</h5>
+                  <p className="amount neutral">
+                    {transactions?.length || 0}
                   </p>
                 </div>
               </div>

@@ -9,7 +9,6 @@ import com.example.profpride.repositories.RoomRepository;
 import com.example.profpride.repositories.PaymentRepository;
 import com.example.profpride.enums.BookingStatus;
 import com.example.profpride.enums.BookingDurationType;
-import com.example.profpride.enums.PaymentStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,9 +63,9 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<Booking> createBooking(@RequestBody Booking booking) {
         try {
-            // Validate customer exists
-            Optional<Customer> customer = customerRepository.findById(booking.getCustomerPhoneNumber());
-            if (!customer.isPresent()) {
+            // Validate customer exists by phone number
+            Customer customer = customerRepository.findByPhoneNumber(booking.getCustomerPhoneNumber());
+            if (customer == null) {
                 return ResponseEntity.badRequest().build();
             }
 
@@ -82,9 +81,13 @@ public class BookingController {
             List<Booking> existingBookings = bookingRepository.findByRoom(room);
             Optional<Booking> conflictingBooking = existingBookings.stream()
                 .filter(existingBooking -> {
-                    // Only check confirmed bookings
-                    if (existingBooking.getBookingStatus() == null || 
-                        !existingBooking.getBookingStatus().toString().equals("CONFIRMED")) {
+                    // Only check confirmed and checked-in bookings
+                    if (existingBooking.getBookingStatus() == null) {
+                        return false;
+                    }
+                    
+                    String status = existingBooking.getBookingStatus().toString();
+                    if (!status.equals("CONFIRMED") && !status.equals("CHECKEDIN")) {
                         return false;
                     }
                     
@@ -114,9 +117,6 @@ public class BookingController {
             // Set default values
             if (booking.getBookingStatus() == null) {
                 booking.setBookingStatus(BookingStatus.CONFIRMED);
-            }
-            if (booking.getPaymentStatus() == null) {
-                booking.setPaymentStatus(PaymentStatus.PENDING);
             }
             if (booking.getCreatedAt() == null) {
                 booking.setCreatedAt(LocalDateTime.now());
@@ -160,9 +160,13 @@ public class BookingController {
                             return false;
                         }
                         
-                        // Only check confirmed bookings
-                        if (existingBookingItem.getBookingStatus() == null || 
-                            !existingBookingItem.getBookingStatus().toString().equals("CONFIRMED")) {
+                        // Only check confirmed and checked-in bookings
+                        if (existingBookingItem.getBookingStatus() == null) {
+                            return false;
+                        }
+                        
+                        String status = existingBookingItem.getBookingStatus().toString();
+                        if (!status.equals("CONFIRMED") && !status.equals("CHECKEDIN")) {
                             return false;
                         }
                         
@@ -196,9 +200,6 @@ public class BookingController {
             }
             if (updatedBooking.getBookingStatus() != null) {
                 booking.setBookingStatus(updatedBooking.getBookingStatus());
-            }
-            if (updatedBooking.getPaymentStatus() != null) {
-                booking.setPaymentStatus(updatedBooking.getPaymentStatus());
             }
             if (updatedBooking.getDailyCost() != null) {
                 booking.setDailyCost(updatedBooking.getDailyCost());

@@ -65,16 +65,6 @@ public class InvoiceController {
         return new ResponseEntity<>(invoices, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/download")
-    public ResponseEntity<String> downloadInvoice(@PathVariable Long id) {
-        try {
-            String downloadUrl = invoiceService.generateInvoiceDownloadUrl(id);
-            return new ResponseEntity<>(downloadUrl, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
     @GetMapping("/{bookingId}/preview")
     public ResponseEntity<String> previewInvoice(@PathVariable Long bookingId) {
         try {
@@ -88,11 +78,20 @@ public class InvoiceController {
     @GetMapping("/{bookingId}/download")
     public ResponseEntity<byte[]> downloadInvoiceByBooking(@PathVariable Long bookingId) {
         try {
-            byte[] pdfBytes = invoiceService.generateInvoicePdf(bookingId);
+            byte[] htmlBytes = invoiceService.generateInvoicePdf(bookingId);
             return ResponseEntity.ok()
-                .header("Content-Type", "application/pdf")
-                .header("Content-Disposition", "attachment; filename=invoice_" + bookingId + ".pdf")
-                .body(pdfBytes);
+                .header("Content-Type", "text/html; charset=UTF-8")
+                .body(htmlBytes);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/invoice/{id}/download")
+    public ResponseEntity<String> downloadInvoice(@PathVariable Long id) {
+        try {
+            String downloadUrl = invoiceService.generateInvoiceDownloadUrl(id);
+            return new ResponseEntity<>(downloadUrl, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

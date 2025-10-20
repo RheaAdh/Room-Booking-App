@@ -379,12 +379,6 @@ const Dashboard = () => {
         >
           Transactions
         </button>
-        <button
-          className={`tab ${activeTab === 'availability' ? 'active' : ''}`}
-          onClick={() => setActiveTab('availability')}
-        >
-          Room Availability
-        </button>
       </div>
 
       {activeTab === 'today' && dashboardSummary && (
@@ -537,75 +531,6 @@ const Dashboard = () => {
         </>
       )}
 
-      {activeTab === 'availability' && (
-        <>
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">🏠 Check Room Availability</h3>
-            </div>
-            <div className="card-body">
-              <div className="availability-checker">
-                <div className="date-inputs">
-                  <div className="form-group">
-                    <label className="form-label">Check-in Date</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={checkInDate}
-                      onChange={(e) => setCheckInDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Check-out Date</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={checkOutDate}
-                      onChange={(e) => setCheckOutDate(e.target.value)}
-                      min={checkInDate}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <button
-                      className="btn btn-primary"
-                      onClick={checkRoomAvailability}
-                      disabled={checkingAvailability}
-                    >
-                      {checkingAvailability ? 'Checking...' : 'Check Availability'}
-                    </button>
-                  </div>
-                </div>
-                
-                {availableRooms.length > 0 && (
-                  <div className="available-rooms">
-                    <h4>Available Rooms ({availableRooms.length})</h4>
-                    <div className="rooms-grid">
-                      {availableRooms.map(room => (
-                        <div key={room.id} className="room-card">
-                          <div className="room-header">
-                            <h5>Room {room.roomNumber}</h5>
-                            <span className="room-type">{room.roomType}</span>
-                          </div>
-                          <div className="room-details">
-                            <p><strong>Bathroom:</strong> {room.bathroomType}</p>
-                            <p><strong>Cost:</strong> ₹{room.dailyReferenceCost || 'N/A'}/night</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {availableRooms.length === 0 && (checkInDate && checkOutDate) && !checkingAvailability && (
-                  <div className="no-rooms">
-                    <p>No rooms available for the selected dates.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
 
       {activeTab === 'summary' && todaySummary && (
         <>
