@@ -27,7 +27,7 @@ public class CustomerService {
     }
 
     public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+        return customerRepository.findAllWithIdProofUrls();
     }
 
     public Optional<Customer> getCustomerByPhoneNumber(String phoneNumber) {

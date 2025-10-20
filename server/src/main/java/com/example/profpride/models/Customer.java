@@ -1,6 +1,7 @@
 package com.example.profpride.models;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,9 +42,10 @@ public class Customer extends BaseEntityWithCustomId {
     @Column(name = "payment_screenshot_url", columnDefinition = "TEXT")
     private String paymentScreenshotUrl;
     
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "customer_id_proof_urls", joinColumns = @JoinColumn(name = "customer_phone_number"))
     @Column(name = "id_proof_url", columnDefinition = "TEXT")
+    @BatchSize(size = 20)
     private List<String> idProofUrls;
     
     @Column(name = "remarks", columnDefinition = "TEXT")

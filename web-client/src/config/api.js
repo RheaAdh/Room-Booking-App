@@ -1,12 +1,15 @@
 import axios from 'axios';
 
 // API Base URL - dynamic based on environment
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8082/api/v1';
+const BASE_URL = process.env.REACT_APP_API_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://your-actual-backend-url.railway.app/api/v1' 
+    : 'http://localhost:8082/api/v1');
 
 // Create axios instance
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: process.env.NODE_ENV === 'production' ? 30000 : 10000,
   headers: {
     'Content-Type': 'application/json',
   },
