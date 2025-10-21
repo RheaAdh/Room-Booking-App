@@ -10,7 +10,11 @@ const SummaryScreen = () => {
   const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [cashAmount, setCashAmount] = useState(0);
   const [allPayments, setAllPayments] = useState([]);
-  const [cashFilterStartDate, setCashFilterStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [cashFilterStartDate, setCashFilterStartDate] = useState(() => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return firstDayOfMonth.toISOString().split('T')[0];
+  });
   const [cashFilterEndDate, setCashFilterEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [showCashFilter, setShowCashFilter] = useState(false);
 
@@ -29,10 +33,40 @@ const SummaryScreen = () => {
       setTodaySummary(summaryResponse.data);
       setAllPayments(paymentsResponse.data || []);
       
-      // Calculate total cash collected from payments with paymentMode = 'CARETAKER'
-      const totalCashCollected = paymentsResponse.data
-        ?.filter(payment => payment.paymentMode === 'CARETAKER')
-        ?.reduce((total, payment) => total + (payment.amount || 0), 0) || 0;
+      // Calculate total cash collected from payments with paymentMethod = 'CARETAKER' within the filtered date range
+      const startDate = new Date(cashFilterStartDate);
+      const endDate = new Date(cashFilterEndDate);
+      endDate.setHours(23, 59, 59, 999); // Include the entire end date
+      
+      console.log('💰 Cash calculation for date range:', {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        totalPayments: paymentsResponse.data?.length || 0
+      });
+      
+      const caretakerPayments = paymentsResponse.data?.filter(payment => {
+        if (payment.paymentMethod !== 'CARETAKER') {
+          return false;
+        }
+        const paymentDate = new Date(payment.paymentDate || payment.createdAt);
+        const isInRange = paymentDate >= startDate && paymentDate <= endDate;
+        console.log('💰 Payment check:', {
+          id: payment.id,
+          amount: payment.amount,
+          paymentMethod: payment.paymentMethod,
+          paymentDate: payment.paymentDate,
+          createdAt: payment.createdAt,
+          parsedDate: paymentDate.toISOString(),
+          isInRange
+        });
+        return isInRange;
+      }) || [];
+      
+      console.log('💰 CARETAKER payments found:', caretakerPayments);
+      
+      const totalCashCollected = caretakerPayments.reduce((total, payment) => total + (payment.amount || 0), 0);
+      
+      console.log('💰 Total cash collected:', totalCashCollected);
       
       setCashAmount(totalCashCollected);
     } catch (error) {
@@ -40,7 +74,7 @@ const SummaryScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, [selectedDate, cashFilterStartDate, cashFilterEndDate]);
 
   const handleCheckIn = async (bookingId) => {
     if (window.confirm('Are you sure you want to check-in this customer?')) {
@@ -113,7 +147,7 @@ const SummaryScreen = () => {
     
     return allPayments
       ?.filter(payment => {
-        if (payment.paymentMode !== 'CARETAKER') {
+        if (payment.paymentMethod !== 'CARETAKER') {
           return false;
         }
         
@@ -134,7 +168,7 @@ const SummaryScreen = () => {
       const cashFromPayments = calculateCashFromPayments();
       setCashAmount(cashFromPayments);
     }
-  }, [allPayments]);
+  }, [allPayments, cashFilterStartDate, cashFilterEndDate]);
 
 
 
@@ -177,6 +211,9 @@ const SummaryScreen = () => {
         <div className="stat-card cash">
           <div className="stat-number">₹{cashAmount.toLocaleString()}</div>
           <div className="stat-label">Cash to Return</div>
+          <div className="stat-date-range">
+            {new Date(cashFilterStartDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} - {new Date(cashFilterEndDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+          </div>
           <div className="stat-filter" onClick={() => setShowCashFilter(!showCashFilter)}>
             📅 Filter
           </div>
@@ -330,7 +367,7 @@ const SummaryScreen = () => {
                     </span>
                     {booking.bookingStatus === 'CONFIRMED' && (
                       <button 
-                        className="action-btn checkin-btn"
+                        className="checkin-btn"
                         onClick={() => handleCheckIn(booking.bookingId)}
                       >
                         ✅
@@ -373,10 +410,8 @@ const SummaryScreen = () => {
                 <div className="one-liner-content">
                   <div className="one-liner-main">
                     <span className="customer-name">{due.customerName}</span>
-                    <span className="room-info">Room {due.roomNumber}</span>
                     <span className="phone-info">📞 {due.phoneNumber}</span>
-                  </div>
-                  <div className="one-liner-actions">
+            
                     <span className="due-amount">₹{due.dueAmount}</span>
                   </div>
                 </div>

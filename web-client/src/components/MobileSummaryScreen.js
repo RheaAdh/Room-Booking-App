@@ -176,7 +176,6 @@ const MobileSummaryScreen = () => {
                   <tr key={`due-${index}`} className="due-row">
                     <td className="name-cell">{booking.customerName}</td>
                     <td className="phone-cell">{booking.customerPhone}</td>
-                    <td className="room-cell">{booking.roomNumber}</td>
                     <td className="type-cell">💰 Due</td>
                     <td className="amount-cell">₹{booking.dueAmount}</td>
                   </tr>

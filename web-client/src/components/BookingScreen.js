@@ -110,7 +110,16 @@ const BookingScreen = () => {
         })
       );
       
-      setBookings(bookingsWithPayments);
+      // Add customer names to bookings
+      const bookingsWithCustomerNames = bookingsWithPayments.map(booking => {
+        const customer = customersRes.data.find(c => c.phoneNumber === booking.customerPhoneNumber);
+        return {
+          ...booking,
+          customerName: customer ? customer.name : 'Unknown Customer'
+        };
+      });
+      
+      setBookings(bookingsWithCustomerNames);
       setRooms(roomsRes.data);
       setRoomConfigurations(roomConfigsRes.data);
       setCustomers(customersRes.data);
@@ -130,7 +139,16 @@ const BookingScreen = () => {
       
       // Auto-populate costs when room is selected
       if (field === 'roomId' && value) {
-        const roomConfig = getRoomConfiguration(value);
+        const roomConfig = getRoomConfiguration(value, newFormData.numberOfPeople);
+        if (roomConfig) {
+          newFormData.dailyCost = roomConfig.dailyCost || '';
+          newFormData.monthlyCost = roomConfig.monthlyCost || '';
+        }
+      }
+      
+      // Auto-populate costs when number of people changes
+      if (field === 'numberOfPeople' && newFormData.roomId) {
+        const roomConfig = getRoomConfiguration(newFormData.roomId, value);
         if (roomConfig) {
           newFormData.dailyCost = roomConfig.dailyCost || '';
           newFormData.monthlyCost = roomConfig.monthlyCost || '';
@@ -141,14 +159,18 @@ const BookingScreen = () => {
     });
   };
 
-  const getRoomConfiguration = (roomId) => {
-    const room = rooms.find(r => r.id === roomId);
-    if (!room) return null;
+  const getRoomConfiguration = (roomId, personCount = null) => {
+    // Find room configurations that match the room ID
+    let configs = roomConfigurations.filter(config => config.roomId === roomId);
     
-    return roomConfigurations.find(config => 
-      config.roomType === room.roomType && 
-      config.bathroomType === room.bathroomType
-    );
+    // If personCount is specified, try to find exact match
+    if (personCount && configs.length > 0) {
+      const exactMatch = configs.find(config => config.personCount === personCount);
+      if (exactMatch) return exactMatch;
+    }
+    
+    // Return the first available configuration for the room
+    return configs.find(config => config.isAvailable) || configs[0] || null;
   };
 
   const calculateTotalCost = () => {
@@ -174,17 +196,35 @@ const BookingScreen = () => {
       const totalAmount = calculateTotalCost();
       const bookingData = {
         ...formData,
-        totalAmount,
+        // Convert string values to proper types
+        roomId: formData.roomId ? parseInt(formData.roomId) : null,
+        numberOfPeople: formData.numberOfPeople ? parseInt(formData.numberOfPeople) : 1,
+        dailyCost: formData.dailyCost ? parseFloat(formData.dailyCost) : null,
+        monthlyCost: formData.monthlyCost ? parseFloat(formData.monthlyCost) : null,
+        earlyCheckinCost: formData.earlyCheckinCost ? parseFloat(formData.earlyCheckinCost) : null,
+        lateCheckoutCost: formData.lateCheckoutCost ? parseFloat(formData.lateCheckoutCost) : null,
+        totalAmount: totalAmount,
         checkInDate: toLocalDateTimeString(formData.checkInDate),
         checkOutDate: toLocalDateTimeString(formData.checkOutDate),
         createdAt: toLocalDateTimeString(new Date())
       };
 
       if (isEditing && selectedBooking) {
-        await api.put(`/bookings/${selectedBooking.id}`, bookingData);
+        console.log('🔄 UPDATE BOOKING REQUEST');
+        console.log('📋 Booking ID:', selectedBooking.id);
+        console.log('📊 Request Payload:', JSON.stringify(bookingData, null, 2));
+        
+        const response = await api.put(`/bookings/${selectedBooking.id}`, bookingData);
+        
+        console.log('✅ UPDATE SUCCESS - Response:', response.data);
         alert('Booking updated successfully!');
       } else {
-        await api.post('/bookings', bookingData);
+        console.log('🆕 CREATE BOOKING REQUEST');
+        console.log('📊 Request Payload:', JSON.stringify(bookingData, null, 2));
+        
+        const response = await api.post('/bookings', bookingData);
+        
+        console.log('✅ CREATE SUCCESS - Response:', response.data);
         alert('Booking created successfully!');
       }
       
@@ -239,6 +279,7 @@ const BookingScreen = () => {
     if (isNaN(checkOutDate.getTime())) {
       checkOutDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
+
     
     // Find the customer name from the phone number
     const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
@@ -923,7 +964,7 @@ const BookingScreen = () => {
                   <option value="">Select Room</option>
                   {rooms.map(room => (
                     <option key={room.id} value={room.id}>
-                      {room.roomNumber} - {room.roomType} ({room.bathroomType})
+                      {room.roomNumber} - {room.bathroomType}
                     </option>
                   ))}
                 </select>
@@ -945,23 +986,53 @@ const BookingScreen = () => {
               {/* Check-in and Check-out Dates */}
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Check-in Date *</label>
+                  <label className="form-label">Check-in Date & Time *</label>
                   <input
-                    type="date"
-                    value={toLocalDateString(formData.checkInDate)}
-                    onChange={(e) => handleInputChange('checkInDate', new Date(e.target.value))}
+                    type="datetime-local"
+                    value={formData.checkInDate ? 
+                      `${formData.checkInDate.getFullYear()}-${String(formData.checkInDate.getMonth() + 1).padStart(2, '0')}-${String(formData.checkInDate.getDate()).padStart(2, '0')}T${String(formData.checkInDate.getHours()).padStart(2, '0')}:${String(formData.checkInDate.getMinutes()).padStart(2, '0')}` 
+                      : ''}
+                    onChange={(e) => {
+                      const dateValue = e.target.value;
+                      if (dateValue) {
+                        // Create date in local timezone to avoid timezone conversion issues
+                        const [datePart, timePart] = dateValue.split('T');
+                        const [year, month, day] = datePart.split('-').map(Number);
+                        const [hours, minutes] = timePart.split(':').map(Number);
+                        const localDate = new Date(year, month - 1, day, hours, minutes);
+                        handleInputChange('checkInDate', localDate);
+                      } else {
+                        handleInputChange('checkInDate', null);
+                      }
+                    }}
                     className="form-control"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Check-out Date *</label>
+                  <label className="form-label">Check-out Date & Time *</label>
                   <input
-                    type="date"
-                    value={toLocalDateString(formData.checkOutDate)}
-                    onChange={(e) => handleInputChange('checkOutDate', new Date(e.target.value))}
+                    type="datetime-local"
+                    value={formData.checkOutDate ? 
+                      `${formData.checkOutDate.getFullYear()}-${String(formData.checkOutDate.getMonth() + 1).padStart(2, '0')}-${String(formData.checkOutDate.getDate()).padStart(2, '0')}T${String(formData.checkOutDate.getHours()).padStart(2, '0')}:${String(formData.checkOutDate.getMinutes()).padStart(2, '0')}` 
+                      : ''}
+                    onChange={(e) => {
+                      const dateValue = e.target.value;
+                      if (dateValue) {
+                        // Create date in local timezone to avoid timezone conversion issues
+                        const [datePart, timePart] = dateValue.split('T');
+                        const [year, month, day] = datePart.split('-').map(Number);
+                        const [hours, minutes] = timePart.split(':').map(Number);
+                        const localDate = new Date(year, month - 1, day, hours, minutes);
+                        handleInputChange('checkOutDate', localDate);
+                      } else {
+                        handleInputChange('checkOutDate', null);
+                      }
+                    }}
                     className="form-control"
-                    min={toLocalDateString(formData.checkInDate)}
+                    min={formData.checkInDate ? 
+                      `${formData.checkInDate.getFullYear()}-${String(formData.checkInDate.getMonth() + 1).padStart(2, '0')}-${String(formData.checkInDate.getDate()).padStart(2, '0')}T${String(formData.checkInDate.getHours()).padStart(2, '0')}:${String(formData.checkInDate.getMinutes()).padStart(2, '0')}` 
+                      : ''}
                     required
                   />
                 </div>

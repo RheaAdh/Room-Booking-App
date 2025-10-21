@@ -41,8 +41,8 @@ class NotificationService {
 
     try {
       const notificationOptions = {
-        icon: '/logo192.png',
-        badge: '/logo192.png',
+        icon: `${process.env.PUBLIC_URL || ''}/android-chrome-192x192.png`,
+        badge: `${process.env.PUBLIC_URL || ''}/android-chrome-192x192.png`,
         requireInteraction: true,
         ...options
       };
@@ -76,12 +76,12 @@ class NotificationService {
         {
           action: 'view',
           title: 'View Request',
-          icon: '/logo192.png'
+          icon: `${process.env.PUBLIC_URL || ''}/android-chrome-192x192.png`
         },
         {
           action: 'dismiss',
           title: 'Dismiss',
-          icon: '/logo192.png'
+          icon: `${process.env.PUBLIC_URL || ''}/android-chrome-192x192.png`
         }
       ]
     };

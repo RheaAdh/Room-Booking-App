@@ -216,7 +216,7 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
     // Available images: 1, 2, 3, 4, 5, 6, 8, 9, 10, 11 (missing 7)
     const availableImages = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11];
     const imageIndex = (roomId - 1) % availableImages.length;
-    return `/rooms/${availableImages[imageIndex]}.jpg`;
+    return `${process.env.PUBLIC_URL || ''}/rooms/${availableImages[imageIndex]}.jpg`;
   };
 
   // Function to check room availability (same format as PublicRoomView)
@@ -265,9 +265,19 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
   const [previewBooking, setPreviewBooking] = useState(null);
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
 
+  const scrollToSearchSection = useCallback(() => {
+    const searchSection = document.getElementById('search-section');
+    if (searchSection) {
+      searchSection.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
+  }, []);
+
   const handleBookRoom = useCallback((room, config) => {
     if (!searchDates.checkIn || !searchDates.checkOut) {
-      alert('Please select check-in and check-out dates first');
+      scrollToSearchSection();
       return;
     }
 
@@ -588,7 +598,7 @@ Booking ID: ${response.data.id || 'N/A'}
 
               
               {/* Search Section */}
-              <div className="search-section">
+              <div id="search-section" className="search-section">
                 <div className="search-filters">
                   <div className="filter-group">
                     <label className="filter-label">Check-in</label>
@@ -711,8 +721,13 @@ Booking ID: ${response.data.id || 'N/A'}
                                     return (
                                       <button 
                                         className="booking-btn primary"
-                                        onClick={() => handleBookRoom(room, config)}
-                                        disabled={!searchDates.checkIn || !searchDates.checkOut}
+                                        onClick={() => {
+                                          if (!searchDates.checkIn || !searchDates.checkOut) {
+                                            scrollToSearchSection();
+                                          } else {
+                                            handleBookRoom(room, config);
+                                          }
+                                        }}
                                       >
                                         {!searchDates.checkIn || !searchDates.checkOut 
                                           ? 'Select Dates First' 

@@ -155,6 +155,14 @@ const CaretakerBookingScreen = () => {
       setRoomConfigurations(roomConfigsRes.data);
       setCustomers(customersRes.data);
       
+      // Log the fetched bookings to see if they have the updated dates
+      console.log('📅 Fetched bookings with dates:', bookingsWithPayments.map(b => ({
+        id: b.id,
+        checkInDate: b.checkInDate,
+        checkOutDate: b.checkOutDate,
+        updatedAt: b.updatedAt
+      })));
+      
       // Debug: Log booking data to see if payments are included
       console.log('Bookings with payments data:', bookingsWithPayments);
       if (bookingsWithPayments.length > 0) {
@@ -202,11 +210,24 @@ const CaretakerBookingScreen = () => {
   };
 
   const handleInputChange = (field, value) => {
+    console.log(`🔄 handleInputChange called: ${field} = ${value}`);
     setFormData(prev => {
       const newFormData = {
         ...prev,
         [field]: value
       };
+      
+      // Log date changes specifically
+      if (field === 'checkInDate' || field === 'checkOutDate') {
+        console.log(`📅 Date changed: ${field}`, {
+          oldValue: prev[field],
+          newValue: value,
+          newFormDataDates: {
+            checkInDate: newFormData.checkInDate,
+            checkOutDate: newFormData.checkOutDate
+          }
+        });
+      }
       
       // Auto-populate costs when room or number of people changes
       if (field === 'roomId' || field === 'numberOfPeople') {
@@ -278,6 +299,12 @@ const CaretakerBookingScreen = () => {
   const handleCreateBooking = async (e) => {
     e.preventDefault();
     
+    console.log('🚀 Form submission started');
+    console.log('📅 Current form dates before validation:', {
+      checkInDate: formData.checkInDate,
+      checkOutDate: formData.checkOutDate
+    });
+    
     if (!validateBookingForm(formData)) {
       return;
     }
@@ -297,18 +324,53 @@ const CaretakerBookingScreen = () => {
       };
       
       if (isEditing && selectedBooking) {
-        await api.put(`/bookings/${selectedBooking.id}`, bookingPayload);
+        console.log('🔄 CARETAKER UPDATE BOOKING REQUEST');
+        console.log('📋 Booking ID:', selectedBooking.id);
+        console.log('📅 Form Data Dates:', {
+          checkInDate: formData.checkInDate,
+          checkOutDate: formData.checkOutDate,
+          checkInDateType: typeof formData.checkInDate,
+          checkOutDateType: typeof formData.checkOutDate
+        });
+        console.log('📅 Processed Dates:', {
+          checkInDate: toLocalDateTimeString(formData.checkInDate),
+          checkOutDate: toLocalDateTimeString(formData.checkOutDate)
+        });
+        console.log('📊 Request Payload:', JSON.stringify(bookingPayload, null, 2));
+        
+        const response = await api.put(`/bookings/${selectedBooking.id}`, bookingPayload);
+        
+        console.log('✅ CARETAKER UPDATE SUCCESS - Response:', response.data);
+        console.log('📅 Response dates:', {
+          checkInDate: response.data.checkInDate,
+          checkOutDate: response.data.checkOutDate,
+          updatedAt: response.data.updatedAt
+        });
         alert('✅ Booking updated successfully!');
+        
+        // For updates, just close the modal and refresh data
+        setShowBookingModal(false);
+        setIsEditing(false);
+        setSelectedBooking(null);
+        console.log('🔄 Refreshing data after update...');
+        await fetchData();
+        console.log('✅ Data refresh completed');
       } else {
-        await api.post('/bookings', bookingPayload);
+        console.log('🆕 CARETAKER CREATE BOOKING REQUEST');
+        console.log('📊 Request Payload:', JSON.stringify(bookingPayload, null, 2));
+        
+        const response = await api.post('/bookings', bookingPayload);
+        
+        console.log('✅ CARETAKER CREATE SUCCESS - Response:', response.data);
         alert(`✅ Booking created successfully! Total Amount: ₹${totalCost.toFixed(2)}`);
+        
+        // For creates, reset the form and close the modal
+        setShowBookingModal(false);
+        setIsEditing(false);
+        setSelectedBooking(null);
+        resetForm();
+        fetchData();
       }
-      
-      setShowBookingModal(false);
-      setIsEditing(false);
-      setSelectedBooking(null);
-      resetForm();
-      fetchData();
     } catch (error) {
       console.error('Error creating/updating booking:', error);
       if (error.response?.status === 409) {
@@ -324,32 +386,43 @@ const CaretakerBookingScreen = () => {
   };
 
   const handleEditBooking = (booking) => {
-    console.log('Editing booking:', booking);
-    console.log('Original checkInDate:', booking.checkInDate, typeof booking.checkInDate);
-    console.log('Original checkOutDate:', booking.checkOutDate, typeof booking.checkOutDate);
+    console.log('🔄 handleEditBooking called with booking:', booking);
+    console.log('📅 Booking dates from state:', {
+      checkInDate: booking.checkInDate,
+      checkOutDate: booking.checkOutDate,
+      checkInDateType: typeof booking.checkInDate,
+      checkOutDateType: typeof booking.checkOutDate
+    });
     
     // Parse dates properly - handle both string and Date formats
     let checkInDate, checkOutDate;
     
     // Parse check-in date
     if (typeof booking.checkInDate === 'string') {
-      // Try different date parsing methods
-      checkInDate = fromLocalDateTimeString(booking.checkInDate) || 
-                   new Date(booking.checkInDate) || 
-                   new Date(booking.checkInDate.replace('T', ' ')) ||
-                   new Date();
+      console.log('📅 Parsing checkInDate string:', booking.checkInDate);
+      checkInDate = fromLocalDateTimeString(booking.checkInDate);
+      console.log('📅 Parsed checkInDate:', checkInDate);
+      if (!checkInDate || isNaN(checkInDate.getTime())) {
+        console.log('📅 CheckInDate parsing failed, using fallback');
+        checkInDate = new Date(booking.checkInDate);
+      }
     } else {
-      checkInDate = new Date(booking.checkInDate) || new Date();
+      console.log('📅 CheckInDate is not string, creating new Date');
+      checkInDate = new Date(booking.checkInDate);
     }
     
     // Parse check-out date
     if (typeof booking.checkOutDate === 'string') {
-      checkOutDate = fromLocalDateTimeString(booking.checkOutDate) || 
-                    new Date(booking.checkOutDate) || 
-                    new Date(booking.checkOutDate.replace('T', ' ')) ||
-                    new Date(Date.now() + 24 * 60 * 60 * 1000);
+      console.log('📅 Parsing checkOutDate string:', booking.checkOutDate);
+      checkOutDate = fromLocalDateTimeString(booking.checkOutDate);
+      console.log('📅 Parsed checkOutDate:', checkOutDate);
+      if (!checkOutDate || isNaN(checkOutDate.getTime())) {
+        console.log('📅 CheckOutDate parsing failed, using fallback');
+        checkOutDate = new Date(booking.checkOutDate);
+      }
     } else {
-      checkOutDate = new Date(booking.checkOutDate) || new Date(Date.now() + 24 * 60 * 60 * 1000);
+      console.log('📅 CheckOutDate is not string, creating new Date');
+      checkOutDate = new Date(booking.checkOutDate);
     }
     
     // Ensure dates are valid
@@ -370,6 +443,13 @@ const CaretakerBookingScreen = () => {
     // Find the customer name from the phone number
     const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
     const customerName = customer ? customer.name : '';
+    
+    console.log('📅 Setting form data with dates:', {
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
+      checkInDateString: checkInDate.toISOString(),
+      checkOutDateString: checkOutDate.toISOString()
+    });
     
     setFormData({
       customerPhoneNumber: booking.customerPhoneNumber || '',
@@ -589,6 +669,11 @@ const CaretakerBookingScreen = () => {
     console.log('Editing payment from dropdown:', payment);
     
     setSelectedBooking(bookings.find(b => b.payments?.some(p => p.id === payment.id)));
+    
+    // Ensure booking modal is closed when editing payment
+    setShowBookingModal(false);
+    setIsEditing(false);
+    
     setPaymentData({
       amount: payment.amount?.toString() || '',
       mode: payment.paymentMethod || '',
@@ -709,6 +794,10 @@ const CaretakerBookingScreen = () => {
     if (booking) {
       setSelectedBooking(booking);
     }
+    
+    // Ensure booking modal is closed when editing payment
+    setShowBookingModal(false);
+    setIsEditing(false);
     
     setIsEditingPayment(true);
     setEditingPaymentId(payment.id);
@@ -944,10 +1033,6 @@ const CaretakerBookingScreen = () => {
                 // Find customer data
                 const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
                 
-                // Debug: Log booking and customer data
-                console.log('Rendering booking:', booking.id, 'customerPhoneNumber:', booking.customerPhoneNumber);
-                console.log('Found customer:', customer);
-                console.log('Total customers loaded:', customers.length);
                 
                 return (
                 <div key={booking.id} className="booking-card compact-booking-card">
@@ -957,7 +1042,6 @@ const CaretakerBookingScreen = () => {
                         <span className="compact-customer-name">{customer?.name || 'Unknown Customer'}</span>
                         <span className="compact-phone">📞 {booking.customerPhoneNumber}</span>
                         <span className="compact-room">🏠 Room {rooms.find(r => r.id === booking.roomId)?.roomNumber || booking.roomId}</span>
-                        <span className="compact-due">💰 Due: ₹{calculateDueAmount(booking)}</span>
                       </div>
                       <div className="compact-booking-status">
                         <span 
@@ -1156,8 +1240,7 @@ const CaretakerBookingScreen = () => {
                     (() => {
                       const configs = roomConfigurations.filter(config => config.roomId === parseInt(formData.roomId));
                       console.log('Room ID:', formData.roomId, 'Configs:', configs);
-                      return configs
-                        .map(config => config.personCount)
+                      return [...new Set(configs.map(config => config.personCount))]
                         .sort((a, b) => a - b)
                         .map(num => (
                           <option key={num} value={num}>
@@ -1179,10 +1262,44 @@ const CaretakerBookingScreen = () => {
                 <input
                   type="date"
                   className="form-control"
-                  value={toLocalDateString(formData.checkInDate)}
+                  value={(() => {
+                    const value = toLocalDateString(formData.checkInDate);
+                    console.log('📅 Check-in input value being set to:', value, 'from formData.checkInDate:', formData.checkInDate);
+                    return value;
+                  })()}
                   onChange={(e) => {
-                    const selectedDate = e.target.value ? new Date(e.target.value) : new Date();
-                    handleInputChange('checkInDate', selectedDate);
+                    console.log('🎯 CHECK-IN DATE INPUT CHANGED!');
+                    console.log('📅 Input value:', e.target.value);
+                    console.log('📅 Event type:', e.type);
+                    console.log('📅 Current formData.checkInDate:', formData.checkInDate);
+                    
+                    if (e.target.value) {
+                      // Preserve the original time, only update the date part
+                      const originalDate = formData.checkInDate;
+                      console.log('📅 Original date to preserve time from:', originalDate);
+                      console.log('📅 Original date hours/minutes:', originalDate ? `${originalDate.getHours()}:${originalDate.getMinutes()}` : 'null');
+                      
+                      const [year, month, day] = e.target.value.split('-').map(Number);
+                      console.log('📅 Parsed date parts:', { year, month, day });
+                      console.log('📅 Current year:', new Date().getFullYear());
+                      console.log('📅 Selected year vs current year:', year, 'vs', new Date().getFullYear());
+                      
+                      const newDate = new Date(
+                        year, 
+                        month - 1, 
+                        day, 
+                        originalDate ? originalDate.getHours() : 0, 
+                        originalDate ? originalDate.getMinutes() : 0, 
+                        originalDate ? originalDate.getSeconds() : 0
+                      );
+                      console.log('📅 New date created:', newDate);
+                      console.log('📅 New date string:', newDate.toISOString());
+                      console.log('📅 Calling handleInputChange with new date...');
+                      handleInputChange('checkInDate', newDate);
+                    } else {
+                      console.log('📅 Empty value, setting to current date');
+                      handleInputChange('checkInDate', new Date());
+                    }
                   }}
                   required
                 />
@@ -1193,10 +1310,42 @@ const CaretakerBookingScreen = () => {
                 <input
                   type="date"
                   className="form-control"
-                  value={toLocalDateString(formData.checkOutDate)}
+                  value={(() => {
+                    const value = toLocalDateString(formData.checkOutDate);
+                    console.log('📅 Check-out input value being set to:', value, 'from formData.checkOutDate:', formData.checkOutDate);
+                    return value;
+                  })()}
                   onChange={(e) => {
-                    const selectedDate = e.target.value ? new Date(e.target.value) : new Date(Date.now() + 24 * 60 * 60 * 1000);
-                    handleInputChange('checkOutDate', selectedDate);
+                    console.log('🎯 CHECK-OUT DATE INPUT CHANGED!');
+                    console.log('📅 Input value:', e.target.value);
+                    console.log('📅 Event type:', e.type);
+                    console.log('📅 Current formData.checkOutDate:', formData.checkOutDate);
+                    
+                    if (e.target.value) {
+                      // Preserve the original time, only update the date part
+                      const originalDate = formData.checkOutDate;
+                      console.log('📅 Original date to preserve time from:', originalDate);
+                      console.log('📅 Original date hours/minutes:', originalDate ? `${originalDate.getHours()}:${originalDate.getMinutes()}` : 'null');
+                      
+                      const [year, month, day] = e.target.value.split('-').map(Number);
+                      console.log('📅 Parsed date parts:', { year, month, day });
+                      
+                      const newDate = new Date(
+                        year, 
+                        month - 1, 
+                        day, 
+                        originalDate ? originalDate.getHours() : 0, 
+                        originalDate ? originalDate.getMinutes() : 0, 
+                        originalDate ? originalDate.getSeconds() : 0
+                      );
+                      console.log('📅 New date created:', newDate);
+                      console.log('📅 New date string:', newDate.toISOString());
+                      console.log('📅 Calling handleInputChange with new date...');
+                      handleInputChange('checkOutDate', newDate);
+                    } else {
+                      console.log('📅 Empty value, setting to tomorrow');
+                      handleInputChange('checkOutDate', new Date(Date.now() + 24 * 60 * 60 * 1000));
+                    }
                   }}
                   required
                 />
@@ -1819,7 +1968,7 @@ const CaretakerBookingScreen = () => {
                 
                 {/* Multiple ID proofs */}
                 {newCustomerFormData.idProofUrls && newCustomerFormData.idProofUrls.map((url, index) => (
-                  <div key={index} className="id-proof-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '8px' }}>
+                  <div key={`${url}-${index}`} className="id-proof-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '8px' }}>
                     <div style={{ flex: '0 0 auto' }}>
                       <img 
                         src={url} 

@@ -22,6 +22,19 @@
   justify-content: space-between;
   align-items: center;
   height: 70px;
+  gap: 20px;
+}
+
+/* Mobile navigation - reduced height */
+@media (max-width: 768px) {
+  .nav-container {
+    height: 60px;
+    padding: 0 16px;
+  }
+  
+  .nav-brand h2 {
+    font-size: 1.4rem;
+  }
 }
 
 .nav-brand h2 {
@@ -78,15 +91,15 @@
 .nav-social-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 20px;
   background: rgba(102, 126, 234, 0.1);
   color: #667eea;
   text-decoration: none;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .nav-social-link:hover {
@@ -107,6 +120,16 @@
 .nav-social-link.maps:hover {
   background: #ea4335;
   color: white;
+}
+
+.social-handle {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.mobile-brand-social {
+  display: none; /* Hide on desktop */
 }
 
 .customer-info {
@@ -270,6 +293,13 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+.btn-book-now {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
 .btn-secondary {
   background: transparent;
   color: #667eea;
@@ -284,36 +314,105 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .nav-container {
-    flex-direction: column;
-    height: auto;
-    padding: 16px 20px;
-    gap: 16px;
-  }
-  
-  .nav-tabs {
-    order: -1;
-    margin: 0;
-    width: 100%;
-    justify-content: center;
+    flex-direction: row;
+    height: 60px;
+    padding: 0 16px;
+    gap: 8px;
   }
   
   .nav-brand h2 {
-    font-size: 1.5rem;
+    display: none; /* Hide brand text on mobile */
   }
   
-  .customer-info {
-    flex-direction: column;
-    gap: 12px;
+  .nav-tabs {
+    display: none; /* Hide tabs on mobile to save space */
   }
   
   .nav-social {
-    margin-right: 0;
-    margin-bottom: 12px;
+    display: none; /* Hide social links from main nav on mobile */
+  }
+  
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .nav-brand .nav-social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    padding: 0;
+    gap: 0;
+  }
+  
+  .nav-brand .nav-social-link svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .mobile-brand-social {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .social-handle {
+    display: none;
+  }
+  
+  .nav-social-link {
+    padding: 6px;
+    gap: 0;
+  }
+  
+  .nav-actions {
+    margin-left: auto;
+  }
+  
+  .mobile-menu-btn {
+    display: block;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .mobile-menu-btn:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .nav-actions {
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .nav-social {
+    display: none; /* Hide social icons on mobile to save space */
+  }
+  
+  .customer-info {
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
   }
   
   .footer-content {
     grid-template-columns: 1fr;
-    gap: 30px;
+    gap: 24px;
   }
   
   .footer-section {
@@ -325,19 +424,102 @@
   }
 }
 
+/* Mobile Menu Button - Hidden on desktop */
+.mobile-menu-btn {
+  display: none;
+}
+
+/* Mobile Menu Dropdown */
+.mobile-menu {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 60px;
+  z-index: 999;
+}
+
+.mobile-menu-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.mobile-menu-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: transparent;
+  border: none;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-item:hover {
+  background-color: #f8f9fa;
+}
+
+.mobile-menu-item.active {
+  background-color: #667eea;
+  color: white;
+}
+
+.mobile-menu-divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 16px 0;
+}
+
+.mobile-menu-social {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-social-link {
+  display: block;
+  padding: 8px 16px;
+  color: #666;
+  text-decoration: none;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-social-link:hover {
+  background-color: #f8f9fa;
+  color: #333;
+}
+
 @media (max-width: 480px) {
   .nav-container {
-    padding: 12px 16px;
+    padding: 0 12px;
+    height: 55px;
+  }
+  
+  .nav-brand h2 {
+    font-size: 1.2rem;
   }
   
   .nav-actions {
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    gap: 6px;
   }
   
   .customer-info {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    gap: 6px;
+    align-items: center;
+  }
+  
+  .welcome-text {
+    font-size: 0.9rem;
   }
   
   .customer-info .btn {

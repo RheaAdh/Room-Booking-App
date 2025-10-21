@@ -13,27 +13,18 @@
 
 /* Hero Section */
 .info-hero {
-  background: linear-gradient(135deg, #003580 0%, #0047ab 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 60px 40px;
-  border-radius: 16px;
+  padding: 48px 32px;
+  border-radius: 20px;
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
 }
 
-.info-hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('../../public/logo.png') no-repeat right center;
-  background-size: 200px;
-  opacity: 0.1;
-}
+/* Removed problematic background image that was causing build errors */
 
 .hero-content {
   position: relative;
@@ -41,17 +32,18 @@
 }
 
 .info-hero h1 {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  margin-bottom: 16px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 12px;
+  line-height: 1.2;
 }
 
 .hero-subtitle {
-  font-size: 1.3rem;
-  opacity: 0.9;
-  margin-bottom: 24px;
-  font-weight: 300;
+  font-size: 1.2rem;
+  opacity: 0.95;
+  margin-bottom: 20px;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
 .hero-rating {
@@ -579,8 +571,13 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .info-hero {
+    padding: 32px 20px;
+    margin-bottom: 24px;
+  }
+  
   .info-hero h1 {
-    font-size: 2.2rem;
+    font-size: 2rem;
   }
   
   .hero-subtitle {

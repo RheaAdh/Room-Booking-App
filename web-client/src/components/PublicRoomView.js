@@ -224,7 +224,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
     // Available images: 1, 2, 3, 4, 5, 6, 8, 9, 10, 11 (missing 7)
     const availableImages = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11];
     const imageIndex = (roomId - 1) % availableImages.length;
-    return `/rooms/${availableImages[imageIndex]}.jpg`;
+    return `${process.env.PUBLIC_URL || ''}/rooms/${availableImages[imageIndex]}.jpg`;
   };
 
   // Calculate pricing based on dates and configuration
@@ -249,6 +249,16 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
       rateType: isMonthly ? 'month' : 'day'
     };
   };
+
+  const scrollToSearchSection = useCallback(() => {
+    const searchSection = document.getElementById('search-section');
+    if (searchSection) {
+      searchSection.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
+  }, []);
 
   const filterRooms = (roomsToFilter) => {
     // Ensure roomsToFilter is an array before calling filter
@@ -289,11 +299,11 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
 
 
       {/* Airbnb-style Search Section */}
-      <div className="airbnb-search-section">
+      <div id="search-section" className="airbnb-search-section">
         <div className="container">
           <div className="search-header">
-            <h2>Find your perfect stay</h2>
-            <p>Search and filter rooms based on your preferences</p>
+            <h2>Professionals Pride</h2>
+            <p>Find your perfect stay</p>
           </div>
           
           <div className="search-filters">
@@ -465,11 +475,16 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
                                   return (
                                     <button 
                                       className="btn btn-primary btn-sm"
-                                      onClick={() => handleBookRoom(room, config)}
-                                      disabled={!checkInDate || !checkOutDate}
+                                      onClick={() => {
+                                        if (!checkInDate || !checkOutDate) {
+                                          scrollToSearchSection();
+                                        } else {
+                                          handleBookRoom(room, config);
+                                        }
+                                      }}
                                     >
                                       {!checkInDate || !checkOutDate 
-                                        ? 'Select Dates First' 
+                                        ? 'Choose Dates' 
                                         : pricing 
                                           ? `Book Now - ₹${pricing.totalCost} (${pricing.days} ${pricing.rateType}${pricing.days > 1 ? 's' : ''})`
                                           : 'Book Now'

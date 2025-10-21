@@ -972,8 +972,8 @@
 
 .rooms-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
 }
 
 .room-card {
@@ -1212,6 +1212,23 @@
     height: 60px;
   }
   
+  .rooms-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  
+  .room-card {
+    border-radius: 6px;
+  }
+  
+  .room-image {
+    height: 160px;
+  }
+  
+  .room-content {
+    padding: 16px;
+  }
+  
   .brand-name {
     font-size: 20px;
   }
@@ -1291,6 +1308,23 @@
   .header-container {
     height: 55px;
     padding: 0 12px;
+  }
+  
+  .rooms-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .room-card {
+    border-radius: 4px;
+  }
+  
+  .room-image {
+    height: 140px;
+  }
+  
+  .room-content {
+    padding: 12px;
   }
   
   .brand-name {

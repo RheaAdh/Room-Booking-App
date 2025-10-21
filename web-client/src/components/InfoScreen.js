@@ -80,23 +80,15 @@ const InfoScreen = () => {
           <div className="facilities-grid">
             <div className="facility-item">
               <span className="facility-icon">📶</span>
-              <span className="facility-name">Free WiFi (12 Mbps)</span>
+              <span className="facility-name">Free WiFi</span>
             </div>
             <div className="facility-item">
-              <span className="facility-icon">👨‍👩‍👧‍👦</span>
-              <span className="facility-name">Family Rooms</span>
+              <span className="facility-icon">👕</span>
+              <span className="facility-name">Washing Machine</span>
             </div>
             <div className="facility-item">
               <span className="facility-icon">🚗</span>
               <span className="facility-name">Private Parking (₹50/day)</span>
-            </div>
-            <div className="facility-item">
-              <span className="facility-icon">🚭</span>
-              <span className="facility-name">Non-smoking Rooms</span>
-            </div>
-            <div className="facility-item">
-              <span className="facility-icon">🕐</span>
-              <span className="facility-name">24-hour Front Desk</span>
             </div>
             <div className="facility-item">
               <span className="facility-icon">🍳</span>
@@ -107,24 +99,8 @@ const InfoScreen = () => {
               <span className="facility-name">Terrace</span>
             </div>
             <div className="facility-item">
-              <span className="facility-icon">🔐</span>
-              <span className="facility-name">Lockers</span>
-            </div>
-            <div className="facility-item">
               <span className="facility-icon">🛏️</span>
               <span className="facility-name">Linen Included</span>
-            </div>
-            <div className="facility-item">
-              <span className="facility-icon">🚪</span>
-              <span className="facility-name">Private Entrance</span>
-            </div>
-            <div className="facility-item">
-              <span className="facility-icon">🔌</span>
-              <span className="facility-name">Socket Near Bed</span>
-            </div>
-            <div className="facility-item">
-              <span className="facility-icon">🔇</span>
-              <span className="facility-name">Soundproofing</span>
             </div>
           </div>
         </div>

@@ -192,6 +192,9 @@ public class BookingController {
             }
             
             // Update fields
+            if (updatedBooking.getRoomId() != null) {
+                booking.setRoomId(updatedBooking.getRoomId());
+            }
             if (updatedBooking.getCheckInDate() != null) {
                 booking.setCheckInDate(updatedBooking.getCheckInDate());
             }
