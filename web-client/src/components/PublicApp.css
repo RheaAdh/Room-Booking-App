@@ -311,6 +311,30 @@
   color: white;
 }
 
+.btn-login {
+  background: #f8f9fa;
+  color: #333;
+  border: 1px solid #dee2e6;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+}
+
+.btn-login:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .nav-container {
@@ -372,6 +396,11 @@
   .nav-social-link {
     padding: 6px;
     gap: 0;
+  }
+  
+  .btn-login {
+    padding: 6px 8px;
+    margin-right: 4px;
   }
   
   .nav-actions {

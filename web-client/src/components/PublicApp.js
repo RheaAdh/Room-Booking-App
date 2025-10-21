@@ -177,6 +177,12 @@ const PublicApp = () => {
             ) : (
               <div className="auth-actions">
                 <button 
+                  className="btn btn-secondary btn-login"
+                  onClick={handleShowAuth}
+                >
+                  Login
+                </button>
+                <button 
                   className="btn btn-primary btn-book-now"
                   onClick={() => setCurrentView(currentView === 'info' ? 'rooms' : 'info')}
                 >

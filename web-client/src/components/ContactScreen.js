@@ -301,12 +301,43 @@ const ContactScreen = () => {
 
   const downloadInvoicePdf = async (bookingId) => {
     try {
-      // Open the invoice URL directly in a new tab
-      const invoiceUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:8082'}/api/v1/invoices/${bookingId}/download`;
-      window.open(invoiceUrl, '_blank');
+      console.log('Downloading invoice for booking:', bookingId);
+      
+      // Get the HTML preview content and download it as HTML
+      const response = await api.get(`/invoices/${bookingId}/preview`);
+      
+      console.log('Invoice preview response:', {
+        status: response.status,
+        statusText: response.statusText,
+        dataType: typeof response.data,
+        dataLength: response.data?.length || 'unknown'
+      });
+      
+      if (response.data) {
+        // Create a blob with the HTML content
+        const blob = new Blob([response.data], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `invoice-${bookingId}.html`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        console.log('Invoice download completed successfully');
+      } else {
+        console.error('Empty preview response');
+        alert('Invoice content is empty. Please try again.');
+      }
     } catch (error) {
       console.error('Error downloading invoice:', error);
-      alert('Error downloading invoice. Please try again.');
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      alert(`Error downloading invoice: ${error.message}. Please try again.`);
     }
   };
 
@@ -394,19 +425,22 @@ const ContactScreen = () => {
               )}
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Additional Phone</th>
-                    <th>ID Proof Status</th>
-                    <th>Remarks</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <>
+              {/* Desktop Table View */}
+              <div className="desktop-view">
+                <div className="table-responsive">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Additional Phone</th>
+                        <th>ID Proof Status</th>
+                        <th>Remarks</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                   {filteredCustomers.map(customer => {
                     // Check if customer has any ID proof (single or multiple)
                     const hasIdProof = customer.photoIdProofUrl || 
@@ -608,6 +642,128 @@ const ContactScreen = () => {
                 </tbody>
               </table>
             </div>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="mobile-view">
+                <div className="customer-cards">
+                  {filteredCustomers.map(customer => {
+                    // Check if customer has any ID proof (single or multiple)
+                    const hasIdProof = customer.photoIdProofUrl || 
+                                      (customer.idProofUrls && customer.idProofUrls.length > 0);
+                    
+                    return (
+                      <div key={customer.phoneNumber} className="customer-card-mobile">
+                        <div className="customer-card-header">
+                          <div className="customer-name-section">
+                            <button
+                              onClick={() => toggleCustomerExpansion(customer.phoneNumber)}
+                              className="expand-btn"
+                              title="Click to view booking history"
+                            >
+                              {expandedCustomers.has(customer.phoneNumber) ? '▼' : '▶'}
+                            </button>
+                            <h3 className="customer-name" onClick={() => toggleCustomerExpansion(customer.phoneNumber)}>
+                              {customer.name}
+                            </h3>
+                          </div>
+                          <div className={`id-proof-status ${hasIdProof ? 'verified' : 'required'}`}>
+                            {hasIdProof ? '✅ Verified' : '⚠️ Required'}
+                          </div>
+                        </div>
+                        
+                        <div className="customer-details">
+                          <div className="detail-row">
+                            <span className="detail-label">Phone:</span>
+                            <span className="detail-value">{customer.phoneNumber}</span>
+                          </div>
+                          {customer.additionalPhoneNumber && (
+                            <div className="detail-row">
+                              <span className="detail-label">Additional Phone:</span>
+                              <span className="detail-value">{customer.additionalPhoneNumber}</span>
+                            </div>
+                          )}
+                          {customer.remarks && (
+                            <div className="detail-row">
+                              <span className="detail-label">Remarks:</span>
+                              <span className="detail-value">{customer.remarks}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="customer-actions-mobile">
+                          <button 
+                            className="action-btn-mobile primary"
+                            onClick={() => handleEditCustomer(customer)}
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            className="action-btn-mobile secondary"
+                            onClick={() => toggleCustomerExpansion(customer.phoneNumber)}
+                          >
+                            Bookings
+                          </button>
+                          {hasIdProof && (
+                            <button 
+                              className="action-btn-mobile tertiary"
+                              onClick={() => {
+                                if (customer.photoIdProofUrl) {
+                                  handleViewImage(customer.photoIdProofUrl, `${customer.name} - Photo ID Proof`);
+                                } else if (customer.idProofUrls && customer.idProofUrls.length > 0) {
+                                  handleViewImage(customer.idProofUrls[0], `${customer.name} - ID Proof`);
+                                }
+                              }}
+                            >
+                              View ID
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Expanded Booking History */}
+                        {expandedCustomers.has(customer.phoneNumber) && (
+                          <div className="booking-history-mobile">
+                            {loadingBookings[customer.phoneNumber] ? (
+                              <div className="loading-bookings">Loading bookings...</div>
+                            ) : customerBookings[customer.phoneNumber] && customerBookings[customer.phoneNumber].length > 0 ? (
+                              <div className="bookings-list">
+                                <h4>Booking History</h4>
+                                {customerBookings[customer.phoneNumber].map(booking => (
+                                  <div key={booking.id} className="booking-item-mobile">
+                                    <div className="booking-info">
+                                      <div className="booking-dates">
+                                        {new Date(booking.checkInDate).toLocaleDateString()} - {new Date(booking.checkOutDate).toLocaleDateString()}
+                                      </div>
+                                      <div className="booking-status">
+                                        Status: <span className={`status-${booking.bookingStatus.toLowerCase()}`}>{booking.bookingStatus}</span>
+                                      </div>
+                                      <div className="booking-amount">
+                                        Amount: ₹{booking.totalAmount}
+                                      </div>
+                                    </div>
+                                    <div className="booking-actions">
+                                      <button 
+                                        className="download-invoice-btn-mobile"
+                                        onClick={() => downloadInvoicePdf(booking.id)}
+                                        title="Download Invoice"
+                                      >
+                                        📄
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="no-bookings">No bookings found for this customer.</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>

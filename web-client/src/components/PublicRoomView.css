@@ -1031,9 +1031,9 @@
 }
 
 .btn-sm {
-  padding: 3px 6px;
-  font-size: 0.7rem;
-  min-width: 60px;
+  padding: 2px 4px;
+  font-size: 0.6rem;
+  min-width: 50px;
 }
 
 .room-number-badge {

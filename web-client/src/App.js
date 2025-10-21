@@ -8,7 +8,6 @@ import LoginScreen from './components/LoginScreen';
 import StatsScreen from './components/StatsScreen';
 import SummaryScreen from './components/SummaryScreen';
 import TransactionsScreen from './components/TransactionsScreen';
-import BookingScreen from './components/BookingScreen';
 import CaretakerBookingScreen from './components/CaretakerBookingScreen';
 import BookingGrid from './components/BookingGrid';
 import RoomScreen from './components/RoomScreen';
@@ -47,7 +46,7 @@ const OwnerRoutes = () => {
         <Route path="/stats" element={<StatsScreen />} />
         <Route path="/summary" element={<SummaryScreen />} />
         <Route path="/transactions" element={<TransactionsScreen />} />
-        <Route path="/bookings" element={<BookingScreen />} />
+        <Route path="/bookings" element={<CaretakerBookingScreen />} />
         <Route path="/booking-grid" element={<BookingGrid />} />
         <Route path="/rooms" element={<RoomScreen />} />
         <Route path="/expenses" element={<ExpenseScreen />} />

@@ -111,6 +111,29 @@ const Layout = ({ children }) => {
         </div>
       </div>
 
+      {/* Bottom Navigation for Mobile */}
+      <nav className="bottom-nav">
+        {menuItems.slice(0, 4).map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`bottom-nav-item ${location.pathname === item.path ? 'active' : ''}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <span className="bottom-nav-icon">{item.icon}</span>
+            <span className="bottom-nav-label">{item.label}</span>
+          </Link>
+        ))}
+        <button 
+          className="bottom-nav-item logout-nav-btn" 
+          onClick={logout} 
+          title="Logout"
+        >
+          <span className="bottom-nav-icon">🚪</span>
+          <span className="bottom-nav-label">Logout</span>
+        </button>
+      </nav>
+
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />

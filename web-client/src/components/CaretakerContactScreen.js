@@ -358,12 +358,43 @@ const CaretakerContactScreen = () => {
 
   const downloadInvoicePdf = async (bookingId) => {
     try {
-      // Open the invoice URL directly in a new tab
-      const invoiceUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:8082'}/api/v1/invoices/${bookingId}/download`;
-      window.open(invoiceUrl, '_blank');
+      console.log('Downloading invoice for booking:', bookingId);
+      
+      // Get the HTML preview content and download it as HTML
+      const response = await api.get(`/invoices/${bookingId}/preview`);
+      
+      console.log('Invoice preview response:', {
+        status: response.status,
+        statusText: response.statusText,
+        dataType: typeof response.data,
+        dataLength: response.data?.length || 'unknown'
+      });
+      
+      if (response.data) {
+        // Create a blob with the HTML content
+        const blob = new Blob([response.data], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `invoice-${bookingId}.html`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        console.log('Invoice download completed successfully');
+      } else {
+        console.error('Empty preview response');
+        alert('Invoice content is empty. Please try again.');
+      }
     } catch (error) {
       console.error('Error downloading invoice:', error);
-      alert('❌ Error downloading invoice. Please try again.');
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      alert(`Error downloading invoice: ${error.message}. Please try again.`);
     }
   };
 

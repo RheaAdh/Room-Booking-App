@@ -506,6 +506,23 @@
   box-shadow: 0 0 0 3px rgba(0, 53, 128, 0.1);
 }
 
+/* Prevent unwanted scrolling on date input focus */
+.filter-input[type="date"]:focus {
+  scroll-margin-top: 0;
+  scroll-behavior: auto;
+}
+
+/* Prevent automatic scrolling when date picker opens */
+.search-section {
+  scroll-margin-top: 0;
+  scroll-padding-top: 0;
+}
+
+/* Ensure date inputs don't cause page scroll */
+.filter-input[type="date"] {
+  scroll-margin: 0;
+}
+
 .filter-actions {
   display: flex;
   gap: 12px;

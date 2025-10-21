@@ -319,8 +319,390 @@
   color: #6c757d;
 }
 
+/* Desktop and Mobile View Controls */
+.desktop-view {
+  display: block;
+}
+
+.mobile-view {
+  display: none;
+}
+
+/* Large Desktop Styles */
+@media (min-width: 1200px) {
+  .customer-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  
+  .customer-card-mobile {
+    padding: 24px;
+  }
+  
+  .customer-name {
+    font-size: 1.3rem;
+  }
+  
+  .detail-label {
+    min-width: 160px;
+  }
+}
+
+/* Mobile Card Styles */
+.customer-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  width: 100%;
+}
+
+.customer-card-mobile {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.customer-card-mobile:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.customer-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.customer-name-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #007bff;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.customer-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.customer-name:hover {
+  color: #007bff;
+}
+
+.id-proof-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.id-proof-status.verified {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.id-proof-status.required {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.customer-details {
+  margin-bottom: 16px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #6c757d;
+  font-size: 0.9rem;
+  min-width: 120px;
+}
+
+.detail-value {
+  color: #2c3e50;
+  font-size: 0.9rem;
+  text-align: right;
+  flex: 1;
+  word-break: break-word;
+}
+
+.customer-actions-mobile {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn-mobile {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn-mobile.primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.action-btn-mobile.primary:hover {
+  background-color: #0056b3;
+}
+
+.action-btn-mobile.secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.action-btn-mobile.secondary:hover {
+  background-color: #545b62;
+}
+
+.action-btn-mobile.tertiary {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.action-btn-mobile.tertiary:hover {
+  background-color: #138496;
+}
+
+.booking-history-mobile {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+}
+
+.bookings-list h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+}
+
+.booking-item-mobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.booking-info {
+  flex: 1;
+}
+
+.booking-dates {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.booking-status {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.booking-amount {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.status-confirmed {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.status-pending {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.status-checkedin {
+  color: #17a2b8;
+  font-weight: 600;
+}
+
+.status-checkedout {
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.status-cancelled {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.download-invoice-btn-mobile {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.download-invoice-btn-mobile:hover {
+  background: #138496;
+}
+
+.loading-bookings {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 16px;
+}
+
+.no-bookings {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 16px;
+}
+
+/* Tablet Styles */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .customer-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .customer-card-mobile {
+    padding: 20px;
+  }
+  
+  .customer-name {
+    font-size: 1.2rem;
+  }
+  
+  .detail-label {
+    min-width: 140px;
+  }
+}
+
 /* Mobile Responsive Design */
 @media (max-width: 768px) {
+  .desktop-view {
+    display: none;
+  }
+  
+  .mobile-view {
+    display: block;
+  }
+  
+  .customer-cards {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .customer-card-mobile {
+    padding: 16px;
+    margin: 0;
+  }
+  
+  .customer-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .customer-name-section {
+    width: 100%;
+  }
+  
+  .id-proof-status {
+    align-self: flex-end;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .detail-label {
+    min-width: auto;
+    font-weight: 600;
+  }
+  
+  .detail-value {
+    text-align: left;
+    word-break: break-word;
+  }
+  
+  .customer-actions-mobile {
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .action-btn-mobile {
+    flex: 1;
+    min-width: 80px;
+  }
+  
   .contacts-container {
     padding: 8px;
   }
@@ -428,6 +810,48 @@
 }
 
 @media (max-width: 480px) {
+  .customer-cards {
+    gap: 12px;
+  }
+  
+  .customer-card-mobile {
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .customer-name {
+    font-size: 1rem;
+  }
+  
+  .detail-label {
+    font-size: 0.85rem;
+  }
+  
+  .detail-value {
+    font-size: 0.85rem;
+  }
+  
+  .action-btn-mobile {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    min-height: 32px;
+  }
+  
+  .customer-actions-mobile {
+    gap: 8px;
+  }
+  
+  .booking-item-mobile {
+    padding: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .booking-actions {
+    align-self: flex-end;
+  }
+  
   .contacts-container {
     padding: 4px;
   }
@@ -476,5 +900,72 @@
   .btn {
     padding: 8px 14px;
     font-size: 0.85rem;
+  }
+}
+
+/* Extra Small Mobile Styles */
+@media (max-width: 360px) {
+  .customer-cards {
+    gap: 8px;
+  }
+  
+  .customer-card-mobile {
+    padding: 10px;
+    border-radius: 6px;
+  }
+  
+  .customer-name {
+    font-size: 0.95rem;
+  }
+  
+  .detail-label {
+    font-size: 0.8rem;
+  }
+  
+  .detail-value {
+    font-size: 0.8rem;
+  }
+  
+  .action-btn-mobile {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    min-height: 28px;
+  }
+  
+  .customer-actions-mobile {
+    gap: 6px;
+  }
+  
+  .expand-btn {
+    min-width: 20px;
+    min-height: 20px;
+    font-size: 12px;
+  }
+  
+  .id-proof-status {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+  
+  .booking-item-mobile {
+    padding: 6px;
+  }
+  
+  .booking-dates {
+    font-size: 0.8rem;
+  }
+  
+  .booking-status {
+    font-size: 0.7rem;
+  }
+  
+  .booking-amount {
+    font-size: 0.8rem;
+  }
+  
+  .download-invoice-btn-mobile {
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 0.8rem;
   }
 }

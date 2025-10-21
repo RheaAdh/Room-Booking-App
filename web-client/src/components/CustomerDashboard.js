@@ -126,7 +126,7 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
       
       // Fetch bookings using the standard api instance
       console.log('Fetching customer bookings...');
-      const bookingsResponse = await api.get('/customer/bookings');
+      const bookingsResponse = await api.get(`/bookings/customer/${customer.phoneNumber}`);
       console.log('Bookings fetched:', bookingsResponse.data);
       setBookings(bookingsResponse.data || []);
 
@@ -762,12 +762,8 @@ Booking ID: ${response.data.id || 'N/A'}
                   <div className="empty-icon">📅</div>
                     <div className="empty-decoration"></div>
                   </div>
-                  <h3>No bookings yet</h3>
-                  <p>You don't have any confirmed bookings yet. Start by browsing our rooms!</p>
-                  <button className="booking-btn primary" onClick={onShowRooms}>
-                    <span className="btn-icon">🏠</span>
-                    Browse Available Rooms
-                  </button>
+                  <h3>No bookings</h3>
+                  <p>You don't have any confirmed bookings yet.</p>
                 </div>
               ) : (
                 <div className="booking-grid">
@@ -848,10 +844,7 @@ Booking ID: ${response.data.id || 'N/A'}
                   </div>
                   <h3>No booking requests yet</h3>
                   <p>You haven't submitted any booking requests yet. Start by browsing our rooms!</p>
-                  <button className="btn-primary" onClick={onShowRooms}>
-                    <span className="btn-icon">🏠</span>
-                    Browse Available Rooms
-                  </button>
+     
                 </div>
               ) : (
                 <div className="booking-grid">
