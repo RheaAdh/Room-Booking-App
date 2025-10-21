@@ -231,37 +231,37 @@ const StatsScreen = () => {
           <div className="stats-grid">
             <StatCard 
               title="Today's Revenue" 
-              value={`₹${additionalStats.todayRevenue.toFixed(2)}`} 
+              value={`Rs.${additionalStats.todayRevenue.toFixed(2)}`} 
               icon="💵" 
               color="#27ae60" 
             />
             <StatCard 
               title="This Month Revenue" 
-              value={`₹${additionalStats.thisMonthRevenue.toFixed(2)}`} 
+              value={`Rs.${additionalStats.thisMonthRevenue.toFixed(2)}`} 
               icon="📈" 
               color="#2ecc71" 
             />
             <StatCard 
               title="Today's Expenses" 
-              value={`₹${additionalStats.todayExpensesTotal.toFixed(2)}`} 
+              value={`Rs.${additionalStats.todayExpensesTotal.toFixed(2)}`} 
               icon="💸" 
               color="#e74c3c" 
             />
             <StatCard 
               title="This Month Expenses" 
-              value={`₹${additionalStats.thisMonthExpensesTotal.toFixed(2)}`} 
+              value={`Rs.${additionalStats.thisMonthExpensesTotal.toFixed(2)}`} 
               icon="📉" 
               color="#c0392b" 
             />
             <StatCard 
               title="Net Profit Today" 
-              value={`₹${additionalStats.netProfitToday.toFixed(2)}`} 
+              value={`Rs.${additionalStats.netProfitToday.toFixed(2)}`} 
               icon="💎" 
               color={additionalStats.netProfitToday >= 0 ? "#27ae60" : "#e74c3c"} 
             />
             <StatCard 
               title="Net Profit This Month" 
-              value={`₹${additionalStats.netProfitThisMonth.toFixed(2)}`} 
+              value={`Rs.${additionalStats.netProfitThisMonth.toFixed(2)}`} 
               icon="🏆" 
               color={additionalStats.netProfitThisMonth >= 0 ? "#27ae60" : "#e74c3c"} 
             />
@@ -294,7 +294,7 @@ const StatsScreen = () => {
             />
             <StatCard 
               title="Average Booking Value" 
-              value={`₹${additionalStats.avgBookingValue.toFixed(2)}`} 
+              value={`Rs.${additionalStats.avgBookingValue.toFixed(2)}`} 
               icon="💳" 
               color="#9b59b6" 
             />
@@ -351,7 +351,7 @@ const StatsScreen = () => {
             />
             <StatCard 
               title="Pending Dues" 
-              value={`₹${dashboardSummary?.pendingDues?.reduce((sum, due) => sum + (due.dueAmount || 0), 0) || 0}`} 
+              value={`Rs.${dashboardSummary?.pendingDues?.reduce((sum, due) => sum + (due.dueAmount || 0), 0) || 0}`} 
               icon="⏰" 
               color="#e74c3c" 
             />
@@ -386,7 +386,7 @@ const StatsScreen = () => {
               <StatCard 
                 key={category}
                 title={`${category} Expenses`} 
-                value={`₹${amount.toFixed(2)}`} 
+                value={`Rs.${amount.toFixed(2)}`} 
                 icon="📊" 
                 color="#e74c3c" 
               />

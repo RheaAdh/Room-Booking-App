@@ -166,7 +166,7 @@ const MobileBookingScreen = () => {
         alert('✅ Booking updated successfully!');
       } else {
         await api.post('/bookings', bookingPayload);
-        alert(`✅ Booking created successfully! Total Amount: ₹${totalCost.toFixed(2)}`);
+        alert(`✅ Booking created successfully! Total Amount: Rs.${totalCost.toFixed(2)}`);
       }
       
       setShowBookingModal(false);
@@ -683,7 +683,7 @@ const MobileBookingScreen = () => {
 
               <div className="form-group">
                 <label className="form-label">
-                  💰 Daily Cost (₹) 
+                  💰 Daily Cost (Rs.) 
                   {formData.bookingDurationType === 'DAILY' && <span className="required"> *</span>}
                 </label>
                 <input
@@ -700,7 +700,7 @@ const MobileBookingScreen = () => {
 
               <div className="form-group">
                 <label className="form-label">
-                  💰 Monthly Cost (₹) 
+                  💰 Monthly Cost (Rs.) 
                   {formData.bookingDurationType === 'MONTHLY' && <span className="required"> *</span>}
                 </label>
                 <input
@@ -716,7 +716,7 @@ const MobileBookingScreen = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">⏰ Early Check-in Cost (₹)</label>
+                <label className="form-label">⏰ Early Check-in Cost (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"
@@ -729,7 +729,7 @@ const MobileBookingScreen = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">🕐 Late Check-out Cost (₹)</label>
+                <label className="form-label">🕐 Late Check-out Cost (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"
@@ -775,7 +775,7 @@ const MobileBookingScreen = () => {
             </div>
             <form onSubmit={handleAddPayment} className="modal-body">
               <div className="form-group">
-                <label className="form-label">💰 Amount (₹)</label>
+                <label className="form-label">💰 Amount (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"
@@ -969,30 +969,30 @@ const MobileBookingScreen = () => {
                         {selectedBooking.dailyCost && (
                           <div className="preview-row">
                             <span className="preview-label">Daily Cost:</span>
-                            <span className="preview-value">₹{selectedBooking.dailyCost}</span>
+                            <span className="preview-value">Rs.{selectedBooking.dailyCost}</span>
                           </div>
                         )}
                         {selectedBooking.monthlyCost && (
                           <div className="preview-row">
                             <span className="preview-label">Monthly Cost:</span>
-                            <span className="preview-value">₹{selectedBooking.monthlyCost}</span>
+                            <span className="preview-value">Rs.{selectedBooking.monthlyCost}</span>
                           </div>
                         )}
                         {selectedBooking.earlyCheckinCost && (
                           <div className="preview-row">
                             <span className="preview-label">Early Check-in Cost:</span>
-                            <span className="preview-value">₹{selectedBooking.earlyCheckinCost}</span>
+                            <span className="preview-value">Rs.{selectedBooking.earlyCheckinCost}</span>
                           </div>
                         )}
                         {selectedBooking.lateCheckoutCost && (
                           <div className="preview-row">
                             <span className="preview-label">Late Check-out Cost:</span>
-                            <span className="preview-value">₹{selectedBooking.lateCheckoutCost}</span>
+                            <span className="preview-value">Rs.{selectedBooking.lateCheckoutCost}</span>
                           </div>
                         )}
                         <div className="preview-row">
                           <span className="preview-label">Total Amount:</span>
-                          <span className="preview-value">₹{selectedBooking.totalAmount}</span>
+                          <span className="preview-value">Rs.{selectedBooking.totalAmount}</span>
                         </div>
                         <div className="preview-row">
                           <span className="preview-label">Due Amount:</span>
@@ -1000,7 +1000,7 @@ const MobileBookingScreen = () => {
                             color: selectedBooking.dueAmount > 0 ? '#dc3545' : '#28a745',
                             fontWeight: 'bold'
                           }}>
-                            ₹{selectedBooking.dueAmount}
+                            Rs.{selectedBooking.dueAmount}
                           </span>
                         </div>
                       </div>
@@ -1013,7 +1013,7 @@ const MobileBookingScreen = () => {
                           {selectedBooking.payments.map((payment, index) => (
                             <div key={index} className="payment-item">
                               <div className="payment-info">
-                                <span className="payment-amount">₹{payment.amount}</span>
+                                <span className="payment-amount">Rs.{payment.amount}</span>
                                 <span className="payment-method">{payment.paymentMethod}</span>
                                 <span className="payment-date">
                                   {new Date(payment.paymentDate).toLocaleDateString()}

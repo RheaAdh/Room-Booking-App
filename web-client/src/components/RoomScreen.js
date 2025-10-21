@@ -252,8 +252,8 @@ const RoomScreen = () => {
                               <div key={config.id} className="config-item">
                                 <span className="config-info">
                                   {config.personCount} person(s) - 
-                                  Daily: ₹{config.dailyCost} | 
-                                  Monthly: ₹{config.monthlyCost}
+                                  Daily: Rs.{config.dailyCost} | 
+                                  Monthly: Rs.{config.monthlyCost}
                                 </span>
                                 <div className="config-actions">
                                   <button 
@@ -384,7 +384,7 @@ const RoomScreen = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Daily Cost (₹)</label>
+                <label className="form-label">Daily Cost (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"
@@ -397,7 +397,7 @@ const RoomScreen = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Monthly Cost (₹)</label>
+                <label className="form-label">Monthly Cost (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"

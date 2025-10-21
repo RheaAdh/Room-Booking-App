@@ -125,7 +125,7 @@ const ExpenseScreen = () => {
                   {(expenses || []).map(expense => (
                     <tr key={expense.id}>
                       <td>{expense.description}</td>
-                      <td className="text-danger">₹{expense.amount}</td>
+                      <td className="text-danger">Rs.{expense.amount}</td>
                       <td><span className="badge badge-info">{expense.category}</span></td>
                       <td>{new Date(expense.expenseDate || expense.createdAt).toLocaleDateString()}</td>
                       <td>
@@ -176,7 +176,7 @@ const ExpenseScreen = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Amount (₹)</label>
+                <label className="form-label">Amount (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"

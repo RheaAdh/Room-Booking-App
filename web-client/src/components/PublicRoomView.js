@@ -465,8 +465,8 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
                               <div className="config-info">
                                 <span className="person-count">{config.personCount} {config.personCount === 1 ? 'Person' : 'People'}</span>
                                 <div className="config-pricing">
-                                  <span className="daily-rate">₹{config.dailyCost}/day</span>
-                                  <span className="monthly-rate">₹{config.monthlyCost}/month</span>
+                                  <span className="daily-rate">Rs.{config.dailyCost}/day</span>
+                                  <span className="monthly-rate">Rs.{config.monthlyCost}/month</span>
                                 </div>
                               </div>
                               <div className="config-actions">
@@ -486,7 +486,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
                                       {!checkInDate || !checkOutDate 
                                         ? 'Choose Dates' 
                                         : pricing 
-                                          ? `Book Now - ₹${pricing.totalCost} (${pricing.days} ${pricing.rateType}${pricing.days > 1 ? 's' : ''})`
+                                          ? `Book Now - Rs.${pricing.totalCost} (${pricing.days} ${pricing.rateType}${pricing.days > 1 ? 's' : ''})`
                                           : 'Book Now'
                                       }
                                     </button>
@@ -514,7 +514,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
             <div className="success-icon">✅</div>
             <h3>Booking Request Sent!</h3>
             <div style={{ textAlign: 'left', margin: '20px 0' }}>
-              <p><strong>To confirm your booking, please make a token payment of ₹500 to:</strong></p>
+              <p><strong>To confirm your booking, please make a token payment of Rs.500 to:</strong></p>
               <div style={{ 
                 background: '#f8f9fa', 
                 padding: '15px', 
@@ -603,11 +603,11 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
                       : 'Monthly Rate:'
                     }
                   </span>
-                  <span>₹{calculateTotalCost(selectedRoom, bookingData.bookingDurationType, getDaysDifference())}</span>
+                  <span>Rs.{calculateTotalCost(selectedRoom, bookingData.bookingDurationType, getDaysDifference())}</span>
                 </div>
                 <div className="breakdown-item total">
                   <span><strong>Total Amount:</strong></span>
-                  <span><strong>₹{bookingData.totalAmount}</strong></span>
+                  <span><strong>Rs.{bookingData.totalAmount}</strong></span>
                 </div>
               </div>
 

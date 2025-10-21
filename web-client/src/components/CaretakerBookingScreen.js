@@ -362,7 +362,7 @@ const CaretakerBookingScreen = () => {
         const response = await api.post('/bookings', bookingPayload);
         
         console.log('✅ CARETAKER CREATE SUCCESS - Response:', response.data);
-        alert(`✅ Booking created successfully! Total Amount: ₹${totalCost.toFixed(2)}`);
+        alert(`✅ Booking created successfully! Total Amount: Rs.${totalCost.toFixed(2)}`);
         
         // For creates, reset the form and close the modal
         setShowBookingModal(false);
@@ -1409,7 +1409,7 @@ const CaretakerBookingScreen = () => {
               {formData.bookingDurationType === 'DAILY' && (
                 <div className="form-group">
                   <label className="form-label">
-                    💰 Daily Cost (₹)
+                    💰 Daily Cost (Rs.)
                     <small style={{ color: '#6c757d', marginLeft: '8px' }}>
                       (Auto-populated, editable for bargaining)
                     </small>
@@ -1434,7 +1434,7 @@ const CaretakerBookingScreen = () => {
               {formData.bookingDurationType === 'MONTHLY' && (
                 <div className="form-group">
                   <label className="form-label">
-                    💰 Monthly Cost (₹)
+                    💰 Monthly Cost (Rs.)
                     <small style={{ color: '#6c757d', marginLeft: '8px' }}>
                       (Auto-populated, editable for bargaining)
                     </small>
@@ -1457,7 +1457,7 @@ const CaretakerBookingScreen = () => {
               )}
 
               <div className="form-group">
-                <label className="form-label">⏰ Early Check-in Cost (₹)</label>
+                <label className="form-label">⏰ Early Check-in Cost (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"
@@ -1470,7 +1470,7 @@ const CaretakerBookingScreen = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">🕐 Late Check-out Cost (₹)</label>
+                <label className="form-label">🕐 Late Check-out Cost (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"
@@ -1491,7 +1491,7 @@ const CaretakerBookingScreen = () => {
                       selectedBooking.payments.map((payment) => (
                         <div key={payment.id} className="payment-item-modal">
                           <div className="payment-info-modal">
-                            <div className="payment-amount-modal">₹{payment.amount}</div>
+                            <div className="payment-amount-modal">Rs.{payment.amount}</div>
                             <div className="payment-details-modal">
                               <span className="payment-mode-modal">{payment.paymentMethod}</span>
                               <span className="payment-date-modal">
@@ -1576,7 +1576,7 @@ const CaretakerBookingScreen = () => {
             </div>
             <form onSubmit={handleAddPayment} className="modal-body">
               <div className="form-group">
-                <label className="form-label">💰 Amount (₹)</label>
+                <label className="form-label">💰 Amount (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"

@@ -177,7 +177,7 @@ const MobileSummaryScreen = () => {
                     <td className="name-cell">{booking.customerName}</td>
                     <td className="phone-cell">{booking.customerPhone}</td>
                     <td className="type-cell">💰 Due</td>
-                    <td className="amount-cell">₹{booking.dueAmount}</td>
+                    <td className="amount-cell">Rs.{booking.dueAmount}</td>
                   </tr>
                 ))}
                 

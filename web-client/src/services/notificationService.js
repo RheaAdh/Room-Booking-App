@@ -108,7 +108,7 @@ class NotificationService {
   // Show payment notification
   async showPaymentNotification(payment) {
     const title = '💰 Payment Received!';
-    const body = `₹${payment.amount} payment from ${payment.customerName || 'Customer'}`;
+    const body = `Rs.${payment.amount} payment from ${payment.customerName || 'Customer'}`;
     const options = {
       body,
       data: {

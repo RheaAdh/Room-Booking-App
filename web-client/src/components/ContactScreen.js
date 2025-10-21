@@ -580,22 +580,22 @@ const ContactScreen = () => {
                                           <strong>Duration:</strong> {booking.bookingDurationType || 'N/A'}
                                         </div>
                                         <div>
-                                          <strong>Total Amount:</strong> ₹{booking.totalAmount || '0'}
+                                          <strong>Total Amount:</strong> Rs.{booking.totalAmount || '0'}
                                         </div>
                                         <div>
-                                          <strong>Daily Rate:</strong> ₹{booking.dailyCost || '0'}
+                                          <strong>Daily Rate:</strong> Rs.{booking.dailyCost || '0'}
                                         </div>
                                         <div>
-                                          <strong>Monthly Rate:</strong> ₹{booking.monthlyCost || '0'}
+                                          <strong>Monthly Rate:</strong> Rs.{booking.monthlyCost || '0'}
                                         </div>
                                         {booking.earlyCheckinCost > 0 && (
                                           <div>
-                                            <strong>Early Check-in:</strong> ₹{booking.earlyCheckinCost}
+                                            <strong>Early Check-in:</strong> Rs.{booking.earlyCheckinCost}
                                           </div>
                                         )}
                                         {booking.lateCheckoutCost > 0 && (
                                           <div>
-                                            <strong>Late Check-out:</strong> ₹{booking.lateCheckoutCost}
+                                            <strong>Late Check-out:</strong> Rs.{booking.lateCheckoutCost}
                                           </div>
                                         )}
                                         <div>
@@ -738,7 +738,7 @@ const ContactScreen = () => {
                                         Status: <span className={`status-${booking.bookingStatus.toLowerCase()}`}>{booking.bookingStatus}</span>
                                       </div>
                                       <div className="booking-amount">
-                                        Amount: ₹{booking.totalAmount}
+                                        Amount: Rs.{booking.totalAmount}
                                       </div>
                                     </div>
                                     <div className="booking-actions">

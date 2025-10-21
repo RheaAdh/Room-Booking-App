@@ -209,7 +209,7 @@ const SummaryScreen = () => {
           <div className="stat-label">Pending Dues</div>
         </div>
         <div className="stat-card cash">
-          <div className="stat-number">₹{cashAmount.toLocaleString()}</div>
+          <div className="stat-number">Rs.{cashAmount.toLocaleString()}</div>
           <div className="stat-label">Cash to Return</div>
           <div className="stat-date-range">
             {new Date(cashFilterStartDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} - {new Date(cashFilterEndDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
@@ -258,7 +258,7 @@ const SummaryScreen = () => {
               <div className="cash-filter-preview">
                 <div className="preview-item">
                   <span>Filtered Amount:</span>
-                  <span className="preview-amount">₹{calculateCashFromPayments().toLocaleString()}</span>
+                  <span className="preview-amount">Rs.{calculateCashFromPayments().toLocaleString()}</span>
                 </div>
                 <div className="preview-note">
                   Showing CARETAKER payments between {cashFilterStartDate} and {cashFilterEndDate}
@@ -294,16 +294,16 @@ const SummaryScreen = () => {
             {todaySummary.checkIns.map((booking, index) => (
               <div 
                 key={index} 
-                className="booking-card clickable-booking-card one-liner-card"
+                className="booking-card clickable-booking-card one-liner-modern-card"
                 onClick={() => handleBookingClick(booking.bookingId)}
               >
-                <div className="one-liner-content">
-                  <div className="one-liner-main">
+                <div className="one-liner-modern-content">
+                  <div className="one-liner-main-info">
                     <span className="customer-name">{booking.customerName}</span>
                     <span className="room-info">Room {booking.roomNumber}</span>
                     <span className="phone-info">📞 {booking.phoneNumber}</span>
                     {booking.dueAmount && booking.dueAmount > 0 && (
-                      <span className="due-amount">💰 ₹{booking.dueAmount}</span>
+                      <span className="due-amount">💰 Rs.{booking.dueAmount}</span>
                     )}
                   </div>
                   <div className="one-liner-actions" onClick={(e) => e.stopPropagation()}>
@@ -315,7 +315,7 @@ const SummaryScreen = () => {
                         className="action-btn checkin-btn"
                         onClick={() => handleCheckIn(booking.bookingId)}
                       >
-                        ✅
+                        ✅ Check-in
                       </button>
                     )}
                     {booking.bookingStatus === 'CHECKEDIN' && (
@@ -323,7 +323,7 @@ const SummaryScreen = () => {
                         className="action-btn checkout-btn"
                         onClick={() => handleCheckOut(booking.bookingId)}
                       >
-                        🚪
+                        🚪 Check-out
                       </button>
                     )}
                   </div>
@@ -349,16 +349,16 @@ const SummaryScreen = () => {
             {todaySummary.checkOuts.map((booking, index) => (
               <div 
                 key={index} 
-                className="booking-card clickable-booking-card one-liner-card"
+                className="booking-card clickable-booking-card one-liner-modern-card"
                 onClick={() => handleBookingClick(booking.bookingId)}
               >
-                <div className="one-liner-content">
-                  <div className="one-liner-main">
+                <div className="one-liner-modern-content">
+                  <div className="one-liner-main-info">
                     <span className="customer-name">{booking.customerName}</span>
                     <span className="room-info">Room {booking.roomNumber}</span>
                     <span className="phone-info">📞 {booking.phoneNumber}</span>
                     {booking.dueAmount && booking.dueAmount > 0 && (
-                      <span className="due-amount">💰 ₹{booking.dueAmount}</span>
+                      <span className="due-amount">💰 Rs.{booking.dueAmount}</span>
                     )}
                   </div>
                   <div className="one-liner-actions" onClick={(e) => e.stopPropagation()}>
@@ -367,10 +367,10 @@ const SummaryScreen = () => {
                     </span>
                     {booking.bookingStatus === 'CONFIRMED' && (
                       <button 
-                        className="checkin-btn"
+                        className="action-btn checkin-btn"
                         onClick={() => handleCheckIn(booking.bookingId)}
                       >
-                        ✅
+                        ✅ Check-in
                       </button>
                     )}
                     {booking.bookingStatus === 'CHECKEDIN' && (
@@ -378,7 +378,7 @@ const SummaryScreen = () => {
                         className="action-btn checkout-btn"
                         onClick={() => handleCheckOut(booking.bookingId)}
                       >
-                        🚪
+                        🚪 Check-out
                       </button>
                     )}
                   </div>
@@ -404,15 +404,19 @@ const SummaryScreen = () => {
             {todaySummary.pendingDues.map((due, index) => (
               <div 
                 key={index} 
-                className="booking-card clickable-booking-card one-liner-card"
+                className="booking-card clickable-booking-card one-liner-modern-card"
                 onClick={() => handleBookingClick(due.bookingId)}
               >
-                <div className="one-liner-content">
-                  <div className="one-liner-main">
+                <div className="one-liner-modern-content">
+                  <div className="one-liner-main-info">
                     <span className="customer-name">{due.customerName}</span>
                     <span className="phone-info">📞 {due.phoneNumber}</span>
-            
-                    <span className="due-amount">₹{due.dueAmount}</span>
+                    <span className="due-amount">💰 Rs.{due.dueAmount}</span>
+                  </div>
+                  <div className="one-liner-actions">
+                    <span className="status-badge pending">
+                      PENDING
+                    </span>
                   </div>
                 </div>
               </div>

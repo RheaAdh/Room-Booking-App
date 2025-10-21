@@ -88,7 +88,7 @@ const InfoScreen = () => {
             </div>
             <div className="facility-item">
               <span className="facility-icon">🚗</span>
-              <span className="facility-name">Private Parking (₹50/day)</span>
+              <span className="facility-name">Private Parking (Rs.50/day)</span>
             </div>
             <div className="facility-item">
               <span className="facility-icon">🍳</span>
@@ -396,9 +396,9 @@ const InfoScreen = () => {
               <div className="rule-category">
                 <h3>💰 Extra Charges</h3>
                 <ul>
-                  <li>Extra bed (6+ years): ₹200/night</li>
+                  <li>Extra bed (6+ years): Rs.200/night</li>
                   <li>Luggage storage: Additional charge</li>
-                  <li>Private parking: ₹50/day</li>
+                  <li>Private parking: Rs.50/day</li>
                   <li>All charges subject to availability</li>
                 </ul>
               </div>

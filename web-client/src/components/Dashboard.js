@@ -111,7 +111,7 @@ const Dashboard = () => {
       summary += `────────────────────────────────────────\n`;
       
       todaySummary.arrivals.forEach(guest => {
-        summary += `${guest.name} | ${guest.room} | ${guest.start} | ${guest.end} | ₹${guest.totalCost} | ₹${guest.paid} | ₹${guest.due} | ${guest.mobile}\n`;
+        summary += `${guest.name} | ${guest.room} | ${guest.start} | ${guest.end} | Rs.${guest.totalCost} | Rs.${guest.paid} | Rs.${guest.due} | ${guest.mobile}\n`;
       });
       summary += `\n`;
     }
@@ -123,7 +123,7 @@ const Dashboard = () => {
       summary += `────────────────────────────────────────\n`;
       
       todaySummary.departures.forEach(guest => {
-        summary += `${guest.name} | ${guest.room} | ${guest.start} | ${guest.end} | ₹${guest.totalCost} | ₹${guest.paid} | ₹${guest.due} | ${guest.mobile}\n`;
+        summary += `${guest.name} | ${guest.room} | ${guest.start} | ${guest.end} | Rs.${guest.totalCost} | Rs.${guest.paid} | Rs.${guest.due} | ${guest.mobile}\n`;
       });
       summary += `\n`;
     }
@@ -195,9 +195,9 @@ const Dashboard = () => {
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${guest.room}</td>
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${guest.start}</td>
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${guest.end}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹${guest.totalCost}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹${guest.paid}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right; color: ${dueColor}; font-weight: bold;">₹${guest.due}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">Rs.${guest.totalCost}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">Rs.${guest.paid}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right; color: ${dueColor}; font-weight: bold;">Rs.${guest.due}</td>
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${guest.mobile}</td>
           </tr>
         `;
@@ -240,9 +240,9 @@ const Dashboard = () => {
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${guest.room}</td>
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${guest.start}</td>
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${guest.end}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹${guest.totalCost}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹${guest.paid}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right; color: ${dueColor}; font-weight: bold;">₹${guest.due}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">Rs.${guest.totalCost}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">Rs.${guest.paid}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right; color: ${dueColor}; font-weight: bold;">Rs.${guest.due}</td>
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${guest.mobile}</td>
           </tr>
         `;
@@ -405,19 +405,19 @@ const Dashboard = () => {
             />
             <StatCard 
               title="Revenue" 
-              value={`₹${dashboardSummary.todayRevenue}`} 
+              value={`Rs.${dashboardSummary.todayRevenue}`} 
               color="#f39c12" 
               icon="💰" 
             />
             <StatCard 
               title="Expenses" 
-              value={`₹${dashboardSummary.todayExpenses}`} 
+              value={`Rs.${dashboardSummary.todayExpenses}`} 
               color="#e67e22" 
               icon="💸" 
             />
             <StatCard 
               title="Net Flow" 
-              value={`₹${dashboardSummary.netCashFlow}`} 
+              value={`Rs.${dashboardSummary.netCashFlow}`} 
               color={dashboardSummary.netCashFlow >= 0 ? '#27ae60' : '#e74c3c'} 
               icon="📊" 
             />
@@ -468,7 +468,7 @@ const Dashboard = () => {
                   <div>
                     <div className="list-item-header">
                       <span className="guest-name">{item.customer?.name || 'N/A'}</span>
-                      <span className="due-amount">₹{item.dueAmount || 0}</span>
+                      <span className="due-amount">Rs.{item.dueAmount || 0}</span>
                     </div>
                     <div className="phone-number">{item.customer?.phoneNumber || 'N/A'}</div>
                     <div className="room-info">Room: {item.room?.roomNumber || 'N/A'}</div>
@@ -513,7 +513,7 @@ const Dashboard = () => {
                     <div>{transaction.date}</div>
                     <div>{transaction.time}</div>
                     <div className={`amount ${transaction.type.toLowerCase()}`}>
-                      {transaction.type === 'PAYMENT' ? '+' : '-'}₹{transaction.amount}
+                      {transaction.type === 'PAYMENT' ? '+' : '-'}Rs.{transaction.amount}
                     </div>
                     <div>
                       {transaction.type === 'PAYMENT' 
@@ -573,9 +573,9 @@ const Dashboard = () => {
                         <div>{guest.room}</div>
                         <div>{guest.start}</div>
                         <div>{guest.end}</div>
-                        <div>₹{guest.totalCost}</div>
-                        <div>₹{guest.paid}</div>
-                        <div className={guest.due > 0 ? 'due-amount' : 'paid-amount'}>₹{guest.due}</div>
+                        <div>Rs.{guest.totalCost}</div>
+                        <div>Rs.{guest.paid}</div>
+                        <div className={guest.due > 0 ? 'due-amount' : 'paid-amount'}>Rs.{guest.due}</div>
                         <div>{guest.mobile}</div>
                       </div>
                     ))}
@@ -604,9 +604,9 @@ const Dashboard = () => {
                         <div>{guest.room}</div>
                         <div>{guest.start}</div>
                         <div>{guest.end}</div>
-                        <div>₹{guest.totalCost}</div>
-                        <div>₹{guest.paid}</div>
-                        <div className={guest.due > 0 ? 'due-amount' : 'paid-amount'}>₹{guest.due}</div>
+                        <div>Rs.{guest.totalCost}</div>
+                        <div>Rs.{guest.paid}</div>
+                        <div className={guest.due > 0 ? 'due-amount' : 'paid-amount'}>Rs.{guest.due}</div>
                         <div>{guest.mobile}</div>
                       </div>
                     ))}

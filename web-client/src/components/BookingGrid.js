@@ -400,31 +400,31 @@ const BookingGrid = () => {
                   <div className="detail-item">
                     <span className="detail-label">Daily Rate:</span>
                     <span className="detail-value">
-                      {selectedBooking.booking?.dailyCost ? `₹${selectedBooking.booking.dailyCost}` : 'N/A'}
+                      {selectedBooking.booking?.dailyCost ? `Rs.${selectedBooking.booking.dailyCost}` : 'N/A'}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Monthly Rate:</span>
                     <span className="detail-value">
-                      {selectedBooking.booking?.monthlyCost ? `₹${selectedBooking.booking.monthlyCost}` : 'N/A'}
+                      {selectedBooking.booking?.monthlyCost ? `Rs.${selectedBooking.booking.monthlyCost}` : 'N/A'}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Early Check-in Cost:</span>
                     <span className="detail-value">
-                      {selectedBooking.booking?.earlyCheckinCost ? `₹${selectedBooking.booking.earlyCheckinCost}` : '₹0'}
+                      {selectedBooking.booking?.earlyCheckinCost ? `Rs.${selectedBooking.booking.earlyCheckinCost}` : 'Rs.0'}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Late Check-out Cost:</span>
                     <span className="detail-value">
-                      {selectedBooking.booking?.lateCheckoutCost ? `₹${selectedBooking.booking.lateCheckoutCost}` : '₹0'}
+                      {selectedBooking.booking?.lateCheckoutCost ? `Rs.${selectedBooking.booking.lateCheckoutCost}` : 'Rs.0'}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Total Amount:</span>
                     <span className="detail-value total-amount">
-                      {selectedBooking.booking?.totalAmount ? `₹${selectedBooking.booking.totalAmount}` : 'N/A'}
+                      {selectedBooking.booking?.totalAmount ? `Rs.${selectedBooking.booking.totalAmount}` : 'N/A'}
                     </span>
                   </div>
                 </div>

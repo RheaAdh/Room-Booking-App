@@ -34,7 +34,7 @@ const TransactionsScreen = () => {
   };
 
   const formatAmount = (amount) => {
-    return `₹${amount || 0}`;
+    return `Rs.${amount || 0}`;
   };
 
   if (loading) {

@@ -320,7 +320,7 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
         const paymentMessage = `
 🎉 Booking Request Submitted Successfully!
 
-To confirm your booking, please make a token payment of ₹500 to:
+To confirm your booking, please make a token payment of Rs.500 to:
 📱 Google Pay: 9731177065
 
 After payment, your booking will be confirmed and you'll receive a confirmation message.
@@ -711,8 +711,8 @@ Booking ID: ${response.data.id || 'N/A'}
                                 <div className="config-info">
                                   <span className="person-count">{config.personCount} {config.personCount === 1 ? 'Person' : 'People'}</span>
                                   <div className="config-pricing">
-                                    <span className="daily-rate">₹{config.dailyCost}/day</span>
-                                    <span className="monthly-rate">₹{config.monthlyCost}/month</span>
+                                    <span className="daily-rate">Rs.{config.dailyCost}/day</span>
+                                    <span className="monthly-rate">Rs.{config.monthlyCost}/month</span>
                                   </div>
                                 </div>
                                 <div className="config-actions">
@@ -732,7 +732,7 @@ Booking ID: ${response.data.id || 'N/A'}
                                         {!searchDates.checkIn || !searchDates.checkOut 
                                           ? 'Select Dates First' 
                                           : pricing 
-                                            ? `Book Now - ₹${pricing.totalCost} (${pricing.days} ${pricing.rateType}${pricing.days > 1 ? 's' : ''})`
+                                            ? `Book Now - Rs.${pricing.totalCost} (${pricing.days} ${pricing.rateType}${pricing.days > 1 ? 's' : ''})`
                                             : 'Book Now'
                                         }
                                       </button>
@@ -779,7 +779,7 @@ Booking ID: ${response.data.id || 'N/A'}
                         <div className="card-content">
                           <div className="card-title">
                             <h3>Booking #{booking.id}</h3>
-                            <div className="price">₹{breakdown.totalAmount.toFixed(2)}</div>
+                            <div className="price">Rs.{breakdown.totalAmount.toFixed(2)}</div>
                           </div>
                           
                           <div className="card-details">
@@ -803,9 +803,9 @@ Booking ID: ${response.data.id || 'N/A'}
                           
                           <div className="payment-info">
                             <div className="payment-row">
-                              <span>Paid: ₹{breakdown.totalPaid.toFixed(2)}</span>
+                              <span>Paid: Rs.{breakdown.totalPaid.toFixed(2)}</span>
                               <span className={`due ${breakdown.dueAmount > 0 ? 'pending' : 'paid'}`}>
-                                {breakdown.dueAmount > 0 ? `Due: ₹${breakdown.dueAmount.toFixed(2)}` : 'Fully Paid'}
+                                {breakdown.dueAmount > 0 ? `Due: Rs.${breakdown.dueAmount.toFixed(2)}` : 'Fully Paid'}
                                 </span>
                               </div>
                               </div>
@@ -858,7 +858,7 @@ Booking ID: ${response.data.id || 'N/A'}
                       <div className="card-content">
                         <div className="card-title">
                           <h3>Request #{request.id}</h3>
-                          <div className="price">₹{request.totalAmount}</div>
+                          <div className="price">Rs.{request.totalAmount}</div>
                         </div>
                         
                         <div className="card-details">
@@ -927,7 +927,7 @@ Booking ID: ${response.data.id || 'N/A'}
                     <div className="parking-options">
                       <div className="parking-option">
                         <span className="parking-type">Private parking</span>
-                        <span className="parking-price">₹50 per day</span>
+                        <span className="parking-price">Rs.50 per day</span>
                       </div>
                       <div className="parking-option">
                         <span className="parking-type">Free public parking</span>
@@ -1148,7 +1148,7 @@ Booking ID: ${response.data.id || 'N/A'}
                     <div className="extra-charges">
                       <div className="charge-item">
                         <span className="charge-type">Extra bed (6+ years)</span>
-                        <span className="charge-price">₹200 per person/night</span>
+                        <span className="charge-price">Rs.200 per person/night</span>
                       </div>
                       <div className="charge-item">
                         <span className="charge-type">Luggage storage</span>
@@ -1156,7 +1156,7 @@ Booking ID: ${response.data.id || 'N/A'}
                       </div>
                       <div className="charge-item">
                         <span className="charge-type">Private parking</span>
-                        <span className="charge-price">₹50 per day</span>
+                        <span className="charge-price">Rs.50 per day</span>
                       </div>
                     </div>
                   </div>
@@ -1215,7 +1215,7 @@ Booking ID: ${response.data.id || 'N/A'}
                 <h3>Cost Breakdown</h3>
                 <div className="preview-row">
                   <span className="preview-label">Daily Rate:</span>
-                  <span className="preview-value">₹{previewBooking.dailyCost}/night</span>
+                  <span className="preview-value">Rs.{previewBooking.dailyCost}/night</span>
                 </div>
                 <div className="preview-row">
                   <span className="preview-label">Total Nights:</span>
@@ -1223,7 +1223,7 @@ Booking ID: ${response.data.id || 'N/A'}
                 </div>
                 <div className="preview-row total-row">
                   <span className="preview-label"><strong>Total Amount:</strong></span>
-                  <span className="preview-value"><strong>₹{previewBooking.totalAmount}</strong></span>
+                  <span className="preview-value"><strong>Rs.{previewBooking.totalAmount}</strong></span>
                 </div>
               </div>
 

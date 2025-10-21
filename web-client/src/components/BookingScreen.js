@@ -743,7 +743,7 @@ const BookingScreen = () => {
                       <div className="compact-customer-name">{booking.customerName || 'Unknown'}</div>
                       <div className="compact-phone">📞 {booking.customerPhoneNumber}</div>
                       <div className="compact-room">🏠 {room?.roomNumber || 'N/A'}</div>
-                      <div className="compact-due">₹{dueAmount} due</div>
+                      <div className="compact-due">Rs.{dueAmount} due</div>
                     </div>
                     <div className="compact-booking-status">
                       <span className={`compact-status-badge ${booking.bookingStatus.toLowerCase()}`}>
@@ -1147,7 +1147,7 @@ const BookingScreen = () => {
 
               {/* Total Amount Display */}
               <div className="total-amount-display">
-                <strong>Total Amount: ₹{calculateTotalCost()}</strong>
+                <strong>Total Amount: Rs.{calculateTotalCost()}</strong>
               </div>
 
               {/* Payments Section (only in edit mode) */}
@@ -1159,7 +1159,7 @@ const BookingScreen = () => {
                       {selectedBooking.payments.map((payment) => (
                         <div key={payment.id} className="payment-item-modal">
                           <div className="payment-info-modal">
-                            <div className="payment-amount-modal">₹{payment.amount}</div>
+                            <div className="payment-amount-modal">Rs.{payment.amount}</div>
                             <div className="payment-details-modal">
                               <div className="payment-mode-modal">{payment.mode}</div>
                               <div className="payment-date-modal">

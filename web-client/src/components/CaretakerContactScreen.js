@@ -325,7 +325,7 @@ const CaretakerContactScreen = () => {
       };
       
       await api.post('/bookings', bookingPayload);
-      alert(`✅ Booking created successfully! Total Amount: ₹${totalCost.toFixed(2)}`);
+      alert(`✅ Booking created successfully! Total Amount: Rs.${totalCost.toFixed(2)}`);
       
       setShowBookingModal(false);
       resetBookingForm();
@@ -519,7 +519,7 @@ const CaretakerContactScreen = () => {
                                 <span className="booking-dates">
                                   {new Date(booking.checkInDate).toLocaleDateString()} - {new Date(booking.checkOutDate).toLocaleDateString()}
                                 </span>
-                                <span className="booking-amount">₹{booking.totalAmount}</span>
+                                <span className="booking-amount">Rs.{booking.totalAmount}</span>
                                 <span className={`booking-status ${booking.bookingStatus?.toLowerCase()}`}>
                                   {booking.bookingStatus}
                                 </span>
@@ -977,7 +977,7 @@ const CaretakerContactScreen = () => {
               {bookingFormData.bookingDurationType === 'DAILY' && (
                 <div className="form-group">
                   <label className="form-label">
-                    💰 Daily Cost (₹)
+                    💰 Daily Cost (Rs.)
                     <small style={{ color: '#6c757d', marginLeft: '8px' }}>
                       (Auto-populated, editable for bargaining)
                     </small>
@@ -1002,7 +1002,7 @@ const CaretakerContactScreen = () => {
               {bookingFormData.bookingDurationType === 'MONTHLY' && (
                 <div className="form-group">
                   <label className="form-label">
-                    💰 Monthly Cost (₹)
+                    💰 Monthly Cost (Rs.)
                     <small style={{ color: '#6c757d', marginLeft: '8px' }}>
                       (Auto-populated, editable for bargaining)
                     </small>
@@ -1025,7 +1025,7 @@ const CaretakerContactScreen = () => {
               )}
 
               <div className="form-group">
-                <label className="form-label">⏰ Early Check-in Cost (₹)</label>
+                <label className="form-label">⏰ Early Check-in Cost (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"
@@ -1038,7 +1038,7 @@ const CaretakerContactScreen = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">🕐 Late Check-out Cost (₹)</label>
+                <label className="form-label">🕐 Late Check-out Cost (Rs.)</label>
                 <input
                   type="number"
                   className="form-control"

@@ -181,7 +181,7 @@ const BookingRequestsScreen = () => {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">💰 Total Amount:</span>
-                  <span className="detail-value">₹{request.totalAmount}</span>
+                  <span className="detail-value">Rs.{request.totalAmount}</span>
                 </div>
                 {request.remarks && (
                   <div className="detail-row">
@@ -262,16 +262,16 @@ const BookingRequestsScreen = () => {
               <div className="details-section">
                 <h4>Pricing Details</h4>
                 <div className="detail-item">
-                  <strong>Daily Cost:</strong> ₹{selectedRequest.dailyCost}
+                  <strong>Daily Cost:</strong> Rs.{selectedRequest.dailyCost}
                 </div>
                 <div className="detail-item">
-                  <strong>Monthly Cost:</strong> ₹{selectedRequest.monthlyCost}
+                  <strong>Monthly Cost:</strong> Rs.{selectedRequest.monthlyCost}
                 </div>
                 <div className="detail-item">
-                  <strong>Early Check-in Cost:</strong> ₹{selectedRequest.earlyCheckinCost}
+                  <strong>Early Check-in Cost:</strong> Rs.{selectedRequest.earlyCheckinCost}
                 </div>
                 <div className="detail-item total-cost">
-                  <strong>Total Amount:</strong> ₹{selectedRequest.totalAmount}
+                  <strong>Total Amount:</strong> Rs.{selectedRequest.totalAmount}
                 </div>
               </div>
 

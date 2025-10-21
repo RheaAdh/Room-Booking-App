@@ -165,18 +165,18 @@ public class InvoiceService {
                 "<td>" + (booking.getBookingDurationType().equals("DAILY") ? 
                     java.time.temporal.ChronoUnit.DAYS.between(booking.getCheckInDate().toLocalDate(), booking.getCheckOutDate().toLocalDate()) + " days" : 
                     "1 month") + "</td>" +
-                "<td>₹" + (booking.getBookingDurationType().equals("DAILY") ? 
+                "<td>Rs." + (booking.getBookingDurationType().equals("DAILY") ? 
                     (booking.getDailyCost() != null ? booking.getDailyCost() : "0") : 
                     (booking.getMonthlyCost() != null ? booking.getMonthlyCost() : "0")) + "</td>" +
-                "<td>₹" + (booking.getTotalAmount() != null ? booking.getTotalAmount() : "0") + "</td>" +
+                "<td>Rs." + (booking.getTotalAmount() != null ? booking.getTotalAmount() : "0") + "</td>" +
                 "</tr>" +
                 (booking.getEarlyCheckinCost() != null && booking.getEarlyCheckinCost().compareTo(java.math.BigDecimal.ZERO) > 0 ? 
-                    "<tr><td>Early Check-in Fee</td><td>-</td><td>₹" + booking.getEarlyCheckinCost() + "</td><td>₹" + booking.getEarlyCheckinCost() + "</td></tr>" : "") +
+                    "<tr><td>Early Check-in Fee</td><td>-</td><td>Rs." + booking.getEarlyCheckinCost() + "</td><td>Rs." + booking.getEarlyCheckinCost() + "</td></tr>" : "") +
                 (booking.getLateCheckoutCost() != null && booking.getLateCheckoutCost().compareTo(java.math.BigDecimal.ZERO) > 0 ? 
-                    "<tr><td>Late Check-out Fee</td><td>-</td><td>₹" + booking.getLateCheckoutCost() + "</td><td>₹" + booking.getLateCheckoutCost() + "</td></tr>" : "") +
+                    "<tr><td>Late Check-out Fee</td><td>-</td><td>Rs." + booking.getLateCheckoutCost() + "</td><td>Rs." + booking.getLateCheckoutCost() + "</td></tr>" : "") +
                 "<tr class='total-row'>" +
                 "<td colspan='3'><strong>Total Amount</strong></td>" +
-                "<td><strong>₹" + booking.getTotalAmount() + "</strong></td>" +
+                "<td><strong>Rs." + booking.getTotalAmount() + "</strong></td>" +
                 "</tr>" +
                 "</tbody></table>" +
                 
@@ -191,7 +191,7 @@ public class InvoiceService {
                     payments.stream().map(payment -> 
                         "<tr>" +
                         "<td>" + (payment.getPaymentDate() != null ? payment.getPaymentDate().format(formatter) : "N/A") + "</td>" +
-                        "<td>₹" + payment.getAmount() + "</td>" +
+                        "<td>Rs." + payment.getAmount() + "</td>" +
                         "<td>" + payment.getPaymentMethod() + "</td>" +
                         "<td><span class='status-badge status-completed'>COMPLETED</span></td>" +
                         "</tr>"
@@ -203,15 +203,15 @@ public class InvoiceService {
                 "<div style='margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;'>" +
                 "<div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>" +
                 "<span><strong>Total Amount:</strong></span>" +
-                "<span><strong>₹" + (booking.getTotalAmount() != null ? booking.getTotalAmount() : "0") + "</strong></span>" +
+                "<span><strong>Rs." + (booking.getTotalAmount() != null ? booking.getTotalAmount() : "0") + "</strong></span>" +
                 "</div>" +
                 "<div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>" +
                 "<span><strong>Total Paid:</strong></span>" +
-                "<span style='color: #28a745;'><strong>₹" + totalPaid + "</strong></span>" +
+                "<span style='color: #28a745;'><strong>Rs." + totalPaid + "</strong></span>" +
                 "</div>" +
                 "<div style='display: flex; justify-content: space-between; margin-bottom: 10px; border-top: 2px solid #667eea; padding-top: 10px;'>" +
                 "<span><strong>Due Amount:</strong></span>" +
-                "<span style='color: " + (dueAmount.compareTo(BigDecimal.ZERO) > 0 ? "#dc3545" : "#28a745") + "; font-size: 1.2em;'><strong>₹" + dueAmount + "</strong></span>" +
+                "<span style='color: " + (dueAmount.compareTo(BigDecimal.ZERO) > 0 ? "#dc3545" : "#28a745") + "; font-size: 1.2em;'><strong>Rs." + dueAmount + "</strong></span>" +
                 "</div>" +
                 "<div style='display: flex; justify-content: space-between;'>" +
                 "</div>" +
