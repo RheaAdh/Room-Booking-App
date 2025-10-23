@@ -64,26 +64,42 @@ public class DashboardController {
             // Create detailed booking data for frontend
             List<Map<String, Object>> checkInDetails = checkIns.stream()
                 .map(booking -> {
+                    // Calculate actual due amount (total - paid)
+                    List<Payment> payments = paymentRepository.findByBookingId(booking.getId());
+                    double totalPaid = payments.stream()
+                        .mapToDouble(payment -> payment.getAmount().doubleValue())
+                        .sum();
+                    double totalAmount = booking.getTotalAmount() != null ? booking.getTotalAmount().doubleValue() : 0.0;
+                    double actualDueAmount = totalAmount - totalPaid;
+                    
                     Map<String, Object> detail = new HashMap<>();
                     detail.put("customerName", getCustomerName(booking.getCustomerPhoneNumber()));
                     detail.put("roomNumber", getRoomNumber(booking.getRoomId()));
                     detail.put("phoneNumber", booking.getCustomerPhoneNumber());
                     detail.put("bookingId", booking.getId());
                     detail.put("bookingStatus", booking.getBookingStatus());
-                    detail.put("dueAmount", booking.getTotalAmount());
+                    detail.put("dueAmount", actualDueAmount);
                     return detail;
                 })
                 .collect(java.util.stream.Collectors.toList());
 
             List<Map<String, Object>> checkOutDetails = checkOuts.stream()
                 .map(booking -> {
+                    // Calculate actual due amount (total - paid)
+                    List<Payment> payments = paymentRepository.findByBookingId(booking.getId());
+                    double totalPaid = payments.stream()
+                        .mapToDouble(payment -> payment.getAmount().doubleValue())
+                        .sum();
+                    double totalAmount = booking.getTotalAmount() != null ? booking.getTotalAmount().doubleValue() : 0.0;
+                    double actualDueAmount = totalAmount - totalPaid;
+                    
                     Map<String, Object> detail = new HashMap<>();
                     detail.put("customerName", getCustomerName(booking.getCustomerPhoneNumber()));
                     detail.put("roomNumber", getRoomNumber(booking.getRoomId()));
                     detail.put("phoneNumber", booking.getCustomerPhoneNumber());
                     detail.put("bookingId", booking.getId());
                     detail.put("bookingStatus", booking.getBookingStatus());
-                    detail.put("dueAmount", booking.getTotalAmount());
+                    detail.put("dueAmount", actualDueAmount);
                     return detail;
                 })
                 .collect(java.util.stream.Collectors.toList());
@@ -112,11 +128,19 @@ public class DashboardController {
                 .collect(java.util.stream.Collectors.toList());
             List<Map<String, Object>> pendingDuesDetails = pendingDues.stream()
                 .map(booking -> {
+                    // Calculate actual pending amount (total - paid)
+                    List<Payment> payments = paymentRepository.findByBookingId(booking.getId());
+                    double totalPaid = payments.stream()
+                        .mapToDouble(payment -> payment.getAmount().doubleValue())
+                        .sum();
+                    double totalAmount = booking.getTotalAmount() != null ? booking.getTotalAmount().doubleValue() : 0.0;
+                    double actualDueAmount = totalAmount - totalPaid;
+                    
                     Map<String, Object> detail = new HashMap<>();
                     detail.put("customerName", getCustomerName(booking.getCustomerPhoneNumber()));
                     detail.put("roomNumber", getRoomNumber(booking.getRoomId()));
                     detail.put("phoneNumber", booking.getCustomerPhoneNumber());
-                    detail.put("dueAmount", booking.getTotalAmount());
+                    detail.put("dueAmount", actualDueAmount);
                     detail.put("checkInDate", booking.getCheckInDate().toLocalDate().toString());
                     detail.put("checkOutDate", booking.getCheckOutDate().toLocalDate().toString());
                     detail.put("bookingId", booking.getId());

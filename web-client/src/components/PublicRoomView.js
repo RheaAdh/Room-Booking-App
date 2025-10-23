@@ -410,6 +410,7 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
           </div>
           
           {(() => {
+            // Always show all rooms by default, only filter by availability if search was performed
             const roomsToShow = availableRooms.length > 0 ? availableRooms : rooms;
             const filteredRooms = filterRooms(roomsToShow || []);
             

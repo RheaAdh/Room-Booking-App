@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Professional Pride Room Booking API
+  title: Professionals Pride Room Booking API
   version: 2.0.0
   description: |
     Comprehensive REST API for room booking management system with advanced features including:

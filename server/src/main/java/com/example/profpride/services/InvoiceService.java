@@ -133,7 +133,7 @@ public class InvoiceService {
                 "<div class='invoice-container'>" +
                 "<div class='invoice-header'>" +
                 "<div class='logo'>🏨</div>" +
-                "<h1>PROFESSIONAL PRIDE</h1>" +
+                "<h1>PROFESSIONALS PRIDE</h1>" +
                 "<p class='subtitle'>ECC Road, Whitefield, Bangalore - 560066</p>" +
                 "</div>" +
                 "<div class='invoice-content'>" +
@@ -219,7 +219,7 @@ public class InvoiceService {
                 "</div>" +
                 "</div>" +
                 "<div class='invoice-footer'>" +
-                "<h3>Thank You for Choosing Professional Pride!</h3>" +
+                "<h3>Thank You for Choosing Professionals Pride!</h3>" +
                 "<p>For any queries, please contact us at: +91-9731177065</p>" +
                 "</div>" +
                 "</div>" +
