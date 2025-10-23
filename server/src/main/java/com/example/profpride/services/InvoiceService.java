@@ -102,7 +102,7 @@ public class InvoiceService {
             String checkOutDate = booking.getCheckOutDate().format(formatter);
 
             String html = "<!DOCTYPE html>" +
-                "<html><head><title>Professional Pride Invoice</title>" +
+                "<html><head><title>Professionals Pride Invoice</title>" +
                 "<style>" +
                 "body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }" +
                 ".invoice-container { max-width: 800px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }" +
@@ -166,8 +166,8 @@ public class InvoiceService {
                     java.time.temporal.ChronoUnit.DAYS.between(booking.getCheckInDate().toLocalDate(), booking.getCheckOutDate().toLocalDate()) + " days" : 
                     "1 month") + "</td>" +
                 "<td>Rs." + (booking.getBookingDurationType().equals("DAILY") ? 
-                    (booking.getDailyCost() != null ? booking.getDailyCost() : "0") : 
-                    (booking.getMonthlyCost() != null ? booking.getMonthlyCost() : "0")) + "</td>" +
+                    (booking.getDailyCost() != null ? booking.getDailyCost() + " per day" : "0") : 
+                    (booking.getMonthlyCost() != null ? booking.getMonthlyCost() + " per month" : "0")) + "</td>" +
                 "<td>Rs." + (booking.getTotalAmount() != null ? booking.getTotalAmount() : "0") + "</td>" +
                 "</tr>" +
                 (booking.getEarlyCheckinCost() != null && booking.getEarlyCheckinCost().compareTo(java.math.BigDecimal.ZERO) > 0 ? 

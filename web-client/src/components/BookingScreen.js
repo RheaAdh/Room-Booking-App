@@ -155,6 +155,20 @@ const BookingScreen = () => {
         }
       }
       
+      // Auto-calculate duration and determine pricing type
+      if ((field === 'checkInDate' || field === 'checkOutDate') && newFormData.checkInDate && newFormData.checkOutDate) {
+        const checkIn = new Date(newFormData.checkInDate);
+        const checkOut = new Date(newFormData.checkOutDate);
+        const durationInDays = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        
+        // Automatically set duration type based on 30-day threshold
+        if (durationInDays >= 30) {
+          newFormData.bookingDurationType = 'MONTHLY';
+        } else {
+          newFormData.bookingDurationType = 'DAILY';
+        }
+      }
+      
       return newFormData;
     });
   };
@@ -1075,11 +1089,12 @@ const BookingScreen = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Duration Type</label>
+                  <label className="form-label">Duration Type (Auto-determined)</label>
                   <select
                     value={formData.bookingDurationType}
-                    onChange={(e) => handleInputChange('bookingDurationType', e.target.value)}
+                    readOnly
                     className="form-control"
+                    style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
                   >
                     <option value="DAILY">Daily</option>
                     <option value="MONTHLY">Monthly</option>
@@ -1087,27 +1102,39 @@ const BookingScreen = () => {
                 </div>
               </div>
 
-              {/* Cost Fields */}
+              {/* Cost Fields - Auto-populated from room configuration */}
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Daily Cost</label>
+                  <label className="form-label">Daily Cost (Auto-calculated)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={formData.dailyCost}
-                    onChange={(e) => handleInputChange('dailyCost', e.target.value)}
+                    readOnly
                     className="form-control"
+                    style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Monthly Cost</label>
+                  <label className="form-label">Monthly Cost (Auto-calculated)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={formData.monthlyCost}
-                    onChange={(e) => handleInputChange('monthlyCost', e.target.value)}
+                    readOnly
                     className="form-control"
+                    style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
                   />
+                </div>
+              </div>
+              
+              {/* Pricing Information */}
+              <div className="form-group">
+                <div className="alert alert-info" style={{ marginBottom: '20px', padding: '12px', borderRadius: '6px', backgroundColor: '#e3f2fd', border: '1px solid #bbdefb', color: '#1565c0' }}>
+                  <strong>💡 Pricing Information:</strong><br/>
+                  • Stays of <strong>30+ days</strong> will automatically use the <strong>monthly rate</strong><br/>
+                  • Stays of <strong>less than 30 days</strong> will automatically use the <strong>daily rate</strong><br/>
+                  • Total amount will be calculated automatically based on duration
                 </div>
               </div>
 

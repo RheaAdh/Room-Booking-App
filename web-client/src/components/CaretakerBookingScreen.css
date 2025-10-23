@@ -1387,6 +1387,33 @@
   margin-bottom: 8px;
 }
 
+.compact-booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.compact-customer-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.compact-day-badge {
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  border-radius: 10px !important;
+  font-weight: bold !important;
+  white-space: nowrap;
+}
+
+.compact-dates {
+  font-size: 11px;
+  color: #6c757d;
+  margin-top: 2px;
+}
+
 .compact-booking-main {
   display: flex;
   align-items: center;

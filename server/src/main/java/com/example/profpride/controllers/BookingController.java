@@ -334,11 +334,27 @@ public class BookingController {
     private void calculateTotalAmount(Booking booking) {
         BigDecimal total = BigDecimal.ZERO;
         
-        // Add daily or monthly cost based on duration type
-        if (booking.getBookingDurationType() == BookingDurationType.DAILY && booking.getDailyCost() != null) {
-            total = total.add(booking.getDailyCost());
-        } else if (booking.getBookingDurationType() == BookingDurationType.MONTHLY && booking.getMonthlyCost() != null) {
-            total = total.add(booking.getMonthlyCost());
+        // Calculate duration in days
+        long durationInDays = java.time.temporal.ChronoUnit.DAYS.between(
+            booking.getCheckInDate().toLocalDate(), 
+            booking.getCheckOutDate().toLocalDate()
+        );
+        
+        // Determine pricing based on duration: 30+ days = monthly rate, <30 days = daily rate
+        if (durationInDays >= 30) {
+            // Use monthly rate for stays of 30+ days
+            booking.setBookingDurationType(BookingDurationType.MONTHLY);
+            if (booking.getMonthlyCost() != null) {
+                total = total.add(booking.getMonthlyCost());
+            }
+        } else {
+            // Use daily rate for stays less than 30 days
+            booking.setBookingDurationType(BookingDurationType.DAILY);
+            if (booking.getDailyCost() != null) {
+                // Calculate total daily cost based on number of days
+                BigDecimal dailyCostPerDay = booking.getDailyCost();
+                total = total.add(dailyCostPerDay.multiply(BigDecimal.valueOf(durationInDays)));
+            }
         }
         
         // Add early check-in cost

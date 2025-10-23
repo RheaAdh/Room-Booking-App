@@ -31,6 +31,13 @@ const Layout = ({ children }) => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  // Auto-close sidebar on mobile when navigating
+  const handleNavClick = () => {
+    if (window.innerWidth <= 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   const handleNotificationToggle = async () => {
     if (notificationEnabled) {
       // Notifications are enabled, we can't disable them programmatically
@@ -75,7 +82,7 @@ const Layout = ({ children }) => {
                 <Link
                   to={item.path}
                   className={location.pathname === item.path ? 'active' : ''}
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={handleNavClick}
                 >
                   <span className="nav-icon">{item.icon}</span>
                   {item.label}
@@ -118,7 +125,7 @@ const Layout = ({ children }) => {
             key={item.path}
             to={item.path}
             className={`bottom-nav-item ${location.pathname === item.path ? 'active' : ''}`}
-            onClick={() => setSidebarOpen(false)}
+            onClick={handleNavClick}
           >
             <span className="bottom-nav-icon">{item.icon}</span>
             <span className="bottom-nav-label">{item.label}</span>

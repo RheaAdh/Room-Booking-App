@@ -960,6 +960,46 @@ const CaretakerBookingScreen = () => {
   };
 
   const filteredAndSortedBookings = bookings.filter(booking => {
+    // First apply date filter - only show today, tomorrow, and yesterday bookings
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    // Normalize dates to compare only the date part (ignore time)
+    const normalizeDate = (date) => {
+      const normalized = new Date(date);
+      normalized.setHours(0, 0, 0, 0);
+      return normalized;
+    };
+    
+    const bookingCheckInDate = normalizeDate(new Date(booking.checkInDate));
+    const bookingCheckOutDate = normalizeDate(new Date(booking.checkOutDate));
+    const todayNormalized = normalizeDate(today);
+    const tomorrowNormalized = normalizeDate(tomorrow);
+    const yesterdayNormalized = normalizeDate(yesterday);
+    
+    // Check if booking overlaps with today, tomorrow, or yesterday
+    const isRelevantBooking = (
+      // Check-in is today, tomorrow, or yesterday
+      (bookingCheckInDate.getTime() === todayNormalized.getTime() ||
+       bookingCheckInDate.getTime() === tomorrowNormalized.getTime() ||
+       bookingCheckInDate.getTime() === yesterdayNormalized.getTime()) ||
+      // Check-out is today, tomorrow, or yesterday
+      (bookingCheckOutDate.getTime() === todayNormalized.getTime() ||
+       bookingCheckOutDate.getTime() === tomorrowNormalized.getTime() ||
+       bookingCheckOutDate.getTime() === yesterdayNormalized.getTime()) ||
+      // Booking spans across today, tomorrow, or yesterday
+      (bookingCheckInDate <= todayNormalized && bookingCheckOutDate >= todayNormalized) ||
+      (bookingCheckInDate <= tomorrowNormalized && bookingCheckOutDate >= tomorrowNormalized) ||
+      (bookingCheckInDate <= yesterdayNormalized && bookingCheckOutDate >= yesterdayNormalized)
+    );
+    
+    if (!isRelevantBooking) {
+      return false;
+    }
+    
     // Apply search filter (by name, phone, or room)
     if (searchTerm.trim() === '') return true;
     
@@ -1018,6 +1058,50 @@ const CaretakerBookingScreen = () => {
     }
   };
 
+  // Helper function to determine which day a booking is for
+  const getBookingDayType = (booking) => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    const normalizeDate = (date) => {
+      const normalized = new Date(date);
+      normalized.setHours(0, 0, 0, 0);
+      return normalized;
+    };
+    
+    const bookingCheckInDate = normalizeDate(new Date(booking.checkInDate));
+    const bookingCheckOutDate = normalizeDate(new Date(booking.checkOutDate));
+    const todayNormalized = normalizeDate(today);
+    const tomorrowNormalized = normalizeDate(tomorrow);
+    const yesterdayNormalized = normalizeDate(yesterday);
+    
+    // Check if booking is for today
+    if (bookingCheckInDate.getTime() === todayNormalized.getTime() ||
+        bookingCheckOutDate.getTime() === todayNormalized.getTime() ||
+        (bookingCheckInDate <= todayNormalized && bookingCheckOutDate >= todayNormalized)) {
+      return { type: 'today', label: 'Today', color: '#e74c3c', icon: '📅' };
+    }
+    
+    // Check if booking is for tomorrow
+    if (bookingCheckInDate.getTime() === tomorrowNormalized.getTime() ||
+        bookingCheckOutDate.getTime() === tomorrowNormalized.getTime() ||
+        (bookingCheckInDate <= tomorrowNormalized && bookingCheckOutDate >= tomorrowNormalized)) {
+      return { type: 'tomorrow', label: 'Tomorrow', color: '#f39c12', icon: '⏰' };
+    }
+    
+    // Check if booking is for yesterday
+    if (bookingCheckInDate.getTime() === yesterdayNormalized.getTime() ||
+        bookingCheckOutDate.getTime() === yesterdayNormalized.getTime() ||
+        (bookingCheckInDate <= yesterdayNormalized && bookingCheckOutDate >= yesterdayNormalized)) {
+      return { type: 'yesterday', label: 'Yesterday', color: '#95a5a6', icon: '📋' };
+    }
+    
+    return { type: 'other', label: 'Other', color: '#6c757d', icon: '📅' };
+  };
+
   if (loading) {
     return (
       <div className="caretaker-loading">
@@ -1031,6 +1115,37 @@ const CaretakerBookingScreen = () => {
     <div className="caretaker-booking">
 
   
+
+      {/* Date Range Header */}
+      {activeTab === 'list' && (
+        <div className="date-range-header" style={{ 
+          backgroundColor: '#f8f9fa', 
+          padding: '12px 16px', 
+          borderBottom: '1px solid #e9ecef',
+          textAlign: 'center'
+        }}>
+          <div style={{ 
+            fontSize: '14px', 
+            fontWeight: '600', 
+            color: '#495057',
+            marginBottom: '4px'
+          }}>
+            📅 Showing bookings for:
+          </div>
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#6c757d',
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '16px',
+            flexWrap: 'wrap'
+          }}>
+            <span style={{ color: '#e74c3c' }}>📅 Today</span>
+            <span style={{ color: '#f39c12' }}>⏰ Tomorrow</span>
+            <span style={{ color: '#95a5a6' }}>📋 Yesterday</span>
+          </div>
+        </div>
+      )}
 
       {/* Search Filter */}
       {activeTab === 'list' && (
@@ -1056,16 +1171,34 @@ const CaretakerBookingScreen = () => {
               filteredAndSortedBookings.map((booking) => {
                 // Find customer data
                 const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
-                
+                const dayType = getBookingDayType(booking);
                 
                 return (
                 <div key={booking.id} className="booking-card compact-booking-card">
                   <div className="compact-booking-content">
                     <div className="compact-booking-main">
                       <div className="compact-booking-info">
-                        <span className="compact-customer-name">{customer?.name || 'Unknown Customer'}</span>
+                        <div className="compact-booking-header">
+                          <span className="compact-customer-name">{customer?.name || 'Unknown Customer'}</span>
+                          <span 
+                            className="compact-day-badge"
+                            style={{ 
+                              backgroundColor: dayType.color,
+                              color: 'white',
+                              fontSize: '10px',
+                              padding: '2px 6px',
+                              borderRadius: '10px',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            {dayType.icon} {dayType.label}
+                          </span>
+                        </div>
                         <span className="compact-phone">📞 {booking.customerPhoneNumber}</span>
                         <span className="compact-room">🏠 Room {rooms.find(r => r.id === booking.roomId)?.roomNumber || booking.roomId}</span>
+                        <span className="compact-dates">
+                          📅 {new Date(booking.checkInDate).toLocaleDateString('en-IN')} - {new Date(booking.checkOutDate).toLocaleDateString('en-IN')}
+                        </span>
                       </div>
                       <div className="compact-booking-status">
                         <span 
@@ -1074,7 +1207,6 @@ const CaretakerBookingScreen = () => {
                         >
                           {booking.bookingStatus}
                         </span>
-
                       </div>
                     </div>
                   </div>
@@ -1113,9 +1245,9 @@ const CaretakerBookingScreen = () => {
               })
             ) : (
               <div className="no-bookings">
-                <div className="no-bookings-icon">📝</div>
-                <h3>No bookings found</h3>
-                <p>Try adjusting your search or add a new booking.</p>
+                <div className="no-bookings-icon">📅</div>
+                <h3>No bookings for today, tomorrow, or yesterday</h3>
+                <p>No bookings found for the current date range. Try adjusting your search or add a new booking.</p>
               </div>
             )}
           </div>

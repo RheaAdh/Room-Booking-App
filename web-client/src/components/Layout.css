@@ -23,6 +23,20 @@
   transform: translateX(0);
 }
 
+/* Desktop: Always show sidebar */
+@media (min-width: 1025px) {
+  .sidebar {
+    transform: translateX(0);
+    position: relative;
+    height: 100vh;
+  }
+  
+  .main-content {
+    margin-left: 0;
+    flex: 1;
+  }
+}
+
 .sidebar-header {
   padding: 30px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -142,6 +156,17 @@
   justify-content: space-between;
 }
 
+/* Desktop: Hide mobile header and close button */
+@media (min-width: 1025px) {
+  .mobile-header {
+    display: none !important;
+  }
+  
+  .sidebar-close {
+    display: none;
+  }
+}
+
 /* Notification Toggle */
 .notification-toggle {
   background: none;
@@ -236,7 +261,7 @@
   }
   
   .main-content {
-    margin-left: 280px;
+    margin-left: 0;
     padding: 24px;
   }
   
@@ -264,6 +289,11 @@
 @media (max-width: 1024px) and (min-width: 769px) {
   .sidebar {
     width: 200px;
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
   }
   
   .main-content {
@@ -282,6 +312,10 @@
   .sidebar-nav a {
     padding: 12px 15px;
     font-size: 14px;
+  }
+  
+  .mobile-header {
+    display: flex;
   }
 }
 
