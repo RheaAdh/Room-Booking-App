@@ -104,6 +104,7 @@ public class DashboardController {
                 })
                 .collect(java.util.stream.Collectors.toList());
 
+
             // Get pending dues for ALL customers with unpaid amounts (any booking status)
             // Include all bookings that have pending dues (total amount > paid amount)
             List<Booking> allBookings = bookingRepository.findAll();
@@ -161,8 +162,8 @@ public class DashboardController {
             summary.put("checkOuts", checkOutDetails);
             summary.put("pendingDues", pendingDuesDetails);
             // Calculate total revenue from all bookings
-            List<Booking> allBookings = bookingRepository.findAll();
-            summary.put("revenue", calculateTodayRevenue(allBookings));
+            List<Booking> allBookingsForRevenue = bookingRepository.findAll();
+            summary.put("revenue", calculateTodayRevenue(allBookingsForRevenue));
 
             return ResponseEntity.ok(summary);
 
