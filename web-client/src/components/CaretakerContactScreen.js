@@ -33,7 +33,7 @@ const CaretakerContactScreen = () => {
     numberOfPeople: 1,
     checkInDate: new Date(),
     checkOutDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    bookingStatus: 'CONFIRMED',
+    bookingStatus: 'PENDING',
     bookingDurationType: 'DAILY',
     dailyCost: '',
     monthlyCost: '',
@@ -249,7 +249,7 @@ const CaretakerContactScreen = () => {
       numberOfPeople: 1,
       checkInDate: new Date(),
       checkOutDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      bookingStatus: 'CONFIRMED',
+      bookingStatus: 'PENDING',
       bookingDurationType: 'DAILY',
       dailyCost: '',
       monthlyCost: '',
@@ -347,7 +347,7 @@ const CaretakerContactScreen = () => {
       numberOfPeople: 1,
       checkInDate: new Date(),
       checkOutDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      bookingStatus: 'CONFIRMED',
+      bookingStatus: 'PENDING',
       bookingDurationType: 'DAILY',
       dailyCost: '',
       monthlyCost: '',
@@ -411,7 +411,7 @@ const CaretakerContactScreen = () => {
       numberOfPeople: booking.numberOfPeople || 1,
       checkInDate: today, // Reset to today
       checkOutDate: tomorrow, // Reset to tomorrow
-      bookingStatus: 'CONFIRMED', // Reset to confirmed
+      bookingStatus: 'PENDING', // Reset to confirmed
       bookingDurationType: booking.bookingDurationType || 'DAILY',
       dailyCost: booking.dailyCost || '',
       monthlyCost: booking.monthlyCost || '',
@@ -535,6 +535,12 @@ const CaretakerContactScreen = () => {
                     <div className="bookings-list">
                       {customerBookings[customer.phoneNumber].map((booking) => {
                         const room = rooms.find(r => r.id === booking.roomId);
+                        
+                        // Calculate due amount
+                        const totalAmount = parseFloat(booking.totalAmount) || 0;
+                        const totalPaid = (booking.payments || []).reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
+                        const dueAmount = totalAmount - totalPaid;
+                        
                         return (
                           <div key={booking.id} className="booking-item">
                             <div className="booking-info">
@@ -544,6 +550,9 @@ const CaretakerContactScreen = () => {
                                   {new Date(booking.checkInDate).toLocaleDateString()} - {new Date(booking.checkOutDate).toLocaleDateString()}
                                 </span>
                                 <span className="booking-amount">Rs.{booking.totalAmount}</span>
+                                {dueAmount > 0 && (
+                                  <span className="booking-due">Due: Rs.{dueAmount.toFixed(0)}</span>
+                                )}
                                 <span className={`booking-status ${booking.bookingStatus?.toLowerCase()}`}>
                                   {booking.bookingStatus}
                                 </span>
@@ -982,12 +991,9 @@ const CaretakerContactScreen = () => {
                   required
                 >
                   <option value="PENDING">Pending</option>
-                  <option value="CONFIRMED">Confirmed</option>
                   <option value="CHECKEDIN">Checked In</option>
+                  <option value="NOSHOW">No Show</option>
                   <option value="CHECKEDOUT">Checked Out</option>
-                  <option value="CANCELLED">Cancelled</option>
-                  <option value="NO_SHOW">No Show</option>
-                  <option value="COMPLETED">Completed</option>
                 </select>
               </div>
 

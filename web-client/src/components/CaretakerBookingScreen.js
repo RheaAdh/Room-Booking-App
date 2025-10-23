@@ -15,7 +15,7 @@ const CaretakerBookingScreen = () => {
   const [activeTab, setActiveTab] = useState('list'); // 'list' or 'add'
   const [sortBy, setSortBy] = useState('createdAt'); // 'createdAt', 'checkInDate', 'customerName', 'totalAmount'
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc', 'desc'
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'CONFIRMED', 'CHECKEDIN', 'CHECKEDOUT', 'CANCELLED'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'PENDING', 'CHECKEDIN', 'NOSHOW', 'CHECKEDOUT'
   
   // Modal states
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -70,7 +70,7 @@ const CaretakerBookingScreen = () => {
       numberOfPeople: 1,
       checkInDate: today,
       checkOutDate: tomorrow,
-      bookingStatus: 'CONFIRMED',
+      bookingStatus: 'PENDING',
       bookingDurationType: 'DAILY',
       dailyCost: '',
       monthlyCost: '',
@@ -521,7 +521,7 @@ const CaretakerBookingScreen = () => {
       numberOfPeople: booking.numberOfPeople || 1,
       checkInDate: today, // Reset to today
       checkOutDate: tomorrow, // Reset to tomorrow
-      bookingStatus: 'CONFIRMED', // Reset to confirmed
+      bookingStatus: 'PENDING', // Reset to confirmed
       bookingDurationType: booking.bookingDurationType || 'DAILY',
       dailyCost: booking.dailyCost || '',
       monthlyCost: booking.monthlyCost || '',
@@ -985,7 +985,7 @@ const CaretakerBookingScreen = () => {
       numberOfPeople: 1,
       checkInDate: today,
       checkOutDate: tomorrow,
-      bookingStatus: 'CONFIRMED',
+      bookingStatus: 'PENDING',
       bookingDurationType: 'DAILY',
       dailyCost: '',
       monthlyCost: '',
@@ -1121,11 +1121,10 @@ const CaretakerBookingScreen = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'NEW': return '#f39c12';
-      case 'CONFIRMED': return '#27ae60';
-      case 'CHECKED_IN': return '#3498db';
-      case 'CHECKED_OUT': return '#95a5a6';
-      case 'CANCELLED': return '#e74c3c';
+      case 'PENDING': return '#ffc107';
+      case 'CHECKEDIN': return '#17a2b8';
+      case 'NOSHOW': return '#fd7e14';
+      case 'CHECKEDOUT': return '#6c757d';
       default: return '#6c757d';
     }
   };
@@ -1265,7 +1264,7 @@ const CaretakerBookingScreen = () => {
                     >
                       📥 Invoice
                     </button>
-                    {booking.bookingStatus === 'CONFIRMED' && (
+                    {booking.bookingStatus === 'PENDING' && (
                       <button 
                         className="compact-action-btn checkin-btn"
                         onClick={() => handleCheckIn(booking.id)}
@@ -1558,12 +1557,9 @@ const CaretakerBookingScreen = () => {
                   required
                 >
                   <option value="PENDING">Pending</option>
-                  <option value="CONFIRMED">Confirmed</option>
                   <option value="CHECKEDIN">Checked In</option>
+                  <option value="NOSHOW">No Show</option>
                   <option value="CHECKEDOUT">Checked Out</option>
-                  <option value="CANCELLED">Cancelled</option>
-                  <option value="NO_SHOW">No Show</option>
-                  <option value="COMPLETED">Completed</option>
                 </select>
               </div>
 

@@ -67,7 +67,7 @@ const BookingGrid = () => {
             b.roomId === room.id &&
             new Date(b.checkInDate) <= new Date(date) &&
             new Date(b.checkOutDate) > new Date(date) &&
-            b.bookingStatus !== 'CANCELLED'
+            b.bookingStatus !== 'NOSHOW'
           );
           
           const customer = booking ? customerMap[booking.customerPhoneNumber] : null;
@@ -111,22 +111,20 @@ const BookingGrid = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'NEW': return '#17a2b8';
-      case 'CONFIRMED': return '#28a745';
-      case 'CHECKED_IN': return '#ffc107';
-      case 'CHECKED_OUT': return '#6c757d';
-      case 'CANCELLED': return '#dc3545';
+      case 'PENDING': return '#ffc107';
+      case 'CHECKEDIN': return '#17a2b8';
+      case 'NOSHOW': return '#fd7e14';
+      case 'CHECKEDOUT': return '#6c757d';
       default: return '#f8f9fa';
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'NEW': return 'New';
-      case 'CONFIRMED': return 'Confirmed';
-      case 'CHECKED_IN': return 'Checked In';
-      case 'CHECKED_OUT': return 'Checked Out';
-      case 'CANCELLED': return 'Cancelled';
+      case 'PENDING': return 'Pending';
+      case 'CHECKEDIN': return 'Checked In';
+      case 'NOSHOW': return 'No Show';
+      case 'CHECKEDOUT': return 'Checked Out';
       default: return '';
     }
   };

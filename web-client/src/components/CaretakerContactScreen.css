@@ -737,6 +737,28 @@ textarea.form-control {
   background: #138496;
 }
 
+.booking-due {
+  color: #dc3545;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.duplicate-booking-btn-mobile {
+  padding: 0.3rem 0.5rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-right: 0.3rem;
+}
+
+.duplicate-booking-btn-mobile:hover {
+  background: #5a6268;
+}
+
 .loading-bookings {
   text-align: center;
   color: #6c757d;

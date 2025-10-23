@@ -609,6 +609,33 @@
   background: #138496;
 }
 
+.duplicate-booking-btn-mobile {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.duplicate-booking-btn-mobile:hover {
+  background: #5a6268;
+}
+
+.booking-due {
+  color: #dc3545;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
 .loading-bookings {
   text-align: center;
   color: #6c757d;

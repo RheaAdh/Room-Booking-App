@@ -341,15 +341,25 @@ const ContactScreen = () => {
     }
   };
 
+  const handleDuplicateBooking = (booking) => {
+    console.log('📋 DUPLICATE BOOKING - Booking:', booking);
+    
+    // Pre-populate form with booking data but reset dates to today/tomorrow
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    
+    // Navigate to booking screen with prepopulated data
+    // For now, we'll show an alert with the booking details
+    // In a real implementation, you might want to pass this data to a booking form
+    alert(`Duplicate booking for:\nCustomer: ${booking.customerPhoneNumber}\nRoom: ${booking.roomId}\nDates: ${today.toLocaleDateString()} - ${tomorrow.toLocaleDateString()}\n\nPlease use the booking screen to create the new booking.`);
+  };
+
   const getStatusColor = (status) => {
     const statusColors = {
       'PENDING': '#ffc107',
-      'CONFIRMED': '#28a745',
       'CHECKEDIN': '#17a2b8',
-      'CHECKEDOUT': '#6c757d',
-      'CANCELLED': '#dc3545',
-      'NO_SHOW': '#fd7e14',
-      'COMPLETED': '#20c997'
+      'NOSHOW': '#fd7e14',
+      'CHECKEDOUT': '#6c757d'
     };
     return statusColors[status] || '#6c757d';
   };
@@ -728,30 +738,49 @@ const ContactScreen = () => {
                             ) : customerBookings[customer.phoneNumber] && customerBookings[customer.phoneNumber].length > 0 ? (
                               <div className="bookings-list">
                                 <h4>Booking History</h4>
-                                {customerBookings[customer.phoneNumber].map(booking => (
-                                  <div key={booking.id} className="booking-item-mobile">
-                                    <div className="booking-info">
-                                      <div className="booking-dates">
-                                        {new Date(booking.checkInDate).toLocaleDateString()} - {new Date(booking.checkOutDate).toLocaleDateString()}
+                                {customerBookings[customer.phoneNumber].map(booking => {
+                                  // Calculate due amount
+                                  const totalAmount = parseFloat(booking.totalAmount) || 0;
+                                  const totalPaid = (booking.payments || []).reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
+                                  const dueAmount = totalAmount - totalPaid;
+                                  
+                                  return (
+                                    <div key={booking.id} className="booking-item-mobile">
+                                      <div className="booking-info">
+                                        <div className="booking-dates">
+                                          {new Date(booking.checkInDate).toLocaleDateString()} - {new Date(booking.checkOutDate).toLocaleDateString()}
+                                        </div>
+                                        <div className="booking-status">
+                                          Status: <span className={`status-${booking.bookingStatus.toLowerCase()}`}>{booking.bookingStatus}</span>
+                                        </div>
+                                        <div className="booking-amount">
+                                          Amount: Rs.{booking.totalAmount}
+                                        </div>
+                                        {dueAmount > 0 && (
+                                          <div className="booking-due">
+                                            Due: Rs.{dueAmount.toFixed(0)}
+                                          </div>
+                                        )}
                                       </div>
-                                      <div className="booking-status">
-                                        Status: <span className={`status-${booking.bookingStatus.toLowerCase()}`}>{booking.bookingStatus}</span>
-                                      </div>
-                                      <div className="booking-amount">
-                                        Amount: Rs.{booking.totalAmount}
+                                      <div className="booking-actions">
+                                        <button 
+                                          className="duplicate-booking-btn-mobile"
+                                          onClick={() => handleDuplicateBooking(booking)}
+                                          title="Duplicate Booking"
+                                        >
+                                          📋
+                                        </button>
+                                        <button 
+                                          className="download-invoice-btn-mobile"
+                                          onClick={() => downloadInvoicePdf(booking.id)}
+                                          title="Download Invoice"
+                                        >
+                                          📄
+                                        </button>
                                       </div>
                                     </div>
-                                    <div className="booking-actions">
-                                      <button 
-                                        className="download-invoice-btn-mobile"
-                                        onClick={() => downloadInvoicePdf(booking.id)}
-                                        title="Download Invoice"
-                                      >
-                                        📄
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             ) : (
                               <div className="no-bookings">No bookings found for this customer.</div>
