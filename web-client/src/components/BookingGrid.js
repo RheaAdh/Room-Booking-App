@@ -40,7 +40,8 @@ const BookingGrid = () => {
       }
       setDates(allDates);
 
-      // Get unique room IDs from bookings, sorted by room ID
+      // Show ALL rooms, not just those with bookings
+      // Get unique room IDs from bookings for reference, but show all rooms
       const uniqueRoomIds = [...new Set(bookings.map(booking => booking.roomId).filter(Boolean))].sort();
       
       // Create room mapping for display
@@ -55,8 +56,8 @@ const BookingGrid = () => {
         customerMap[customer.phoneNumber] = customer;
       });
       
-      // Store room objects instead of just IDs for better display
-      const roomsWithData = uniqueRoomIds.map(roomId => roomMap[roomId]).filter(Boolean);
+      // Show ALL rooms, sorted by room ID
+      const roomsWithData = roomsData.sort((a, b) => a.id - b.id);
       setRooms(roomsWithData);
 
       // Create grid data
@@ -90,7 +91,8 @@ const BookingGrid = () => {
         totalBookings: bookings.length,
         totalRooms: roomsData.length,
         totalCustomers: customersData.length,
-        uniqueRooms: uniqueRoomIds,
+        uniqueRoomsWithBookings: uniqueRoomIds,
+        allRoomsShown: roomsWithData.length,
         dateRange: `${allDates[0]} to ${allDates[allDates.length - 1]}`,
         gridData: grid
       });

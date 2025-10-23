@@ -707,6 +707,21 @@ textarea.form-control {
   gap: 0.5rem;
 }
 
+.duplicate-booking-btn {
+  padding: 0.4rem 0.6rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.duplicate-booking-btn:hover {
+  background: #5a6268;
+}
+
 .download-invoice-btn {
   padding: 0.4rem 0.6rem;
   background: #17a2b8;

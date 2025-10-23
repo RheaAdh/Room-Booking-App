@@ -104,14 +104,12 @@ public class DashboardController {
                 })
                 .collect(java.util.stream.Collectors.toList());
 
-            // Get pending dues (only for CHECKEDIN or CHECKEDOUT bookings with dues > 0)
-            // This excludes CONFIRMED bookings that haven't checked in yet
-            List<Booking> allCheckedInOrOutBookings = bookingRepository.findByBookingStatusIn(
-                List.of(com.example.profpride.enums.BookingStatus.CHECKEDIN, com.example.profpride.enums.BookingStatus.CHECKEDOUT)
-            );
+            // Get pending dues for ALL customers with unpaid amounts (any booking status)
+            // Include all bookings that have pending dues (total amount > paid amount)
+            List<Booking> allBookings = bookingRepository.findAll();
             
             // Filter bookings that have pending dues (total amount > paid amount)
-            List<Booking> pendingDues = allCheckedInOrOutBookings.stream()
+            List<Booking> pendingDues = allBookings.stream()
                 .filter(booking -> {
                     // Fetch payments for this booking
                     List<Payment> payments = paymentRepository.findByBookingId(booking.getId());
@@ -144,6 +142,9 @@ public class DashboardController {
                     detail.put("checkInDate", booking.getCheckInDate().toLocalDate().toString());
                     detail.put("checkOutDate", booking.getCheckOutDate().toLocalDate().toString());
                     detail.put("bookingId", booking.getId());
+                    detail.put("bookingStatus", booking.getBookingStatus());
+                    detail.put("totalAmount", totalAmount);
+                    detail.put("totalPaid", totalPaid);
                     return detail;
                 })
                 .collect(java.util.stream.Collectors.toList());

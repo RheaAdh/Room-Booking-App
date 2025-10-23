@@ -473,6 +473,70 @@ const CaretakerBookingScreen = () => {
     setShowBookingModal(true);
   };
 
+  const handleDuplicateBooking = (booking) => {
+    console.log('📋 DUPLICATE BOOKING - Booking:', booking);
+    
+    // Parse dates properly - handle both string and Date formats
+    let checkInDate, checkOutDate;
+    
+    // Parse check-in date
+    if (typeof booking.checkInDate === 'string') {
+      checkInDate = fromLocalDateTimeString(booking.checkInDate);
+      if (!checkInDate || isNaN(checkInDate.getTime())) {
+        checkInDate = new Date(booking.checkInDate);
+      }
+    } else {
+      checkInDate = new Date(booking.checkInDate);
+    }
+    
+    // Parse check-out date
+    if (typeof booking.checkOutDate === 'string') {
+      checkOutDate = fromLocalDateTimeString(booking.checkOutDate);
+      if (!checkOutDate || isNaN(checkOutDate.getTime())) {
+        checkOutDate = new Date(booking.checkOutDate);
+      }
+    } else {
+      checkOutDate = new Date(booking.checkOutDate);
+    }
+    
+    // Ensure dates are valid
+    if (isNaN(checkInDate.getTime())) {
+      checkInDate = new Date();
+    }
+    if (isNaN(checkOutDate.getTime())) {
+      checkOutDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    }
+    
+    // Find the customer name from the phone number
+    const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
+    const customerName = customer ? customer.name : '';
+    
+    // Pre-populate form with booking data but reset dates to today/tomorrow
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    
+    setFormData({
+      customerPhoneNumber: booking.customerPhoneNumber || '',
+      roomId: booking.roomId || '',
+      numberOfPeople: booking.numberOfPeople || 1,
+      checkInDate: today, // Reset to today
+      checkOutDate: tomorrow, // Reset to tomorrow
+      bookingStatus: 'CONFIRMED', // Reset to confirmed
+      bookingDurationType: booking.bookingDurationType || 'DAILY',
+      dailyCost: booking.dailyCost || '',
+      monthlyCost: booking.monthlyCost || '',
+      earlyCheckinCost: booking.earlyCheckinCost || '',
+      lateCheckoutCost: booking.lateCheckoutCost || ''
+    });
+    
+    // Set the customer search term to show the selected customer's name
+    setCustomerSearchTerm(customerName);
+    
+    setSelectedBooking(null); // No selected booking for duplication
+    setIsEditing(false); // This is a new booking
+    setShowBookingModal(true);
+  };
+
   // Customer search functions
   const handleCustomerSearch = (searchTerm) => {
     setCustomerSearchTerm(searchTerm);
@@ -996,7 +1060,15 @@ const CaretakerBookingScreen = () => {
       (bookingCheckInDate <= yesterdayNormalized && bookingCheckOutDate >= yesterdayNormalized)
     );
     
-    if (!isRelevantBooking) {
+    // Check if booking has pending dues
+    const hasPendingDues = () => {
+      const totalAmount = parseFloat(booking.totalAmount) || 0;
+      const totalPaid = (booking.payments || []).reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
+      return totalAmount > totalPaid;
+    };
+    
+    // Show booking if it's relevant to today OR has pending dues
+    if (!isRelevantBooking && !hasPendingDues()) {
       return false;
     }
     
@@ -1058,49 +1130,6 @@ const CaretakerBookingScreen = () => {
     }
   };
 
-  // Helper function to determine which day a booking is for
-  const getBookingDayType = (booking) => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    
-    const normalizeDate = (date) => {
-      const normalized = new Date(date);
-      normalized.setHours(0, 0, 0, 0);
-      return normalized;
-    };
-    
-    const bookingCheckInDate = normalizeDate(new Date(booking.checkInDate));
-    const bookingCheckOutDate = normalizeDate(new Date(booking.checkOutDate));
-    const todayNormalized = normalizeDate(today);
-    const tomorrowNormalized = normalizeDate(tomorrow);
-    const yesterdayNormalized = normalizeDate(yesterday);
-    
-    // Check if booking is for today
-    if (bookingCheckInDate.getTime() === todayNormalized.getTime() ||
-        bookingCheckOutDate.getTime() === todayNormalized.getTime() ||
-        (bookingCheckInDate <= todayNormalized && bookingCheckOutDate >= todayNormalized)) {
-      return { type: 'today', label: 'Today', color: '#e74c3c', icon: '📅' };
-    }
-    
-    // Check if booking is for tomorrow
-    if (bookingCheckInDate.getTime() === tomorrowNormalized.getTime() ||
-        bookingCheckOutDate.getTime() === tomorrowNormalized.getTime() ||
-        (bookingCheckInDate <= tomorrowNormalized && bookingCheckOutDate >= tomorrowNormalized)) {
-      return { type: 'tomorrow', label: 'Tomorrow', color: '#f39c12', icon: '⏰' };
-    }
-    
-    // Check if booking is for yesterday
-    if (bookingCheckInDate.getTime() === yesterdayNormalized.getTime() ||
-        bookingCheckOutDate.getTime() === yesterdayNormalized.getTime() ||
-        (bookingCheckInDate <= yesterdayNormalized && bookingCheckOutDate >= yesterdayNormalized)) {
-      return { type: 'yesterday', label: 'Yesterday', color: '#95a5a6', icon: '📋' };
-    }
-    
-    return { type: 'other', label: 'Other', color: '#6c757d', icon: '📅' };
-  };
 
   if (loading) {
     return (
@@ -1171,7 +1200,12 @@ const CaretakerBookingScreen = () => {
               filteredAndSortedBookings.map((booking) => {
                 // Find customer data
                 const customer = customers.find(c => c.phoneNumber === booking.customerPhoneNumber);
-                const dayType = getBookingDayType(booking);
+                
+                // Check if booking has pending dues
+                const totalAmount = parseFloat(booking.totalAmount) || 0;
+                const totalPaid = (booking.payments || []).reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
+                const hasPendingDues = totalAmount > totalPaid;
+                const dueAmount = totalAmount - totalPaid;
                 
                 return (
                 <div key={booking.id} className="booking-card compact-booking-card">
@@ -1180,19 +1214,21 @@ const CaretakerBookingScreen = () => {
                       <div className="compact-booking-info">
                         <div className="compact-booking-header">
                           <span className="compact-customer-name">{customer?.name || 'Unknown Customer'}</span>
-                          <span 
-                            className="compact-day-badge"
-                            style={{ 
-                              backgroundColor: dayType.color,
-                              color: 'white',
-                              fontSize: '10px',
-                              padding: '2px 6px',
-                              borderRadius: '10px',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            {dayType.icon} {dayType.label}
-                          </span>
+                          {hasPendingDues && (
+                            <span 
+                              className="compact-due-badge"
+                              style={{ 
+                                backgroundColor: '#ff6b6b',
+                                color: 'white',
+                                fontSize: '10px',
+                                padding: '2px 6px',
+                                borderRadius: '10px',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              💰 Rs.{dueAmount.toFixed(0)} due
+                            </span>
+                          )}
                         </div>
                         <span className="compact-phone">📞 {booking.customerPhoneNumber}</span>
                         <span className="compact-room">🏠 Room {rooms.find(r => r.id === booking.roomId)?.roomNumber || booking.roomId}</span>
@@ -1216,6 +1252,12 @@ const CaretakerBookingScreen = () => {
                       onClick={() => handleEditBooking(booking)}
                     >
                       ✏️ Edit
+                    </button>
+                    <button 
+                      className="compact-action-btn duplicate-btn"
+                      onClick={() => handleDuplicateBooking(booking)}
+                    >
+                      📋 Duplicate
                     </button>
                     <button 
                       className="compact-action-btn download-btn"

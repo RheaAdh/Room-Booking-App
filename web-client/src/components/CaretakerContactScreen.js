@@ -398,6 +398,30 @@ const CaretakerContactScreen = () => {
     }
   };
 
+  const handleDuplicateBooking = (booking) => {
+    console.log('📋 DUPLICATE BOOKING - Booking:', booking);
+    
+    // Pre-populate form with booking data but reset dates to today/tomorrow
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    
+    setBookingFormData({
+      customerPhoneNumber: booking.customerPhoneNumber || '',
+      roomId: booking.roomId || '',
+      numberOfPeople: booking.numberOfPeople || 1,
+      checkInDate: today, // Reset to today
+      checkOutDate: tomorrow, // Reset to tomorrow
+      bookingStatus: 'CONFIRMED', // Reset to confirmed
+      bookingDurationType: booking.bookingDurationType || 'DAILY',
+      dailyCost: booking.dailyCost || '',
+      monthlyCost: booking.monthlyCost || '',
+      earlyCheckinCost: booking.earlyCheckinCost || '',
+      lateCheckoutCost: booking.lateCheckoutCost || ''
+    });
+    
+    setShowBookingModal(true);
+  };
+
   if (loading) {
     return (
       <div className="caretaker-loading">
@@ -525,6 +549,12 @@ const CaretakerContactScreen = () => {
                                 </span>
                               </div>
                               <div className="booking-actions">
+                                <button 
+                                  className="duplicate-booking-btn"
+                                  onClick={() => handleDuplicateBooking(booking)}
+                                >
+                                  📋 Duplicate
+                                </button>
                                 <button 
                                   className="download-invoice-btn"
                                   onClick={() => downloadInvoicePdf(booking.id)}
