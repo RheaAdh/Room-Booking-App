@@ -12,6 +12,11 @@ const RoomScreen = () => {
   const [isEditingConfig, setIsEditingConfig] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedConfig, setSelectedConfig] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState([]);
+
   const [roomFormData, setRoomFormData] = useState({
     roomNumber: '',
     bathroomType: 'ATTACHED',
@@ -112,6 +117,22 @@ const RoomScreen = () => {
       alert('Error creating/updating room. Please try again.');
     }
   };
+  const handleDeleteImage = async (url) => {
+  if (!window.confirm("Are you sure you want to delete this image?")) return;
+  try {
+    await api.delete(`/rooms/${selectedRoom.id}/images`, {
+      params: { imageUrl: url },
+    });
+
+    setUploadedImages((prev) => prev.filter((img) => img !== url));
+    fetchData(); // refresh data
+    alert("Image deleted successfully!");
+  } catch (err) {
+    console.error("Error deleting image:", err);
+    alert("Failed to delete image. Please try again.");
+  }
+};
+
 
   const handleConfigSubmit = async (e) => {
     e.preventDefault();
@@ -169,6 +190,41 @@ const RoomScreen = () => {
     }
   };
 
+  const handleUploadImagesClick = (room) => {
+  setSelectedRoom(room);
+  setShowImageModal(true);
+  setUploadedImages(room.images || []); // if backend sends images
+};
+
+const handleFileChange = (e) => {
+  setSelectedFiles(Array.from(e.target.files));
+};
+
+const handleUploadImages = async () => {
+  if (!selectedFiles.length) return alert("Please select at least one image.");
+
+  const formData = new FormData();
+  selectedFiles.forEach((file) => formData.append("files", file));
+
+  try {
+    setUploading(true);
+    const res = await api.post(`/rooms/${selectedRoom.id}/images`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    alert("Images uploaded successfully!");
+    setUploadedImages((prev) => [...prev, ...res.data]);
+    setSelectedFiles([]);
+    fetchData(); // refresh room data
+  } catch (err) {
+    console.error("Error uploading images:", err);
+    alert("Failed to upload images. Please try again.");
+  } finally {
+    setUploading(false);
+  }
+};
+
+
 
 
   if (loading) {
@@ -216,6 +272,12 @@ const RoomScreen = () => {
                     <div className="room-header">
                       <h4>Room {room.roomNumber}</h4>
                       <div className="room-actions">
+                      <button
+  className="btn btn-sm btn-info"
+  onClick={() => handleUploadImagesClick(room)}
+>
+  Upload Images
+</button>
                         <button 
                           className="btn btn-sm btn-warning"
                           onClick={() => handleEditRoom(room)}
@@ -233,6 +295,17 @@ const RoomScreen = () => {
                     <div className="room-details">
                       <p><strong>Bathroom:</strong> {room.bathroomType}</p>
                       {room.description && <p><strong>Description:</strong> {room.description}</p>}
+                      {room.images && room.images.length > 0 && (
+  <div className="room-images">
+    <h5>Images:</h5>
+    <div className="image-grid">
+      {room.images.map((url, i) => (
+        <img key={i} src={url} alt={`Room ${room.roomNumber} ${i}`} className="room-image" />
+      ))}
+    </div>
+  </div>
+)}
+
                       <div className="configurations">
                         <h5>Configurations ({configs.length}):</h5>
                         {configs.length === 0 ? (
@@ -435,6 +508,51 @@ const RoomScreen = () => {
           </div>
         </div>
       )}
+
+      {showImageModal && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <div className="modal-header">
+        <h3>Upload Images for Room {selectedRoom?.roomNumber}</h3>
+        <button className="modal-close" onClick={() => setShowImageModal(false)}>×</button>
+      </div>
+      <div className="modal-body">
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileChange}
+        />
+        {selectedFiles.length > 0 && (
+          <p>{selectedFiles.length} file(s) selected</p>
+        )}
+        <button
+          className="btn btn-primary"
+          onClick={handleUploadImages}
+          disabled={uploading}
+          style={{ marginTop: '10px' }}
+        >
+          {uploading ? "Uploading..." : "Upload"}
+        </button>
+
+        {uploadedImages.map((url, i) => (
+  <div key={i} className="image-container">
+    <img src={url} alt={`uploaded-${i}`} className="room-image" />
+    <button
+      className="delete-btn"
+      onClick={() => handleDeleteImage(url)}
+      title="Delete image"
+    >
+      ×
+    </button>
+  </div>
+))}
+
+      </div>
+    </div>
+  </div>
+)}
+
 
     </div>
   );
