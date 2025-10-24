@@ -1048,3 +1048,16 @@
   left: 15px;
   z-index: 3;
 }
+
+.room-images {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+}
+
+.room-photo {
+  width: 150px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}

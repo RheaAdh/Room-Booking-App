@@ -31,9 +31,11 @@ public class Room extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "images", columnDefinition = "TEXT[]")
     @ElementCollection
+    @CollectionTable(name = "room_images", joinColumns = @JoinColumn(name = "room_id"))
+    @Column(name = "image_url")
     private List<String> images = new ArrayList<>();
-    
+
+
     // Room configurations are managed separately through RoomConfigurationService
 }

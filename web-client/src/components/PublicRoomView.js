@@ -219,13 +219,14 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  // Function to get room image
-  const getRoomImage = (roomId) => {
-    // Available images: 1, 2, 3, 4, 5, 6, 8, 9, 10, 11 (missing 7)
-    const availableImages = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11];
-    const imageIndex = (roomId - 1) % availableImages.length;
-    return `${process.env.PUBLIC_URL || ''}/rooms/${availableImages[imageIndex]}.jpg`;
-  };
+const getRoomImage = (room) => {
+    if (room.images && room.images.length > 0) {
+        return room.images[0]; // show first uploaded image
+    }
+    // fallback to default image
+    return `${process.env.PUBLIC_URL || ''}/rooms/default.jpg`;
+};
+
 
   // Calculate pricing based on dates and configuration
   const calculatePricing = (config, checkIn, checkOut) => {
@@ -433,21 +434,16 @@ const PublicRoomView = ({ onShowAuth, customer, onBookingRequestSubmitted }) => 
                   const roomConfigs = roomConfigurations.filter(config => config.roomId === room.id);
                   return (
                     <div key={room.id} className="room-card">
-                      <div className="room-image">
-                        <img 
-                          src={getRoomImage(room.id)} 
-                          alt={`Room ${room.roomNumber}`}
-                          className="room-photo"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.parentElement.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
-                          }}
-                        />
-                        <div className="room-badges">
-                          <span className="badge wifi">Free WiFi</span>
-                        </div>
-                      </div>
-                      
+                      <div className="room-images">
+  {(room.images || []).map((url, idx) => (
+    <img 
+      key={idx} 
+      src={url} 
+      alt={`Room ${room.roomNumber} Image ${idx+1}`} 
+      className="room-photo"
+    />
+  ))}
+</div>
                       <div className="room-content">
                         <div className="room-header">
                           <h3>Room {room.roomNumber}</h3>
