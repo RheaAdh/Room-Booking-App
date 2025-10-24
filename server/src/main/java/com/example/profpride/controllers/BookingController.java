@@ -87,7 +87,7 @@ public class BookingController {
                     }
                     
                     String status = existingBooking.getBookingStatus().toString();
-                    if (!status.equals("CONFIRMED") && !status.equals("CHECKEDIN")) {
+                    if (!status.equals("PENDING") && !status.equals("CHECKEDIN")) {
                         return false;
                     }
                     

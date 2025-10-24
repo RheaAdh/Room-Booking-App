@@ -42,7 +42,7 @@ public class BookingRequestService {
             .filter(existingBooking -> {
                 // Only check confirmed bookings
                 if (existingBooking.getBookingStatus() == null || 
-                    !existingBooking.getBookingStatus().toString().equals("CONFIRMED")) {
+                    !existingBooking.getBookingStatus().toString().equals("PENDING")) {
                     return false;
                 }
                 

@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import com.example.profpride.enums.BathroomType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "room")
 @Getter
@@ -27,6 +30,10 @@ public class Room extends BaseEntity {
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "images", columnDefinition = "TEXT[]")
+    @ElementCollection
+    private List<String> images = new ArrayList<>();
     
     // Room configurations are managed separately through RoomConfigurationService
 }

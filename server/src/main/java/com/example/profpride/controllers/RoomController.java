@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.profpride.models.Room;
 import com.example.profpride.services.RoomService;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -81,6 +83,32 @@ public class RoomController {
             return new ResponseEntity<>(availableRooms, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/{id}/images")
+    public ResponseEntity<?> uploadRoomImages(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) {
+        try {
+            List<String> imageUrls = roomService.uploadRoomImages(id, files);
+            return new ResponseEntity<>(imageUrls, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Failed to upload images: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/{id}/images")
+    public ResponseEntity<?> deleteRoomImage(
+            @PathVariable Long id,
+            @RequestParam String imageUrl) {
+        try {
+            roomService.deleteRoomImage(id, imageUrl);
+            return ResponseEntity.ok("Image deleted");
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
     

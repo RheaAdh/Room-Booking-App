@@ -7,8 +7,10 @@ import com.example.profpride.repositories.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -23,6 +25,9 @@ public class RoomService {
     
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     public Room createRoom(Room room) {
         return roomRepository.save(room);
@@ -74,7 +79,7 @@ public class RoomService {
                         .noneMatch(booking -> {
                             // Only check confirmed bookings
                             if (booking.getBookingStatus() == null || 
-                                !booking.getBookingStatus().toString().equals("CONFIRMED")) {
+                                !booking.getBookingStatus().toString().equals("PENDING")) {
                                 return false;
                             }
                             
@@ -106,5 +111,30 @@ public class RoomService {
             throw new IllegalArgumentException("Invalid date format: " + dateTimeStr + 
                 ". Expected ISO format (e.g., 2025-10-15T14:00:00 or 2025-10-15T14:00:00.000Z)");
         }
+    }
+
+    public List<String> uploadRoomImages(Long roomId, MultipartFile[] files) throws IOException {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
+
+        // Upload images using CloudinaryService
+        List<String> imageUrls = cloudinaryService.uploadMultipleFiles(files, "rooms/" + room.getRoomNumber());
+
+        // Add to existing images (if any)
+        if (room.getImages() == null) {
+            room.setImages(imageUrls);
+        } else {
+            room.getImages().addAll(imageUrls);
+        }
+
+        roomRepository.save(room);
+        return imageUrls;
+    }
+
+    public void deleteRoomImage(Long roomId, String imageUrl) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
+        room.getImages().remove(imageUrl);
+        roomRepository.save(room);
     }
 }
