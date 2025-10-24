@@ -254,7 +254,8 @@ const CaretakerContactScreen = () => {
       dailyCost: '',
       monthlyCost: '',
       earlyCheckinCost: '',
-      lateCheckoutCost: ''
+      lateCheckoutCost: '',
+      remarks: ''
     });
     setShowBookingModal(true);
   };
@@ -289,6 +290,7 @@ const CaretakerContactScreen = () => {
     const checkInDate = new Date(formData.checkInDate);
     const checkOutDate = new Date(formData.checkOutDate);
     const earlyCheckinCost = parseFloat(formData.earlyCheckinCost) || 0;
+    const lateCheckoutCost = parseFloat(formData.lateCheckoutCost) || 0;
     
     let totalCost = 0;
     
@@ -296,12 +298,12 @@ const CaretakerContactScreen = () => {
       const dailyCost = parseFloat(formData.dailyCost) || 0;
       const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
       const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      totalCost = (dailyCost * daysDiff) + earlyCheckinCost;
+      totalCost = (dailyCost * daysDiff) + earlyCheckinCost + lateCheckoutCost;
     } else if (formData.bookingDurationType === 'MONTHLY') {
       const monthlyCost = parseFloat(formData.monthlyCost) || 0;
       const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
       const monthsDiff = Math.ceil(timeDiff / (1000 * 3600 * 24 * 30));
-      totalCost = (monthlyCost * monthsDiff) + earlyCheckinCost;
+      totalCost = (monthlyCost * monthsDiff) + earlyCheckinCost + lateCheckoutCost;
     }
     
     return totalCost;
@@ -321,6 +323,8 @@ const CaretakerContactScreen = () => {
         dailyCost: parseFloat(bookingFormData.dailyCost) || 0,
         monthlyCost: parseFloat(bookingFormData.monthlyCost) || 0,
         earlyCheckinCost: parseFloat(bookingFormData.earlyCheckinCost) || 0,
+        lateCheckoutCost: parseFloat(bookingFormData.lateCheckoutCost) || 0,
+        remarks: bookingFormData.remarks || '',
         totalAmount: totalCost
       };
       
@@ -352,7 +356,8 @@ const CaretakerContactScreen = () => {
       dailyCost: '',
       monthlyCost: '',
       earlyCheckinCost: '',
-      lateCheckoutCost: ''
+      lateCheckoutCost: '',
+      remarks: ''
     });
   };
 
@@ -416,7 +421,8 @@ const CaretakerContactScreen = () => {
       dailyCost: booking.dailyCost || '',
       monthlyCost: booking.monthlyCost || '',
       earlyCheckinCost: booking.earlyCheckinCost || '',
-      lateCheckoutCost: booking.lateCheckoutCost || ''
+      lateCheckoutCost: booking.lateCheckoutCost || '',
+      remarks: booking.remarks || ''
     });
     
     setShowBookingModal(true);
@@ -1067,10 +1073,10 @@ const CaretakerContactScreen = () => {
                   className="form-control"
                   value={bookingFormData.earlyCheckinCost}
                   onChange={(e) => handleBookingInputChange('earlyCheckinCost', e.target.value)}
-                  min="0"
                   step="0.01"
-                  placeholder="Enter early check-in cost"
+                  placeholder="Enter amount (negative for advance payment)"
                 />
+                <small className="form-text text-muted">Use negative values for advance payments</small>
               </div>
 
               <div className="form-group">
@@ -1080,9 +1086,20 @@ const CaretakerContactScreen = () => {
                   className="form-control"
                   value={bookingFormData.lateCheckoutCost}
                   onChange={(e) => handleBookingInputChange('lateCheckoutCost', e.target.value)}
-                  min="0"
                   step="0.01"
-                  placeholder="Enter late check-out cost"
+                  placeholder="Enter amount (negative for advance payment)"
+                />
+                <small className="form-text text-muted">Use negative values for advance payments</small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">📝 Remarks</label>
+                <textarea
+                  className="form-control"
+                  value={bookingFormData.remarks || ''}
+                  onChange={(e) => handleBookingInputChange('remarks', e.target.value)}
+                  rows="3"
+                  placeholder="Any additional notes about this booking..."
                 />
               </div>
 

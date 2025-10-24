@@ -116,7 +116,7 @@ public class BookingController {
 
             // Set default values
             if (booking.getBookingStatus() == null) {
-                booking.setBookingStatus(BookingStatus.CONFIRMED);
+                booking.setBookingStatus(BookingStatus.PENDING);
             }
             if (booking.getCreatedAt() == null) {
                 booking.setCreatedAt(LocalDateTime.now());
@@ -289,7 +289,7 @@ public class BookingController {
             Optional<Booking> bookingOpt = bookingRepository.findById(id);
             if (bookingOpt.isPresent()) {
                 Booking booking = bookingOpt.get();
-                if (booking.getBookingStatus() == BookingStatus.CONFIRMED) {
+                if (booking.getBookingStatus() == BookingStatus.PENDING) {
                     booking.setBookingStatus(BookingStatus.CHECKEDIN);
                     // Set actual check-in date to current time
                     booking.setCheckInDate(LocalDateTime.now());

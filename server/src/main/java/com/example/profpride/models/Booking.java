@@ -46,7 +46,7 @@ public class Booking extends BaseEntity {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "booking_status", nullable = false)
-    private BookingStatus bookingStatus = BookingStatus.CONFIRMED;
+    private BookingStatus bookingStatus = BookingStatus.PENDING;
     
     
     @Column(name = "daily_cost", precision = 10, scale = 2)

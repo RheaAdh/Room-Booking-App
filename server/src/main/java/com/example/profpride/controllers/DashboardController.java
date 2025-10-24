@@ -1,5 +1,6 @@
 package com.example.profpride.controllers;
 
+import com.example.profpride.enums.BookingStatus;
 import com.example.profpride.models.Booking;
 import com.example.profpride.models.Customer;
 import com.example.profpride.models.Room;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/dashboard")
@@ -52,7 +54,7 @@ public class DashboardController {
             );
 
             // Get check-ins for today (CONFIRMED bookings that are due for check-in today)
-            List<Booking> checkIns = bookingRepository.findByCheckInDateBetweenAndBookingStatus(startOfDay, endOfDay, com.example.profpride.enums.BookingStatus.CONFIRMED);
+            List<Booking> checkIns = bookingRepository.findByCheckInDateBetweenAndBookingStatus(startOfDay, endOfDay, BookingStatus.PENDING);
             
             // Get check-outs for today (CHECKEDIN bookings that are due for check-out today)
             List<Booking> checkOuts = bookingRepository.findByCheckOutDateBetweenAndBookingStatus(startOfDay, endOfDay, com.example.profpride.enums.BookingStatus.CHECKEDIN);
@@ -107,10 +109,12 @@ public class DashboardController {
 
             // Get pending dues for ALL customers with unpaid amounts (any booking status)
             // Include all bookings that have pending dues (total amount > paid amount)
-            List<Booking> allBookings = bookingRepository.findAll();
+            List<Booking> allBookingsForPendingDues = bookingRepository.findAll().stream()
+            .filter(booking -> BookingStatus.CHECKEDIN.toString().equalsIgnoreCase(String.valueOf(booking.getBookingStatus())))
+            .collect(Collectors.toList());
             
             // Filter bookings that have pending dues (total amount > paid amount)
-            List<Booking> pendingDues = allBookings.stream()
+            List<Booking> pendingDues = allBookingsForPendingDues.stream()
                 .filter(booking -> {
                     // Fetch payments for this booking
                     List<Payment> payments = paymentRepository.findByBookingId(booking.getId());

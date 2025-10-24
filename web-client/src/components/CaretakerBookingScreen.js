@@ -75,7 +75,8 @@ const CaretakerBookingScreen = () => {
       dailyCost: '',
       monthlyCost: '',
       earlyCheckinCost: '',
-      lateCheckoutCost: ''
+      lateCheckoutCost: '',
+      remarks: ''
     };
   });
   
@@ -262,6 +263,7 @@ const CaretakerBookingScreen = () => {
     const checkInDate = new Date(formData.checkInDate);
     const checkOutDate = new Date(formData.checkOutDate);
     const earlyCheckinCost = parseFloat(formData.earlyCheckinCost) || 0;
+    const lateCheckoutCost = parseFloat(formData.lateCheckoutCost) || 0;
     
     let totalCost = 0;
     
@@ -269,12 +271,12 @@ const CaretakerBookingScreen = () => {
       const dailyCost = parseFloat(formData.dailyCost) || 0;
       const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
       const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      totalCost = (dailyCost * daysDiff) + earlyCheckinCost;
+      totalCost = (dailyCost * daysDiff) + earlyCheckinCost + lateCheckoutCost;
     } else if (formData.bookingDurationType === 'MONTHLY') {
       const monthlyCost = parseFloat(formData.monthlyCost) || 0;
       const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
       const monthsDiff = Math.ceil(timeDiff / (1000 * 3600 * 24 * 30));
-      totalCost = (monthlyCost * monthsDiff) + earlyCheckinCost;
+      totalCost = (monthlyCost * monthsDiff) + earlyCheckinCost + lateCheckoutCost;
     }
     
     return totalCost;
@@ -320,6 +322,8 @@ const CaretakerBookingScreen = () => {
         dailyCost: parseFloat(formData.dailyCost) || 0,
         monthlyCost: parseFloat(formData.monthlyCost) || 0,
         earlyCheckinCost: parseFloat(formData.earlyCheckinCost) || 0,
+        lateCheckoutCost: parseFloat(formData.lateCheckoutCost) || 0,
+        remarks: formData.remarks || '',
         totalAmount: totalCost
       };
       
@@ -462,7 +466,8 @@ const CaretakerBookingScreen = () => {
       dailyCost: booking.dailyCost || '',
       monthlyCost: booking.monthlyCost || '',
       earlyCheckinCost: booking.earlyCheckinCost || '',
-      lateCheckoutCost: booking.lateCheckoutCost || ''
+      lateCheckoutCost: booking.lateCheckoutCost || '',
+      remarks: booking.remarks || ''
     });
     
     // Set the customer search term to show the selected customer's name
@@ -526,7 +531,8 @@ const CaretakerBookingScreen = () => {
       dailyCost: booking.dailyCost || '',
       monthlyCost: booking.monthlyCost || '',
       earlyCheckinCost: booking.earlyCheckinCost || '',
-      lateCheckoutCost: booking.lateCheckoutCost || ''
+      lateCheckoutCost: booking.lateCheckoutCost || '',
+      remarks: booking.remarks || ''
     });
     
     // Set the customer search term to show the selected customer's name
@@ -990,7 +996,8 @@ const CaretakerBookingScreen = () => {
       dailyCost: '',
       monthlyCost: '',
       earlyCheckinCost: '',
-      lateCheckoutCost: ''
+      lateCheckoutCost: '',
+      remarks: ''
     });
     setCustomerSearchTerm('');
     setShowCustomerSearch(false);
@@ -1121,10 +1128,10 @@ const CaretakerBookingScreen = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'PENDING': return '#ffc107';
-      case 'CHECKEDIN': return '#17a2b8';
-      case 'NOSHOW': return '#fd7e14';
-      case 'CHECKEDOUT': return '#6c757d';
+      case 'PENDING': return '#ffc107';    // Yellow - Awaiting confirmation
+      case 'CHECKEDIN': return '#28a745';  // Green - Currently checked in
+      case 'NOSHOW': return '#dc3545';     // Red - Did not show up
+      case 'CHECKEDOUT': return '#6c757d'; // Gray - Completed stay
       default: return '#6c757d';
     }
   };
@@ -1633,10 +1640,10 @@ const CaretakerBookingScreen = () => {
                   className="form-control"
                   value={formData.earlyCheckinCost}
                   onChange={(e) => handleInputChange('earlyCheckinCost', e.target.value)}
-                  min="0"
                   step="0.01"
-                  placeholder="Enter early check-in cost"
+                  placeholder="Enter amount (negative for advance payment)"
                 />
+                <small className="form-text text-muted">Use negative values for advance payments</small>
               </div>
 
               <div className="form-group">
@@ -1646,9 +1653,20 @@ const CaretakerBookingScreen = () => {
                   className="form-control"
                   value={formData.lateCheckoutCost}
                   onChange={(e) => handleInputChange('lateCheckoutCost', e.target.value)}
-                  min="0"
                   step="0.01"
-                  placeholder="Enter late check-out cost"
+                  placeholder="Enter amount (negative for advance payment)"
+                />
+                <small className="form-text text-muted">Use negative values for advance payments</small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">📝 Remarks</label>
+                <textarea
+                  className="form-control"
+                  value={formData.remarks || ''}
+                  onChange={(e) => handleInputChange('remarks', e.target.value)}
+                  rows="3"
+                  placeholder="Any additional notes about this booking..."
                 />
               </div>
 

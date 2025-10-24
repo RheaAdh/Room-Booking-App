@@ -356,10 +356,10 @@ const ContactScreen = () => {
 
   const getStatusColor = (status) => {
     const statusColors = {
-      'PENDING': '#ffc107',
-      'CHECKEDIN': '#17a2b8',
-      'NOSHOW': '#fd7e14',
-      'CHECKEDOUT': '#6c757d'
+      'PENDING': '#ffc107',    // Yellow - Awaiting confirmation
+      'CHECKEDIN': '#28a745',  // Green - Currently checked in
+      'NOSHOW': '#dc3545',     // Red - Did not show up
+      'CHECKEDOUT': '#6c757d'  // Gray - Completed stay
     };
     return statusColors[status] || '#6c757d';
   };

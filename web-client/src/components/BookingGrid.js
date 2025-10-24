@@ -111,11 +111,11 @@ const BookingGrid = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'PENDING': return '#ffc107';
-      case 'CHECKEDIN': return '#17a2b8';
-      case 'NOSHOW': return '#fd7e14';
-      case 'CHECKEDOUT': return '#6c757d';
-      default: return '#f8f9fa';
+      case 'PENDING': return '#ffc107';    // Yellow - Awaiting confirmation
+      case 'CHECKEDIN': return '#28a745';  // Green - Currently checked in
+      case 'NOSHOW': return '#dc3545';     // Red - Did not show up
+      case 'CHECKEDOUT': return '#6c757d'; // Gray - Completed stay
+      default: return '#f8f9fa';           // Light gray - Default/empty
     }
   };
 
@@ -258,24 +258,20 @@ const BookingGrid = () => {
         <div className="status-right">
           <div className="status-legend">
             <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#17a2b8' }}></div>
-              <span>New</span>
+              <div className="legend-color" style={{ backgroundColor: '#ffc107' }}></div>
+              <span>Pending</span>
             </div>
             <div className="legend-item">
               <div className="legend-color" style={{ backgroundColor: '#28a745' }}></div>
-              <span>Confirmed</span>
+              <span>Checked In</span>
             </div>
             <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#ffc107' }}></div>
-              <span>Checked In</span>
+              <div className="legend-color" style={{ backgroundColor: '#dc3545' }}></div>
+              <span>No Show</span>
             </div>
             <div className="legend-item">
               <div className="legend-color" style={{ backgroundColor: '#6c757d' }}></div>
               <span>Checked Out</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: '#dc3545' }}></div>
-              <span>Cancelled</span>
             </div>
             <div className="legend-item">
               <div className="legend-color" style={{ backgroundColor: '#ffffff', border: '1px solid #d0d7de' }}></div>

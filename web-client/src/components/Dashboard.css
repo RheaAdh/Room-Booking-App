@@ -179,12 +179,18 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  gap: 12px;
 }
 
 .guest-name {
   font-size: 16px;
   font-weight: 600;
   color: #2c3e50;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .booking-id {
@@ -211,6 +217,8 @@
   font-size: 16px;
   font-weight: bold;
   color: #e74c3c;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .empty-message {
@@ -2633,6 +2641,37 @@
   
   .due-label {
     font-size: 10px;
+  }
+}
+
+/* Mobile responsive for list items */
+@media (max-width: 768px) {
+  .list-item-header {
+    gap: 8px;
+  }
+  
+  .guest-name {
+    font-size: 14px;
+    max-width: 200px;
+  }
+  
+  .due-amount {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .list-item-header {
+    gap: 6px;
+  }
+  
+  .guest-name {
+    font-size: 13px;
+    max-width: 150px;
+  }
+  
+  .due-amount {
+    font-size: 13px;
   }
 }
 
