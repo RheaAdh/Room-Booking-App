@@ -89,27 +89,41 @@ const ContactScreen = () => {
     setShowModal(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (isEditing && selectedCustomer) {
-        await api.put(`/customer/${selectedCustomer.phoneNumber}`, formData);
-        alert('Customer updated successfully!');
-      } else {
-        await api.post('/customer', formData);
-        alert('Customer added successfully!');
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      // Ensure password matches phoneNumber
+      const customerData = {
+        ...formData,
+        password: formData.phoneNumber
+      };
+
+      try {
+        if (isEditing && selectedCustomer) {
+          await api.put(`/customer/${selectedCustomer.phoneNumber}`, customerData);
+          alert('Customer updated successfully!');
+        } else {
+          await api.post('/customer', customerData);
+          alert('Customer added successfully!');
+        }
+        
+        setShowModal(false);
+        setIsEditing(false);
+        setSelectedCustomer(null);
+        setFormData({ 
+          name: '', 
+          phoneNumber: '', 
+          additionalPhoneNumber: '', 
+          photoIdProofUrl: '', 
+          idProofUrls: [], 
+          remarks: '' 
+        });
+        fetchCustomers();
+      } catch (error) {
+        console.error('Error adding/updating customer:', error);
+        alert('Error adding/updating customer. Please try again.');
       }
-      
-      setShowModal(false);
-      setIsEditing(false);
-      setSelectedCustomer(null);
-      setFormData({ name: '', phoneNumber: '', additionalPhoneNumber: '', photoIdProofUrl: '', idProofUrls: [], remarks: '' });
-      fetchCustomers();
-    } catch (error) {
-      console.error('Error adding/updating customer:', error);
-      alert('Error adding/updating customer. Please try again.');
-    }
-  };
+    };
 
   const handleDelete = async (customerId) => {
     if (window.confirm('Are you sure you want to delete this customer?')) {

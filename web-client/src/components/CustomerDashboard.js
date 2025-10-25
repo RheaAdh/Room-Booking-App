@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../config/api';
+import Slider from "react-slick";
 import notificationService from '../services/notificationService';
 import './CustomerDashboard.css';
 
@@ -10,6 +11,7 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
   const [rooms, setRooms] = useState([]);
   const [roomConfigurations, setRoomConfigurations] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
+  const [roomImages, setRoomImages] = useState({});
   const [searchDates, setSearchDates] = useState({
     checkIn: '',
     checkOut: ''
@@ -20,6 +22,8 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('rooms');
   const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState('roomNumber'); // 'roomNumber', 'roomId', 'bathroomType'
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc', 'desc'
 
   const openMapLocation = (locationName) => {
     // Coordinates for the locations
@@ -261,6 +265,45 @@ const CustomerDashboard = ({ customer, onLogout, onShowRooms, refreshTrigger }) 
     setFilteredRooms(rooms);
   }, [rooms]);
 
+  const sortRooms = useCallback((roomsToSort, sortField, order) => {
+    return [...roomsToSort].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortField) {
+        case 'roomNumber':
+          aValue = a.roomNumber || '';
+          bValue = b.roomNumber || '';
+          // Handle numeric sorting for room numbers
+          const aNum = parseInt(aValue.replace(/\D/g, '')) || 0;
+          const bNum = parseInt(bValue.replace(/\D/g, '')) || 0;
+          if (aNum !== bNum) {
+            return order === 'asc' ? aNum - bNum : bNum - aNum;
+          }
+          // If numbers are equal, sort alphabetically
+          return order === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        case 'roomId':
+          aValue = a.id || 0;
+          bValue = b.id || 0;
+          return order === 'asc' ? aValue - bValue : bValue - aValue;
+        case 'bathroomType':
+          aValue = a.bathroomType || '';
+          bValue = b.bathroomType || '';
+          return order === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        default:
+          return 0;
+      }
+    });
+  }, []);
+
+  const handleSortChange = useCallback((field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  }, [sortBy, sortOrder]);
+
   const [showBookingPreview, setShowBookingPreview] = useState(false);
   const [previewBooking, setPreviewBooking] = useState(null);
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
@@ -399,6 +442,19 @@ Booking ID: ${response.data.id || 'N/A'}
     fetchCustomerData();
     fetchRoomsData();
   }, [fetchCustomerData, fetchRoomsData]);
+
+  useEffect(() => {
+    // Re-sort rooms when sort settings change
+    if (rooms.length > 0) {
+      const sortedRooms = sortRooms(rooms, sortBy, sortOrder);
+      setRooms(sortedRooms);
+      // Also update filtered rooms if they exist
+      if (filteredRooms.length > 0) {
+        const sortedFilteredRooms = sortRooms(filteredRooms, sortBy, sortOrder);
+        setFilteredRooms(sortedFilteredRooms);
+      }
+    }
+  }, [sortBy, sortOrder, rooms, filteredRooms, sortRooms]);
 
   // Refresh data when refreshTrigger changes
   useEffect(() => {
@@ -666,8 +722,31 @@ Booking ID: ${response.data.id || 'N/A'}
               {/* Rooms Grid */}
               <div className="rooms-section">
                 <div className="rooms-header">
-                  <h2>{filteredRooms.length > 0 ? 'Available Rooms' : 'All Rooms'}</h2>
-                  <p>{filteredRooms.length} room{filteredRooms.length !== 1 ? 's' : ''} found</p>
+                  <div className="rooms-title">
+                    <h2>{filteredRooms.length > 0 ? 'Available Rooms' : 'All Rooms'}</h2>
+                    <p>{filteredRooms.length} room{filteredRooms.length !== 1 ? 's' : ''} found</p>
+                  </div>
+                  <div className="sort-controls">
+                    <span className="sort-label">Sort by:</span>
+                    <button 
+                      className={`sort-btn ${sortBy === 'roomNumber' ? 'active' : ''}`}
+                      onClick={() => handleSortChange('roomNumber')}
+                    >
+                      Room Number {sortBy === 'roomNumber' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                    <button 
+                      className={`sort-btn ${sortBy === 'roomId' ? 'active' : ''}`}
+                      onClick={() => handleSortChange('roomId')}
+                    >
+                      Room ID {sortBy === 'roomId' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                    <button 
+                      className={`sort-btn ${sortBy === 'bathroomType' ? 'active' : ''}`}
+                      onClick={() => handleSortChange('bathroomType')}
+                    >
+                      Bathroom Type {sortBy === 'bathroomType' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                  </div>
                 </div>
                 
                 {filteredRooms.length === 0 ? (
@@ -682,19 +761,22 @@ Booking ID: ${response.data.id || 'N/A'}
                   <div className="rooms-grid">
                     {filteredRooms.map(room => (
                       <div key={room.id} className="room-card">
-                        <div className="room-image">
-                          <img 
-                            src={getRoomImage(room.id)} 
-                            alt={`Room ${room.roomNumber}`}
-                            className="room-photo"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
+                        <Slider dots={true} infinite={true} speed={500} slidesToShow={1} slidesToScroll={1}>
+                      {(room.images && room.images.length > 0 ? room.images : ["/rooms/default.png"]).map((url, idx) => (
+                        <div key={idx} style={{ width: "100%", minHeight: "300px" }}> {/* adjust height as needed */}
+                          <img
+                            src={url}
+                            alt={`Room ${room.roomNumber} Image ${idx + 1}`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              borderRadius: "8px"
                             }}
                           />
-                          <div className="room-badges">
-                            <span className="badge wifi">Free WiFi</span>
-                          </div>
                         </div>
+                      ))}
+                    </Slider>
                         
                         <div className="room-content">
                           <div className="room-header">

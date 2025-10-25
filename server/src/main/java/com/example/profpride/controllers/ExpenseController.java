@@ -1,5 +1,6 @@
 package com.example.profpride.controllers;
 
+import com.example.profpride.enums.ExpenseCategory;
 import com.example.profpride.models.Expense;
 import com.example.profpride.services.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,8 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/expenses")

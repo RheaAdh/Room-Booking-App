@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Slider from "react-slick";
 import api from '../config/api';
 // import { toLocalDateTimeString } from '../utils/dateUtils';
 import './PublicRoomView.css';
@@ -434,16 +435,23 @@ const getRoomImage = (room) => {
                   const roomConfigs = roomConfigurations.filter(config => config.roomId === room.id);
                   return (
                     <div key={room.id} className="room-card">
-                      <div className="room-images">
-  {(room.images || []).map((url, idx) => (
-    <img 
-      key={idx} 
-      src={url} 
-      alt={`Room ${room.roomNumber} Image ${idx+1}`} 
-      className="room-photo"
-    />
+<Slider dots={true} infinite={true} speed={500} slidesToShow={1} slidesToScroll={1}>
+  {(room.images && room.images.length > 0 ? room.images : ["/rooms/default.png"]).map((url, idx) => (
+    <div key={idx} style={{ width: "100%", minHeight: "300px" }}> {/* adjust height as needed */}
+      <img
+        src={url}
+        alt={`Room ${room.roomNumber} Image ${idx + 1}`}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          borderRadius: "8px"
+        }}
+      />
+    </div>
   ))}
-</div>
+</Slider>
+
                       <div className="room-content">
                         <div className="room-header">
                           <h3>Room {room.roomNumber}</h3>

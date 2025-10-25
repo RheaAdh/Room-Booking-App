@@ -68,19 +68,24 @@ public class RoomService {
             // Get all rooms
             List<Room> allRooms = roomRepository.findAll();
             
-            // Filter out rooms that have confirmed bookings for the requested dates
+            // Filter out rooms that have active bookings for the requested dates
             List<Room> availableRooms = allRooms.stream()
                 .filter(room -> {
                     // Get all bookings for this room
                     List<Booking> roomBookings = bookingRepository.findByRoom(room);
                     
-                    // Check if any confirmed booking overlaps with the requested dates
+                    // Check if any active booking overlaps with the requested dates
                     return roomBookings.stream()
                         .noneMatch(booking -> {
-                            // Only check confirmed bookings
-                            if (booking.getBookingStatus() == null || 
-                                !booking.getBookingStatus().toString().equals("PENDING")) {
+                            // Only check active bookings (PENDING and CHECKEDIN)
+                            // Exclude CHECKEDOUT and NOSHOW bookings
+                            if (booking.getBookingStatus() == null) {
                                 return false;
+                            }
+                            
+                            String status = booking.getBookingStatus().toString();
+                            if (!status.equals("PENDING") && !status.equals("CHECKEDIN")) {
+                                return false; // Skip CHECKEDOUT and NOSHOW bookings
                             }
                             
                             // Check for date overlap

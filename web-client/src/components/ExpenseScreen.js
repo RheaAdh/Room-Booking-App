@@ -7,15 +7,25 @@ const ExpenseScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
-    category: 'MAINTENANCE',
+    category: 'CARETAKER',
     expenseDate: new Date()
   });
 
   useEffect(() => {
     fetchExpenses();
+    const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+  fetchCategories();
   }, []);
 
   const fetchExpenses = async () => {
@@ -190,16 +200,16 @@ const ExpenseScreen = () => {
               <div className="form-group">
                 <label className="form-label">Category</label>
                 <select
-                  className="form-control"
-                  value={formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
-                >
-                  <option value="MAINTENANCE">Maintenance</option>
-                  <option value="UTILITIES">Utilities</option>
-                  <option value="CLEANING">Cleaning</option>
-                  <option value="SUPPLIES">Supplies</option>
-                  <option value="OTHER">Other</option>
-                </select>
+                className="form-control"
+                value={formData.category}
+                onChange={(e) => setFormData({...formData, category: e.target.value})}
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Date</label>

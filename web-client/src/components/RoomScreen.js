@@ -16,6 +16,8 @@ const RoomScreen = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
+  const [sortBy, setSortBy] = useState('roomNumber'); // 'roomNumber', 'roomId', 'bathroomType'
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc', 'desc'
 
   const [roomFormData, setRoomFormData] = useState({
     roomNumber: '',
@@ -32,6 +34,14 @@ const RoomScreen = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    // Re-sort rooms when sort settings change
+    if (rooms.length > 0) {
+      const sortedRooms = sortRooms(rooms, sortBy, sortOrder);
+      setRooms(sortedRooms);
+    }
+  }, [sortBy, sortOrder]);
 
   const fetchData = async () => {
     try {
@@ -52,6 +62,45 @@ const RoomScreen = () => {
 
   const getRoomConfigurations = (roomId) => {
     return roomConfigurations.filter(config => config.roomId === roomId);
+  };
+
+  const sortRooms = (roomsToSort, sortField, order) => {
+    return [...roomsToSort].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortField) {
+        case 'roomNumber':
+          aValue = a.roomNumber || '';
+          bValue = b.roomNumber || '';
+          // Handle numeric sorting for room numbers
+          const aNum = parseInt(aValue.replace(/\D/g, '')) || 0;
+          const bNum = parseInt(bValue.replace(/\D/g, '')) || 0;
+          if (aNum !== bNum) {
+            return order === 'asc' ? aNum - bNum : bNum - aNum;
+          }
+          // If numbers are equal, sort alphabetically
+          return order === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        case 'roomId':
+          aValue = a.id || 0;
+          bValue = b.id || 0;
+          return order === 'asc' ? aValue - bValue : bValue - aValue;
+        case 'bathroomType':
+          aValue = a.bathroomType || '';
+          bValue = b.bathroomType || '';
+          return order === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const handleSortChange = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
   };
 
 
@@ -241,6 +290,27 @@ const handleUploadImages = async () => {
       <div className="page-header">
         <h1>Room Management</h1>
         <div className="header-actions">
+          <div className="sort-controls">
+            <span className="sort-label">Sort by:</span>
+            <button 
+              className={`sort-btn ${sortBy === 'roomNumber' ? 'active' : ''}`}
+              onClick={() => handleSortChange('roomNumber')}
+            >
+              Room Number {sortBy === 'roomNumber' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </button>
+            <button 
+              className={`sort-btn ${sortBy === 'roomId' ? 'active' : ''}`}
+              onClick={() => handleSortChange('roomId')}
+            >
+              Room ID {sortBy === 'roomId' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </button>
+            <button 
+              className={`sort-btn ${sortBy === 'bathroomType' ? 'active' : ''}`}
+              onClick={() => handleSortChange('bathroomType')}
+            >
+              Bathroom Type {sortBy === 'bathroomType' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </button>
+          </div>
           <button className="btn btn-primary" onClick={() => {
             setRoomFormData({ roomNumber: '', bathroomType: 'ATTACHED', description: '' });
             setIsEditingRoom(false);

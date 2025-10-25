@@ -36,14 +36,19 @@ public class BookingRequestService {
 
         Room room = roomOpt.get();
         
-        // Check for existing confirmed bookings that conflict with this request
+        // Check for existing active bookings that conflict with this request
         List<Booking> existingBookings = bookingRepository.findByRoom(room);
         Optional<Booking> conflictingBooking = existingBookings.stream()
             .filter(existingBooking -> {
-                // Only check confirmed bookings
-                if (existingBooking.getBookingStatus() == null || 
-                    !existingBooking.getBookingStatus().toString().equals("PENDING")) {
+                // Only check active bookings (PENDING and CHECKEDIN)
+                // Exclude CHECKEDOUT and NOSHOW bookings
+                if (existingBooking.getBookingStatus() == null) {
                     return false;
+                }
+                
+                String status = existingBooking.getBookingStatus().toString();
+                if (!status.equals("PENDING") && !status.equals("CHECKEDIN")) {
+                    return false; // Skip CHECKEDOUT and NOSHOW bookings
                 }
                 
                 // Check for date overlap
